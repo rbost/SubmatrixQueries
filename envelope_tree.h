@@ -20,6 +20,13 @@
 using namespace envelope;
 using namespace matrix;
 
+/*
+ * class RowNode
+ *
+ * This is the base class for the envelope trees on rows.
+ * It provides in particular the efficient queries for maximum value of a column in a row range.
+ *
+ */
 template <typename T>
 class RowNode {
 private:
@@ -46,6 +53,9 @@ protected:
     }
     
 public:
+    
+    // This constructor creates a new RowNode with the specified children.
+    // If they are not NULL, it will also compute the merged envelope.
     RowNode(size_t minRow, size_t maxRow,RowNode<T> *lowIndices, RowNode<T> *highIndices ,Matrix<T> const& matrix):
     _minRow(minRow),_maxRow(maxRow)
     {
@@ -58,8 +68,15 @@ public:
             
             _lowIndicesNode = lowIndices;
             _highIndicesNode = highIndices;
+            
+            if (_lowIndicesNode && _highIndicesNode) { // if we can merge the envelopes of the children, do it immediately
+                this->setEnvelope(mergeRowEnvelopes(this->lowIndicesNode()->envelope(), this->highIndicesNode()->envelope()));
+            }
         }
     }
+
+    // Creates a row envelope binary tree node for the specified interval.
+    // This also will creates its children and merge their envelopes.
 
     RowNode(size_t minRow, size_t maxRow, Matrix<T> const& matrix):
     _minRow(minRow),_maxRow(maxRow)
@@ -80,7 +97,9 @@ public:
         }
     }
     
-
+    // Use this constructor to build the root of the row envelope binary tree for the specified matrix
+    // COMPLEXITY: O(number_of_rows*( log(number_of_cols) + log(number_of_rows) ))
+    // SIZE: O(number_of_rows* log(number_of_rows))
     RowNode(Matrix<T> const& matrix) : _minRow(0), _maxRow(matrix.rows()-1)
     {
         _isLeaf = false;
@@ -117,6 +136,7 @@ public:
     size_t maxRow() const { return _maxRow; }
     
     // Returns the canonical nodes (cf. the article) for the specified indices
+    // COMPLEXITY : O(log(number of rows)
     vector<const RowNode<T> *> canonicalNodes(size_t minRow, size_t maxRow) const
     {
         std::vector<const RowNode<T> *> buffer;
@@ -125,6 +145,9 @@ public:
         return buffer;
     }
     
+    // Auxiliary method for the previous one.
+    // It adds itself to the buffer if the query range contains the row range the node represents.
+    // Otherwise, it recursively calls its children.
     virtual void getCanonicalNodes(std::vector<const RowNode<T> *> & buffer, size_t minRow, size_t maxRow) const
     {
         assert(minRow <= maxRow);
@@ -145,10 +168,15 @@ public:
     
     // Returns the maximum value of the matrix in the specified column and in the specified row range
     T maxForColumnInRange(size_t col, size_t minRow, size_t maxRow) const{
+        assert(minRow <= maxRow);
+        
+        // First of all, we get the canonical nodes
         std::vector<const RowNode<T> *> cNodes = this->canonicalNodes(minRow,maxRow);
         
+        // If the set of canonical nodes is empty, it means that the query range is empty
         assert(cNodes.size() > 0);
         
+        // Compute the maximum over the canonical nodes
         T max = cNodes[0]->envelope()->valueForColumn(col);
         
         for (size_t i = 1; i < cNodes.size(); i++) {
@@ -165,7 +193,11 @@ public:
 /*
  * class ColNode
  *
- * This class provides the same data structure implementation as for RowNode but for queries on rows and column ranges instead of queries on columns and row ranges
+ * This class provides the same data structure implementation as for RowNode
+ * but for queries on rows and column ranges instead of queries on columns and row ranges.
+ *
+ *
+ * For a better documentation of the methods, just refer to their equivalents in the RowNode class.
  */
 template <typename T>
 class ColNode {
@@ -321,6 +353,7 @@ public:
     }
     
     // This method computes the _maxima vector
+    // COMPLEXITY: O(number_of_breakpoints * log(number_of_columns) ) = O(number_of_rows_in_the_envelope * log(number_of_columns) )
     void computeIntervalMaxima(const ColNode<T> *flippedTree)
     {
         const vector< Breakpoint > *breakpoints = this->envelope()->breakpoints();
@@ -350,6 +383,10 @@ public:
     }
     
     // Computes the interval maxima and tells the node's children to do the same
+    //
+    // COMPLEXITY: for the root node (i.e. computing the maximum in the entire tree), it should be
+    // O(number_of_rows * log(number_of_rows) * log(number_of_columns))
+    // At this point, I think it is rather O(number_of_rows^2 * log(number_of_columns)) (I know, this is bad!)
     void recursivelyComputeIntervalMaxima(const ColNode<T> *flippedTree)
     {
         computeIntervalMaxima(flippedTree);
@@ -369,6 +406,7 @@ public:
         return buffer;
     }
     
+    // idem.
     void getCanonicalNodes(std::vector<const ExtendedRowNode<T> *> & buffer, size_t minRow, size_t maxRow) const
     {
         assert(minRow <= maxRow);
@@ -402,6 +440,10 @@ class SubmatrixQueriesDataStructure {
     ColNode<T> *_columnTree; // denoted \mathcal{B} in the KMNS article
     
 public:
+    // Constructs a new submatrix query datastructure for the given inverse Monge matrix.
+    // COMPLEXITY (expected): if m = number_of_rows and n = number_of_columns, O(m log(m) log(n) + n(log m + log n)) )
+    // The current complexity if rather O(m^2 * log(n) + n(log m + log n))
+    // SIZE: O(m log m)
     SubmatrixQueriesDataStructure(Matrix<T> const& matrix)
     {
         _rowsTree = new ExtendedRowNode<T>(matrix);
@@ -421,6 +463,9 @@ public:
         return maxInRange(Range(minRow,maxRow), Range(minCol,maxCol));
     }
     
+    // This the query method: it returns the maximum of the submatrix of the Monge inverse matrix within the specified row and column ranges.
+    // COMPLEXITY (expected): O(log(number_of_rows) * (log(number_of_rows) + log(number_of_cols)) )
+    // In the current state of the implementation, we have instead O(log(number_of_rows) * (number_of_rows + log(number_of_cols)) ) (see the WARNING)
     T maxInRange(Range rowRange, Range colRanges) const
     {
         vector<const ExtendedRowNode<T> *> rowNodes = _rowsTree->canonicalNodes(rowRange.min,rowRange.max);
@@ -461,6 +506,9 @@ public:
             // in the case we still have some breakpoints to explore ...
             if(i < numberOfBp){
                 
+                // !!WARNING!!
+                // HERE, INSTEAD OF NAIVELY COMPUTING THE MAXIMUM BY SUCCESSIVELY QUERYING THE INTERVALS,
+                // WE SHOULD USE A RMQ DATA STRUCTURE TO REDUCE THE RUNNING TIME TO A LOG FACTOR (WE CAN EVEN HAVE O(1) TIME QUERY !)
                 for (i = i+1; i < numberOfBp; i++) {
                     // we are considering the interval between (*breakpoints)[i-1].col and (*breakpoints)[i].col-1
                     // we know that (*breakpoints)[i-1].col is in the column range so we only have to check for (*breakpoints)[i].col-1 
