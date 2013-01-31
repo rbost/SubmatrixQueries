@@ -16,6 +16,7 @@
 #include "envelope.h"
 #include "matrix.h"
 #include "max_value.h"
+#include "range_query.h"
 
 using namespace envelope;
 using namespace matrix;
@@ -316,6 +317,7 @@ public:
 template <typename T>
 class ExtendedRowNode : public RowNode<T> {
     vector< T > *_maxima; // the _maxima vector stores the maxima of breakpoints intervals
+    BasicRQNode< T > *_rangeMaxima;
     
 public:
     ExtendedRowNode(size_t minRow, size_t maxRow, Matrix<T> const& matrix): RowNode<T>(minRow,maxRow,NULL,NULL,matrix)
@@ -341,6 +343,7 @@ public:
     
     ~ExtendedRowNode<T>()
     {
+        delete _rangeMaxima;
         delete _maxima;
     }
     
@@ -350,6 +353,11 @@ public:
     const vector< T > *maxima() const
     {
         return _maxima;
+    }
+    
+    const BasicRQNode<T> *rangeMaxima() const
+    {
+        return _rangeMaxima;
     }
     
     // This method computes the _maxima vector
@@ -379,6 +387,8 @@ public:
         maxCol = this->envelope()->maxPosition()-1;
         row = (*breakpoints)[i].row;
         (*_maxima)[i] = flippedTree->maxForRowInRange(row,minCol,maxCol);
+        
+        _rangeMaxima = new BasicRQNode<T>(_maxima,0,_maxima->size()-1,&std::max<T>);
 
     }
     
