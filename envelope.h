@@ -356,22 +356,29 @@ namespace envelope {
         // first, we find the new breakpoint ...
         Breakpoint newBreakpoint = mergeBreakPoint(e1, e2);
         
-        // ... and then we concatenate the two envelopes and the new breakpoint ...
+        // ... and then we concatenate the two envelopes and the new breakpoint:
+        
+        // first, insert the breakpoints of the first envelope
         vector<Breakpoint> *newBpList = new vector<Breakpoint>();
-        int i = 0;
+        size_t i = 0;
         
         while (i < e1->breakpoints()->size() && (*(e1->breakpoints()))[i].col < newBreakpoint.col) {
             newBpList->push_back((*(e1->breakpoints()))[i]);
             i++;
         }
         
+        // add the new breakpoint
         newBpList->push_back(newBreakpoint);
         
-        i = 0;
+        // and copy the breakpoint of the second envelope
+        // To improve performances, here, we just just jump to the first breakpoint to insert using a
+        // logarithmic complexity method instead of just going through all the useless breakpoints.
+        size_t beginningIndex;
+        e2->breakpointBeforePosition(newBreakpoint.col,&beginningIndex);
+        i = beginningIndex+1;
+        
         while (i < e2->breakpoints()->size()){
-            if ((*(e2->breakpoints()))[i].col > newBreakpoint.col) {
-                newBpList->push_back((*(e2->breakpoints()))[i]);
-            }
+            newBpList->push_back((*(e2->breakpoints()))[i]);
             i++;
         }
         
@@ -410,7 +417,7 @@ namespace envelope {
         
         // ... and then we concatenate the two envelopes and the new breakpoint ...
         vector<Breakpoint> *newBpList = new vector<Breakpoint> ();
-        int i = 0;
+        size_t i = 0;
         
         while (i < e1->breakpoints()->size() && (*breakpoints1)[i].row < newBreakpoint.row) {
             newBpList->push_back((*breakpoints1)[i]);
@@ -419,11 +426,14 @@ namespace envelope {
         
         newBpList->push_back(newBreakpoint);
         
-        i = 0;
+        // To improve performances, here, we just just jump to the first breakpoint to insert using a
+        // logarithmic complexity method instead of just going through all the useless breakpoints.
+        size_t beginningIndex;
+        e2->breakpointBeforePosition(newBreakpoint.row,&beginningIndex);
+        i = beginningIndex+1;
+
         while (i < e2->breakpoints()->size()){
-            if ((*breakpoints2)[i].row > newBreakpoint.row) {
-                newBpList->push_back((*breakpoints2)[i]);
-            }
+            newBpList->push_back((*breakpoints2)[i]);
             i++;
         }
         
