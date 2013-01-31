@@ -32,8 +32,8 @@ public:
     size_t minIndex() const { return _minIndex; }
     size_t maxIndex() const { return _maxIndex; }
     bool isLeaf() const { return _isLeaf; }
-    const BasicRQNode<T> *highIndicesNode() { return _highIndicesNode; }
-    const BasicRQNode<T> *lowIndicesNode() { return _lowIndicesNode; }
+    const BasicRQNode<T> *highIndicesNode() const { return _highIndicesNode; }
+    const BasicRQNode<T> *lowIndicesNode() const { return _lowIndicesNode; }
   
     BasicRQNode(const std::vector<T> *values, size_t minIndex, size_t maxIndex, const T& (*compareFunc)(T const&, T const&) ) :
         _minIndex(minIndex),_maxIndex(maxIndex),_compare(compareFunc)
@@ -81,7 +81,7 @@ public:
         }
     }
     
-    T query(size_t startIndex, size_t endIndex)
+    T query(size_t startIndex, size_t endIndex) const
     {
         assert(startIndex <= endIndex);
 

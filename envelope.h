@@ -93,10 +93,13 @@ namespace envelope {
         
         // Finds the last breakpoint before col in the breakpoint list using binary search
         // COMPLEXITY: O( log(number_of_breakpoints) )
-        Breakpoint breakpointBeforePosition(size_t pos) const
+
+        Breakpoint breakpointBeforePosition(size_t pos, size_t *foundPosition) const
         {
             size_t iMin, iMax, iMid;
+            size_t i;
             iMin = 0; iMax = this->numberOfBreakpoints() - 1;
+            i = 0;
             
             while (iMax > iMin) {
                 iMid = iMin + ((iMax - iMin)/2); // to avoid overflows
@@ -107,23 +110,34 @@ namespace envelope {
                     // in case we selected the last breakpoint
                     if (selectedPosition > pos){ // we have to select a lower breakpoint
                         iMax = iMid - 1;
-                    }else{ 
-                        return (*this->breakpoints())[iMid];
+                    }else{
+                        i = iMid;
+                        break;
                     }
                 }else{
                     size_t nextPosition = this->positionForBreakpointAtIndex(iMid+1);
                     
                     if (selectedPosition <= pos && pos < nextPosition) {
-                        return (*this->breakpoints())[iMid]; // we are in the interval between two breakpoints!
+                        i = iMid;
+                        break; // we are in the interval between two breakpoints!
                     }else if (selectedPosition > pos){
                         iMax = iMid - 1;
                     }else{
                         iMin = iMid + 1;
                     }
                 }
+                i = iMin;
             }
             
-            return (*this->breakpoints())[iMin];
+            if (foundPosition) {
+                *foundPosition = i;
+            }
+            return (*this->breakpoints())[i];
+        }
+        
+        Breakpoint breakpointBeforePosition(size_t pos) const
+        {
+            return breakpointBeforePosition(pos, NULL);
         }
         
         virtual size_t mappedPosition(size_t index) const = 0;

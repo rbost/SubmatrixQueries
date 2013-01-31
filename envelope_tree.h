@@ -475,8 +475,8 @@ public:
     
     // This the query method: it returns the maximum of the submatrix of the Monge inverse matrix within the specified row and column ranges.
     // COMPLEXITY (expected): O(log(number_of_rows) * (log(number_of_rows) + log(number_of_cols)) )
-    // In the current state of the implementation, we have instead O(log(number_of_rows) * (number_of_rows + log(number_of_cols)) ) (see the WARNING)
-    T maxInRange(Range rowRange, Range colRanges) const
+    // In this slow implementation, we have instead O(log(number_of_rows) * (number_of_rows + log(number_of_cols)) ) (see the WARNING)
+    T maxInRangeSlow(Range rowRange, Range colRanges) const
     {
         vector<const ExtendedRowNode<T> *> rowNodes = _rowsTree->canonicalNodes(rowRange.min,rowRange.max);
         
@@ -495,7 +495,6 @@ public:
                     break;
                 }
             }
-            
             
             // first degenerated case: the range is after the last breakpoint
             if (i == numberOfBp) {
@@ -519,6 +518,8 @@ public:
                 // !!WARNING!!
                 // HERE, INSTEAD OF NAIVELY COMPUTING THE MAXIMUM BY SUCCESSIVELY QUERYING THE INTERVALS,
                 // WE SHOULD USE A RMQ DATA STRUCTURE TO REDUCE THE RUNNING TIME TO A LOG FACTOR (WE CAN EVEN HAVE O(1) TIME QUERY !)
+                //
+                // THIS IS DONE IN THE "QUICK" VERSION OF THE QUERY (SEE THE METHOD maxInRange )
                 for (i = i+1; i < numberOfBp; i++) {
                     // we are considering the interval between (*breakpoints)[i-1].col and (*breakpoints)[i].col-1
                     // we know that (*breakpoints)[i-1].col is in the column range so we only have to check for (*breakpoints)[i].col-1 
@@ -546,5 +547,65 @@ public:
         
         return max.value();
     }
+    
+    // This the query method: it returns the maximum of the submatrix of the Monge inverse matrix within the specified row and column ranges.
+    // COMPLEXITY: O(log(number_of_rows) * (log(number_of_rows) + log(number_of_cols)) )
+    T maxInRange(Range rowRange, Range colRanges) const
+    {
+        vector<const ExtendedRowNode<T> *> rowNodes = _rowsTree->canonicalNodes(rowRange.min,rowRange.max);
+        
+        MaxValue<T> max;
+        for (typename vector<const ExtendedRowNode<T> *>::iterator nodesIterator = rowNodes.begin(); nodesIterator != rowNodes.end(); ++nodesIterator) {
+            
+            
+            RowEnvelope<T> *envelope = (*nodesIterator)->envelope();
+            const vector< Breakpoint > *breakpoints = envelope->breakpoints();
+            
+            Breakpoint startBP, endBP;
+            size_t startBPIndex, endBPIndex;
+            
+            size_t numberOfBp = breakpoints->size();
+            
+            // we get the last breakpoint before colRanges.min and its index ...
+            startBP = envelope->breakpointBeforePosition(colRanges.min, &startBPIndex);
+            // ... and the last breakpoint before colRanges.max and its index
+            endBP = envelope->breakpointBeforePosition(colRanges.max, &endBPIndex);
+            
+            // first degenerated case: the range is after the last breakpoint
+            if (startBPIndex == numberOfBp-1) {
+                size_t row = startBP.row;
+                max.updateMax( _columnTree->maxForRowInRange(row,colRanges.min,colRanges.max));
+                continue;
+            }
+            
+            // at this point, we have the prefix: it is the interval [colRanges.min,(*breakpoints)[startBPIndex+1].col-1]
+            // we first have to check if it is empty or not ...
+            if ((*breakpoints)[startBPIndex+1].col > colRanges.min) {
+                // it is not empty, go on ...
+                size_t row = (*breakpoints)[startBPIndex].row;
+                max.updateMax(_columnTree->maxForRowInRange(row,colRanges.min, (*breakpoints)[startBPIndex+1].col-1));
+            }
+            
+            // now, we check for the fully contained intervals
+            // in the case we still have some breakpoints to explore ...
+            
+            if (endBPIndex - startBPIndex > 1) { // to have at least one interval, we need at least two breakpoints ...
+                // the range of the set of intervals is then [(*breakpoints)[startBPIndex+1].col,(*breakpoints)[endBPIndex].col-1]
+                const BasicRQNode<T> *rangeMaxima = (*nodesIterator)->rangeMaxima();
+                max.updateMax(rangeMaxima->query((*breakpoints)[startBPIndex+1].col,endBP.col-1));
+            }
+            
+            // check for the rest of the range
+            // the remaining of the interval is between the last breakpoint column and the column range maximum :
+            // the suffix is of range [(*breakpoints)[i-1].col,colRanges.max]
+            // ( even if there are two ways to exit the loop, in the end we have to do the same processing for the remaining )
+            
+            size_t row = endBP.row;
+            max.updateMax(_columnTree->maxForRowInRange(row,endBP.col,colRanges.max));
+        }
+        
+        return max.value();
+    }
+
 };
 #endif /* defined(__KMNS__enveloppe_tree__) */
