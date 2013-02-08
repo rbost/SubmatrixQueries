@@ -11,6 +11,7 @@
 #include "matrix.h"
 #include "envelope.h"
 #include "envelope_tree.h"
+#include "tests.h"
 
 using namespace std;
 using namespace matrix;
@@ -206,6 +207,30 @@ void  testSubmatrixQueries()
 
 }
 
+void testTest()
+{
+    valarray<double> foo (35);
+    foo[0] =  23;    foo[1] = 28;    foo[2] = 13;    foo[3] = 17;    foo[4] = 10;
+    foo[5] =  23;    foo[6] = 29;    foo[7] = 16;    foo[8] = 22;    foo[9] = 17;
+    foo[10] = 24;   foo[11] = 34;   foo[12] = 22;   foo[13] = 28;   foo[14] = 24;
+    foo[15] = 7;    foo[16] = 17;   foo[17] = 6;    foo[18] = 13;   foo[19] = 11;
+    foo[20] = 23;   foo[21] = 37;   foo[22] = 32;   foo[23] = 44;   foo[24] = 45;
+    foo[25] = 6;    foo[26] = 21;   foo[27] = 19;   foo[28] = 33;   foo[29] = 36;
+    foo[30] = 34;   foo[31] = 53;   foo[32] = 51;   foo[33] = 66;   foo[34] = 75;
+    
+    Matrix<double> m = Matrix<double>(7,5,foo);
+
+//    SubmatrixQueriesTest test = SubmatrixQueriesTest(&m);
+    SubmatrixQueriesTest test = SubmatrixQueriesTest(10, 10);
+    
+    if (test.multipleColumnQueryTest(10)) {
+        cout << "Column query test passed" << endl;
+    }
+
+    if (test.multipleSubmatrixQueryTest(10)) {
+        cout << "Submatrix query test passed" << endl;
+    }
+}
 
 int main(int argc, const char * argv[])
 {
@@ -214,7 +239,9 @@ int main(int argc, const char * argv[])
 //    testEnvelope();
 //    testRowTree();
 //    testColTree();
-    testSubmatrixQueries();
+//    testSubmatrixQueries();
+    
+    testTest();
     
     return 0;
 }
