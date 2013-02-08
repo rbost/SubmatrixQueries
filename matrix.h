@@ -27,6 +27,7 @@ namespace matrix {
     public:
         Matrix(size_t rows, size_t cols);
         Matrix(size_t rows, size_t cols, std::valarray<T> data);
+        Matrix(Matrix<T> *m);
         
         size_t rows() const;
         size_t cols() const;
@@ -73,6 +74,10 @@ namespace matrix {
         assert(cols > 0);
     }
 
+    template <typename T> Matrix<T>::Matrix(Matrix<T> *m) : _rows(m->rows()), _cols(m->cols()), _data(m->_data)
+    {
+        
+    }
     // Accessors
     
     template <typename T> size_t Matrix<T>::rows() const{
