@@ -468,6 +468,16 @@ public:
         delete _columnTree;
     }
     
+    const ExtendedRowNode<T>* rowsTree() const
+    {
+        return _rowsTree;
+    }
+    
+    const ColNode<T>* columnTree() const
+    {
+        return _columnTree;
+    }
+    
     T maxInRange(size_t minRow, size_t maxRow, size_t minCol, size_t maxCol) const
     {
         return maxInRange(Range(minRow,maxRow), Range(minCol,maxCol));
