@@ -573,21 +573,20 @@ public:
             
             Breakpoint startBP, endBP;
             size_t startBPIndex, endBPIndex;
-            
-            size_t numberOfBp = breakpoints->size();
-            
+                        
             // we get the last breakpoint before colRanges.min and its index ...
             startBP = envelope->breakpointBeforePosition(colRanges.min, &startBPIndex);
             // ... and the last breakpoint before colRanges.max and its index
             endBP = envelope->breakpointBeforePosition(colRanges.max, &endBPIndex);
             
-            // first degenerated case: the range is after the last breakpoint
-            if (startBPIndex == numberOfBp-1) {
+            // if the range between does not contain any interval, the returned breakpoints will be the sames
+            // as a consequence, we have to check for that case to avoid undefined behavior
+            if (endBPIndex == startBPIndex) {
                 size_t row = startBP.row;
                 max.updateMax( _columnTree->maxForRowInRange(row,colRanges.min,colRanges.max));
                 continue;
             }
-            
+
             // at this point, we have the prefix: it is the interval [colRanges.min,(*breakpoints)[startBPIndex+1].col-1]
             // we first have to check if it is empty or not ...
             if ((*breakpoints)[startBPIndex+1].col > colRanges.min) {
