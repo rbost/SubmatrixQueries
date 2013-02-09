@@ -38,13 +38,17 @@ public:
     
     bool testColumnQuery(Range rowRange, size_t col);
     bool testColumnQuery();
+    bool testRowQuery(Range colRange, size_t row);
+    bool testRowQuery();
     bool testSubmatrixQuery(Range rowRange, Range colRange);
     bool testSubmatrixQuery();
     
     bool multipleColumnQueryTest(size_t n);
+    bool multipleRowQueryTest(size_t n);
     bool multipleSubmatrixQueryTest(size_t n);
     
     static double naiveMaximumInColumn(const Matrix<double> *m, Range rowRange, size_t col);
+    static double naiveMaximumInRow(const Matrix<double> *m, Range colRange, size_t row);
     static double naiveMaximumInSubmatrix(const Matrix<double> *m, Range rowRange, Range colRange);
     
     static Matrix<double>* generateInverseMongeMatrix(size_t rows, size_t cols);

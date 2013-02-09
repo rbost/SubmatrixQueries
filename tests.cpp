@@ -23,6 +23,13 @@ SubmatrixQueriesTest::SubmatrixQueriesTest(size_t rows, size_t cols)
 {
     _testMatrix = generateInverseMongeMatrix(rows, cols);
     _queryDS = new SubmatrixQueriesDataStructure<double>(*_testMatrix);
+    
+    for (size_t i = 0; i < rows; i++) {
+        for (size_t j = 0; j < cols; j++) {
+            cout << (*_testMatrix)(i,j) << " | \t ";
+        }
+        cout << endl;
+    }
 }
 
 SubmatrixQueriesTest::~SubmatrixQueriesTest()
@@ -54,6 +61,29 @@ bool SubmatrixQueriesTest::testColumnQuery()
     return testColumnQuery(r, col);
 }
 
+bool SubmatrixQueriesTest::testRowQuery(Range colRange, size_t row)
+{
+    double naiveMax, queryMax;
+    
+    queryMax = _queryDS->columnTree()->maxForRowInRange(row, colRange.min, colRange.max);
+    naiveMax = SubmatrixQueriesTest::naiveMaximumInRow(_testMatrix, colRange, row);
+    
+    return queryMax == naiveMax;
+}
+
+bool SubmatrixQueriesTest::testRowQuery()
+{
+    size_t row = rand() % (_testMatrix->rows());
+    
+    size_t c1,c2;
+    c1 = rand() % (_testMatrix->cols());
+    c2 = rand() % (_testMatrix->cols());
+    
+    Range c = Range(min(c1,c2),max(c1,c2));
+    
+    return testRowQuery(c, row);
+}
+
 bool SubmatrixQueriesTest::testSubmatrixQuery(Range rowRange, Range colRange)
 {
     double naiveMax, queryMax;
@@ -62,6 +92,8 @@ bool SubmatrixQueriesTest::testSubmatrixQuery(Range rowRange, Range colRange)
     naiveMax = SubmatrixQueriesTest::naiveMaximumInSubmatrix(_testMatrix, rowRange, colRange);
     
     if (queryMax != naiveMax) {
+        cout << "query ranges : row = (" << rowRange.min <<","<<rowRange.max<<")";
+        cout << " col = (" << colRange.min <<","<<colRange.max<<")"<<endl;
         cout << "queryMax: " << queryMax;
         cout << " ; naiveMax: " << naiveMax << endl;
         
@@ -96,6 +128,16 @@ bool SubmatrixQueriesTest::multipleColumnQueryTest(size_t n)
     return result;
 }
 
+bool SubmatrixQueriesTest::multipleRowQueryTest(size_t n)
+{
+    bool result = true;
+    
+    for (size_t i = 0; i < n && result; i++) {
+        result = result && testRowQuery();
+    }
+    return result;
+}
+
 bool SubmatrixQueriesTest::multipleSubmatrixQueryTest(size_t n)
 {
     bool result = true;
@@ -113,6 +155,17 @@ double SubmatrixQueriesTest::naiveMaximumInColumn(const Matrix<double> *m, Range
     
     for (size_t i = rowRange.min; i <= rowRange.max; i++) {
         max.updateMax((*m)(i,col));
+    }
+    
+    return max.value();
+}
+
+double SubmatrixQueriesTest::naiveMaximumInRow(const Matrix<double> *m, Range colRange, size_t row)
+{
+    MaxValue<double> max = MaxValue<double>();
+    
+    for (size_t j = colRange.min; j <= colRange.max; j++) {
+        max.updateMax((*m)(row,j));
     }
     
     return max.value();
