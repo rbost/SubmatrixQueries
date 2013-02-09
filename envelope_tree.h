@@ -384,7 +384,7 @@ public:
         
         // Do not forget the last interval!
         minCol = (*breakpoints)[i].col;
-        maxCol = this->envelope()->maxPosition()-1;
+        maxCol = this->envelope()->maxPosition();
         row = (*breakpoints)[i].row;
         (*_maxima)[i] = flippedTree->maxForRowInRange(row,minCol,maxCol);
         
