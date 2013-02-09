@@ -10,26 +10,48 @@
 
 #include <cstdlib>
 #include <cassert>
+#include <ctime>
+
+#define PRINT_TEST_MATRIX false
+#define BENCHMARK true
+
 SubmatrixQueriesTest::SubmatrixQueriesTest(Matrix<double> *m)
 {
     assert(m->isInverseMonge());
     // copy the matrix
     _testMatrix = new Matrix<double>(m);
     
+#if BENCHMARK
+    clock_t time = clock();
+#endif
     _queryDS = new SubmatrixQueriesDataStructure<double>(*_testMatrix);
+#if BENCHMARK
+    time = clock() - time;
+    cout << "Building Data Structure: " << 1000*((double)time)/CLOCKS_PER_SEC << " ms" << endl;
+#endif
 }
 
 SubmatrixQueriesTest::SubmatrixQueriesTest(size_t rows, size_t cols)
 {
     _testMatrix = generateInverseMongeMatrix(rows, cols);
+
+#if BENCHMARK
+    clock_t time = clock();
+#endif
     _queryDS = new SubmatrixQueriesDataStructure<double>(*_testMatrix);
+#if BENCHMARK
+    time = clock() - time;
+    cout << "Building Data Structure: " << 1000*((double)time)/CLOCKS_PER_SEC << " ms" << endl;
+#endif
     
+#if PRINT_TEST_MATRIX
     for (size_t i = 0; i < rows; i++) {
         for (size_t j = 0; j < cols; j++) {
             cout << (*_testMatrix)(i,j) << " | \t ";
         }
         cout << endl;
     }
+#endif
 }
 
 SubmatrixQueriesTest::~SubmatrixQueriesTest()
@@ -84,12 +106,24 @@ bool SubmatrixQueriesTest::testRowQuery()
     return testRowQuery(c, row);
 }
 
-bool SubmatrixQueriesTest::testSubmatrixQuery(Range rowRange, Range colRange)
+bool SubmatrixQueriesTest::testSubmatrixQuery(Range rowRange, Range colRange, clock_t *naiveTime, clock_t *queryTime)
 {
     double naiveMax, queryMax;
     
+    clock_t clock1, clock2, clock3;
+    
+    clock1 = clock();
     queryMax = _queryDS->maxInRange(rowRange,colRange);
+    clock2 = clock();
     naiveMax = SubmatrixQueriesTest::naiveMaximumInSubmatrix(_testMatrix, rowRange, colRange);
+    clock3 = clock();
+    
+    if (naiveTime) {
+        *naiveTime += clock3 - clock2;
+    }
+    if (queryTime) {
+        *queryTime += clock2 - clock1;
+    }
     
     if (queryMax != naiveMax) {
         cout << "query ranges : row = (" << rowRange.min <<","<<rowRange.max<<")";
@@ -101,7 +135,7 @@ bool SubmatrixQueriesTest::testSubmatrixQuery(Range rowRange, Range colRange)
     return queryMax == naiveMax;    
 }
 
-bool SubmatrixQueriesTest::testSubmatrixQuery()
+bool SubmatrixQueriesTest::testSubmatrixQuery(clock_t *naiveTime, clock_t *queryTime)
 {
     size_t r1, r2;
     r1 = rand() % (_testMatrix->rows());
@@ -115,7 +149,7 @@ bool SubmatrixQueriesTest::testSubmatrixQuery()
     Range r = Range(min(r1,r2),max(r1,r2));
     Range c = Range(min(c1,c2),max(c1,c2));
     
-    return testSubmatrixQuery(r, c);
+    return testSubmatrixQuery(r, c, naiveTime, queryTime);
 }
 
 bool SubmatrixQueriesTest::multipleColumnQueryTest(size_t n)
@@ -141,11 +175,18 @@ bool SubmatrixQueriesTest::multipleRowQueryTest(size_t n)
 bool SubmatrixQueriesTest::multipleSubmatrixQueryTest(size_t n)
 {
     bool result = true;
+    clock_t naiveTime = 0, queryTime = 0;
     
     for (size_t i = 0; i < n && result; i++) {
-        result = result && testSubmatrixQuery();
+        result = result && testSubmatrixQuery(&naiveTime, &queryTime);
     }
-    return result;    
+    
+#if BENCHMARK
+    cout << "Benchmark for " << n << " queries:" <<endl;
+    cout << "Naive algorithm: " << 1000*((double)naiveTime)/CLOCKS_PER_SEC << " ms" << endl;
+    cout << "Submatrix queries: " << 1000*((double)queryTime)/CLOCKS_PER_SEC << " ms" << endl;
+#endif
+    return result;
 }
 
 

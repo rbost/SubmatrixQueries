@@ -180,16 +180,26 @@ void testMonge()
 void  testSubmatrixQueries()
 {
     cout << "Test Submatrix Queries" << endl;
-    valarray<int> foo (35);
-    foo[0] =  23;    foo[1] = 28;    foo[2] = 13;    foo[3] = 17;    foo[4] = 10;
-    foo[5] =  23;    foo[6] = 29;    foo[7] = 16;    foo[8] = 22;    foo[9] = 17;
-    foo[10] = 24;   foo[11] = 34;   foo[12] = 22;   foo[13] = 28;   foo[14] = 24;
-    foo[15] = 7;    foo[16] = 17;   foo[17] = 6;    foo[18] = 13;   foo[19] = 11;
-    foo[20] = 23;   foo[21] = 37;   foo[22] = 32;   foo[23] = 44;   foo[24] = 45;
-    foo[25] = 6;    foo[26] = 21;   foo[27] = 19;   foo[28] = 33;   foo[29] = 36;
-    foo[30] = 34;   foo[31] = 53;   foo[32] = 51;   foo[33] = 66;   foo[34] = 75;
+    valarray<int> foo (25);
+//    foo[0] =  23;    foo[1] = 28;    foo[2] = 13;    foo[3] = 17;    foo[4] = 10;
+//    foo[5] =  23;    foo[6] = 29;    foo[7] = 16;    foo[8] = 22;    foo[9] = 17;
+//    foo[10] = 24;   foo[11] = 34;   foo[12] = 22;   foo[13] = 28;   foo[14] = 24;
+//    foo[15] = 7;    foo[16] = 17;   foo[17] = 6;    foo[18] = 13;   foo[19] = 11;
+//    foo[20] = 23;   foo[21] = 37;   foo[22] = 32;   foo[23] = 44;   foo[24] = 45;
+//    foo[25] = 6;    foo[26] = 21;   foo[27] = 19;   foo[28] = 33;   foo[29] = 36;
+//    foo[30] = 34;   foo[31] = 53;   foo[32] = 51;   foo[33] = 66;   foo[34] = 75;
     
-    Matrix<int> m = Matrix<int>(7,5,foo);
+    
+    
+    foo[0] = 16054;     foo[1] = 11809; foo[2] = 7292;  foo[3] = 6225;  foo[4] = 1517;
+    foo[5] = 14438;     foo[6] = 10193; foo[7] = 5676;  foo[8] = 4609;  foo[9] = 99;
+    foo[10] = 11197;    foo[11] = 6952; foo[12] = 2435; foo[13] = 1368; foo[14] = 3340;
+    foo[15] = 9786;     foo[16] = 5541; foo[17] = 1024; foo[18] = 43;   foo[19] = 4751;
+    foo[20] = 9085; 	foo[21] = 4840; foo[22] = 323;  foo[23] = 744;  foo[24] = 5452;
+    
+    
+    
+    Matrix<int> m = Matrix<int>(5,5,foo);
     
     if (m.isMonge()) {
         cout << "Is Monge" << endl;
@@ -201,7 +211,7 @@ void  testSubmatrixQueries()
     
     SubmatrixQueriesDataStructure<int> structure = SubmatrixQueriesDataStructure<int>(m);
     
-    int max = structure.maxInRange(3,5,0,2);
+    int max = structure.maxInRange(0,4,1,3);
     
     cout << "max: " << max << endl;
 
@@ -209,26 +219,29 @@ void  testSubmatrixQueries()
 
 void testTest()
 {
-    valarray<double> foo (35);
-    foo[0] =  23;    foo[1] = 28;    foo[2] = 13;    foo[3] = 17;    foo[4] = 10;
-    foo[5] =  23;    foo[6] = 29;    foo[7] = 16;    foo[8] = 22;    foo[9] = 17;
-    foo[10] = 24;   foo[11] = 34;   foo[12] = 22;   foo[13] = 28;   foo[14] = 24;
-    foo[15] = 7;    foo[16] = 17;   foo[17] = 6;    foo[18] = 13;   foo[19] = 11;
-    foo[20] = 23;   foo[21] = 37;   foo[22] = 32;   foo[23] = 44;   foo[24] = 45;
-    foo[25] = 6;    foo[26] = 21;   foo[27] = 19;   foo[28] = 33;   foo[29] = 36;
-    foo[30] = 34;   foo[31] = 53;   foo[32] = 51;   foo[33] = 66;   foo[34] = 75;
+    size_t nRows, nCols;
     
-    Matrix<double> m = Matrix<double>(7,5,foo);
-
-//    SubmatrixQueriesTest test = SubmatrixQueriesTest(&m);
-    SubmatrixQueriesTest test = SubmatrixQueriesTest(10, 10);
+    nRows = 1000;
+    nCols = 5000;
     
-    if (test.multipleColumnQueryTest(10)) {
-        cout << "Column query test passed" << endl;
-    }
-
-    if (test.multipleSubmatrixQueryTest(10)) {
+    cout << "Test for " << nRows << " rows and " << nCols << " columns" << endl;
+    
+    SubmatrixQueriesTest test = SubmatrixQueriesTest(nRows, nCols);
+    
+//    if (test.multipleColumnQueryTest(10)) {
+//        cout << "Column query test passed" << endl;
+//    }
+//    
+//    if (test.multipleRowQueryTest(10)) {
+//        cout << "Row query test passed" << endl;
+//    }
+//
+    
+    cout << endl << "Beginning tests ..." << endl;
+    if (test.multipleSubmatrixQueryTest(1000)) {
         cout << "Submatrix query test passed" << endl;
+    }else{
+        cout << "Tests failed" << endl;
     }
 }
 

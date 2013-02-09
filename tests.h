@@ -40,8 +40,8 @@ public:
     bool testColumnQuery();
     bool testRowQuery(Range colRange, size_t row);
     bool testRowQuery();
-    bool testSubmatrixQuery(Range rowRange, Range colRange);
-    bool testSubmatrixQuery();
+    bool testSubmatrixQuery(Range rowRange, Range colRange, clock_t *naiveTime, clock_t *queryTime);
+    bool testSubmatrixQuery(clock_t *naiveTime, clock_t *queryTime);
     
     bool multipleColumnQueryTest(size_t n);
     bool multipleRowQueryTest(size_t n);
