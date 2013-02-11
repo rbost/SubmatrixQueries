@@ -33,11 +33,16 @@ SubmatrixQueriesTest::SubmatrixQueriesTest(Matrix<double> *m)
 
 SubmatrixQueriesTest::SubmatrixQueriesTest(size_t rows, size_t cols)
 {
-    _testMatrix = generateInverseMongeMatrix(rows, cols);
-
 #if BENCHMARK
     clock_t time = clock();
 #endif
+    _testMatrix = generateInverseMongeMatrix(rows, cols);
+#if BENCHMARK
+    time = clock() - time;
+    cout << "Building Matrix: " << 1000*((double)time)/CLOCKS_PER_SEC << " ms" << endl;
+    time = clock();
+#endif
+    
     _queryDS = new SubmatrixQueriesDataStructure<double>(*_testMatrix);
 #if BENCHMARK
     time = clock() - time;

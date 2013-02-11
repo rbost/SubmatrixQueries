@@ -221,7 +221,7 @@ void testTest()
 {
     size_t nRows, nCols;
     
-    nRows = 1000;
+    nRows = 5000;
     nCols = 5000;
     
     cout << "Test for " << nRows << " rows and " << nCols << " columns" << endl;
