@@ -317,6 +317,7 @@ public:
 template <typename T>
 class ExtendedRowNode : public RowNode<T> {
     vector< T > *_maxima; // the _maxima vector stores the maxima of breakpoints intervals
+    size_t _crossingBpIndex; // the index of the breakpoint inserted when merging the children envelopes
     BasicRQNode< T > *_rangeMaxima;
     
 public:
@@ -326,7 +327,7 @@ public:
             size_t midRow = minRow + ((maxRow - minRow)/2);
             this->setLowIndicesNode(new ExtendedRowNode<T>(minRow,midRow,matrix));
             this->setHighIndicesNode(new ExtendedRowNode<T>(midRow+1,maxRow,matrix));
-            this->setEnvelope(mergeRowEnvelopes(this->lowIndicesNode()->envelope(), this->highIndicesNode()->envelope()));
+            this->setEnvelope(mergeRowEnvelopes(this->lowIndicesNode()->envelope(), this->highIndicesNode()->envelope(),&_crossingBpIndex));
         }
     }
     
@@ -338,7 +339,7 @@ public:
         
         this->setLowIndicesNode(new ExtendedRowNode<T>(minRow,midRow,matrix));
         this->setHighIndicesNode(new ExtendedRowNode<T>(midRow+1,maxRow,matrix));
-        this->setEnvelope(mergeRowEnvelopes(this->lowIndicesNode()->envelope(), this->highIndicesNode()->envelope()));
+        this->setEnvelope(mergeRowEnvelopes(this->lowIndicesNode()->envelope(), this->highIndicesNode()->envelope(),&_crossingBpIndex));
     }
     
     ~ExtendedRowNode<T>()
@@ -350,6 +351,8 @@ public:
     virtual ExtendedRowNode<T>* lowIndicesNode() const { return (ExtendedRowNode<T>*) RowNode<T>::lowIndicesNode(); }
     virtual ExtendedRowNode<T>* highIndicesNode() const { return (ExtendedRowNode<T>*) RowNode<T>::highIndicesNode(); }
 
+    size_t crossingBreakpointIndex() const { return _crossingBpIndex; }
+    
     const vector< T > *maxima() const
     {
         return _maxima;
@@ -406,6 +409,79 @@ public:
             this->highIndicesNode()->computeIntervalMaxima(flippedTree);
         }
     }
+    void recursivelyComputeIntervalMaxima_fast(const ColNode<T> *flippedTree)
+    {
+        if (this->isLeaf()) {
+            // if we are at a leaf, we only have one breakpoint and it is easy to compute the maximum
+            size_t minCol = 0, maxCol = this->envelope()->maxPosition();
+            size_t row;
+            
+            row = (*this->envelope()->breakpoints())[0].row;
+            T max = flippedTree->maxForRowInRange(row,minCol, maxCol);
+            _rangeMaxima = new BasicRQNode<T>(max,&std::max<T>);
+            _maxima = new vector<T>(1,max);
+        }else{
+            this->lowIndicesNode()->recursivelyComputeIntervalMaxima_fast(flippedTree);
+            this->highIndicesNode()->recursivelyComputeIntervalMaxima_fast(flippedTree);
+            
+            if (this->crossingBreakpointIndex() == -1) {
+                
+                // only the envelope of the highIndicesNode has been kept when merging
+                // we copy the RMQ DS of this node
+                _rangeMaxima = new BasicRQNode<T>(*this->highIndicesNode()->rangeMaxima());
+                // and the maxima vector
+                _maxima = new vector<T>(*this->highIndicesNode()->maxima());
+                
+            }else if (this->crossingBreakpointIndex() == this->lowIndicesNode()->envelope()->numberOfBreakpoints()){
+                
+                // only the envelope of the lowIndicesNode has been kept when merging
+                // we copy the RMQ DS of this node
+                _rangeMaxima = new BasicRQNode<T>(*this->lowIndicesNode()->rangeMaxima());
+                _maxima = new vector<T>(*this->lowIndicesNode()->maxima());
+                
+            }else{
+                
+                const vector< Breakpoint > *breakpoints = this->envelope()->breakpoints();
+                size_t n = breakpoints->size();
+                
+                _maxima = new vector< T >(n); // create a new vector of the same size than the breakpoints one
+                
+                // for the first breakpoints, just copy the maxima table from the lowIndicesNode
+                for (size_t i = 0; i < _crossingBpIndex - 1; i++) {
+                    _maxima[i] = (this->lowIndicesNode()->maxima())[i];
+                }
+                
+                // for the intervals on both sides of the crossing breakpoint, we have to recompute the maximum using the flipped tree
+                size_t minCol, maxCol;
+                size_t row;
+
+                // on the left side
+                minCol = (*breakpoints)[_crossingBpIndex - 1].col; // ... get the interval first index ...
+                maxCol = (*breakpoints)[_crossingBpIndex].col-1; // ... its last index ...
+                row = (*breakpoints)[_crossingBpIndex - 1].row; // ... and the corresponding row ...
+
+                (*_maxima)[_crossingBpIndex - 1] = flippedTree->maxForRowInRange(row,minCol,maxCol);
+
+                // and on the right side 
+                minCol = (*breakpoints)[_crossingBpIndex].col; // ... get the interval first index ...
+                maxCol = (*breakpoints)[_crossingBpIndex+1].col-1; // ... its last index ...
+                row = (*breakpoints)[_crossingBpIndex].row; // ... and the corresponding row ...
+                
+                (*_maxima)[_crossingBpIndex] = flippedTree->maxForRowInRange(row,minCol,maxCol);
+                
+                // for the last part of the breakpoints, we again have to copy the maxima table for the highIndicesNode
+                // to avoid computing the beginning index of the copy in the child max table, we do the copy backward
+                size_t m = this->highIndicesNode()->envelope()->numberOfBreakpoints();
+                
+                for (size_t i = 1; n-i > _crossingBpIndex; i++) {
+                    _maxima[n-i] = (this->highIndicesNode()->maxima())[m-i];
+                }
+
+                // and we end by creating the RMQ data structure
+                _rangeMaxima = new BasicRQNode<T>(_maxima,0,_maxima->size()-1,&std::max<T>);
+            }
+        } //endif (this->isLeaf())
+    }
     
     // We override this to avoid compile-time errors (thank you C++) 
     vector<const ExtendedRowNode<T> *> canonicalNodes(size_t minRow, size_t maxRow) const
@@ -459,6 +535,7 @@ public:
         _rowsTree = new ExtendedRowNode<T>(matrix);
         _columnTree = new ColNode<T>(matrix);
         
+//        _rowsTree->recursivelyComputeIntervalMaxima_fast(_columnTree);
         _rowsTree->recursivelyComputeIntervalMaxima(_columnTree);
     }
     

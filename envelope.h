@@ -327,11 +327,15 @@ namespace envelope {
     }
 
     // we suppose that the envelope e1 is the envelope for lower indices than e2
+    // if a valid pointer crossingBpIndex is provided. In the new enveloppe, every breakpoint whose index is strictly less than crossingBpIndex
+    // comes from e1, and if striclty more than crossingBpIndex comes from e2. If the returned envelope is not a "merge" of e1 and e2,
+    // crossingBpIndex is set to -1 if a copy of e2 is returned, and is set to number_of_breakpoints of e1 if a copy of e1 is returned. 
+    
     // COMPLEXITY: O( log(number_of_breakpoints) * log(number_of_columns) + number_of_breakpoints)
     
     // WARNING: THIS RETURNS A NEWLY ALLOCATED ENVELOPE. IT MEANS YOU ARE RESPONSIBLE FOR DESTROYING IT WHEN YOU ARE DONE WITH IT!
     
-    template <typename T> RowEnvelope<T> * mergeRowEnvelopes(RowEnvelope<T> * e1, RowEnvelope<T> * e2) {
+    template <typename T> RowEnvelope<T> * mergeRowEnvelopes(RowEnvelope<T> * e1, RowEnvelope<T> * e2, size_t *crossingBpIndex) {
         // We begin to check if we really need to merge the envelopes.
         T firstValue1 = (e1->values())((e1->breakpoints())->front().row,0);
         T firstValue2 = (e2->values())((e2->breakpoints())->front().row,0);
@@ -346,9 +350,15 @@ namespace envelope {
             // The pseudo lines corresponding to the envelopes are not crossing, so we have to return the "upper" one.
             if (firstValue1 > firstValue2 || lastValue1 >= lastValue2) {
                 // e1 is "over" e2
+                if (crossingBpIndex) {
+                    *crossingBpIndex = e1->breakpoints()->size();
+                }
                 return new RowEnvelope<T>(e1->values(), new vector<Breakpoint>(*e1->breakpoints()));
             }else{
                 // e2 is "over" e1
+                if (crossingBpIndex) {
+                    *crossingBpIndex =-1;
+                }
                 return new RowEnvelope<T>(e2->values(), new vector<Breakpoint>(*e2->breakpoints()));
             }
         }
@@ -370,6 +380,11 @@ namespace envelope {
         // add the new breakpoint
         newBpList->push_back(newBreakpoint);
         
+        // save the position of the crossing breakpoint in the new enveloppe
+        if (crossingBpIndex) {
+            *crossingBpIndex = i;
+        }
+        
         // and copy the breakpoint of the second envelope
         // To improve performances, here, we just just jump to the first breakpoint to insert using a
         // logarithmic complexity method instead of just going through all the useless breakpoints.
@@ -386,7 +401,12 @@ namespace envelope {
         return new RowEnvelope<T>(e1->values(), newBpList);
     }
     
-    template <typename T> ColumnEnvelope<T> * mergeColumnEnvelopes(ColumnEnvelope<T> * e1, ColumnEnvelope<T> * e2) {
+    template <typename T> RowEnvelope<T> * mergeRowEnvelopes(RowEnvelope<T> * e1, RowEnvelope<T> * e2)
+    {
+        return mergeRowEnvelopes(e1,e2,NULL);
+    }
+    
+    template <typename T> ColumnEnvelope<T> * mergeColumnEnvelopes(ColumnEnvelope<T> * e1, ColumnEnvelope<T> * e2, size_t *crossingBpIndex) {
         
         const vector<Breakpoint> *breakpoints1 = e1->breakpoints();
         const vector<Breakpoint> *breakpoints2 = e2->breakpoints();
@@ -405,9 +425,15 @@ namespace envelope {
             // The pseudo lines corresponding to the envelopes are not crossing, so we have to return the "upper" one.
             if (firstValue1 > firstValue2 || lastValue1 >= lastValue2) {
                 // e1 is "over" e2
+                if (crossingBpIndex) {
+                    *crossingBpIndex = e1->breakpoints()->size();
+                }
                 return new ColumnEnvelope<T>(e1->values(), new vector<Breakpoint>(*breakpoints1));
             }else{
                 // e2 is "over" e1
+                if (crossingBpIndex) {
+                    *crossingBpIndex = -1;
+                }
                 return new ColumnEnvelope<T>(e2->values(), new vector<Breakpoint>(*breakpoints2));
             }
         }
@@ -425,7 +451,11 @@ namespace envelope {
         }
         
         newBpList->push_back(newBreakpoint);
-        
+        // save the position of the crossing breakpoint in the new enveloppe
+        if (crossingBpIndex) {
+            *crossingBpIndex = i;
+        }
+
         // To improve performances, here, we just just jump to the first breakpoint to insert using a
         // logarithmic complexity method instead of just going through all the useless breakpoints.
         size_t beginningIndex;
@@ -439,6 +469,11 @@ namespace envelope {
         
         // ... in order to create a new one
         return new ColumnEnvelope<T>(e1->values(), newBpList);
+    }
+    
+    template <typename T> ColumnEnvelope<T> * mergeColumnEnvelopes(ColumnEnvelope<T> * e1, ColumnEnvelope<T> * e2)
+    {
+        return mergeColumnEnvelopes(e1,e2,NULL);
     }
 
 }

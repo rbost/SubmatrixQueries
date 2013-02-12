@@ -238,7 +238,7 @@ void testTest()
 //
     
     cout << endl << "Beginning tests ..." << endl;
-    if (test.multipleSubmatrixQueryTest(1000)) {
+    if (test.multipleSubmatrixQueryTest(10)) {
         cout << "Submatrix query test passed" << endl;
     }else{
         cout << "Tests failed" << endl;

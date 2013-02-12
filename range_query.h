@@ -15,6 +15,7 @@
 #include <cassert>
 #include <algorithm>
 
+
 template <typename T>
 class BasicRQNode {
     T _value;
@@ -24,8 +25,9 @@ class BasicRQNode {
     const BasicRQNode<T> *_highIndicesNode;
     const BasicRQNode<T> *_lowIndicesNode;
     
-    const T& (*_compare)(T const&, T const&);
-
+    typedef const T& (*compareFunctionPtr)(T const&, T const&);
+    compareFunctionPtr _compare;
+    
 public:
     
     T value() const { return _value; }
@@ -34,7 +36,8 @@ public:
     bool isLeaf() const { return _isLeaf; }
     const BasicRQNode<T> *highIndicesNode() const { return _highIndicesNode; }
     const BasicRQNode<T> *lowIndicesNode() const { return _lowIndicesNode; }
-  
+    compareFunctionPtr compareFunction() const { return _compare; }
+    
     BasicRQNode(const std::vector<T> *values, size_t minIndex, size_t maxIndex, const T& (*compareFunc)(T const&, T const&) ) :
         _minIndex(minIndex),_maxIndex(maxIndex),_compare(compareFunc)
     {
@@ -73,6 +76,16 @@ public:
         }
     }
     
+    BasicRQNode(T val,const T& (*compareFunc)(T const&, T const&)) : _minIndex(0), _maxIndex(0), _isLeaf(true), _value(val),_compare(compareFunc)
+    {}
+    
+    BasicRQNode(BasicRQNode<T> *nodePtr) : _minIndex(nodePtr->minIndex()), _maxIndex(nodePtr->maxIndex()), _isLeaf(nodePtr->isLeaf()), _value(nodePtr->value()), _compare(nodePtr->compareFunction())
+    {
+        if (!this->isLeaf()) {
+            _lowIndicesNode = new BasicRQNode<T>(nodePtr->lowIndicesNode());
+            _highIndicesNode = new BasicRQNode<T>(nodePtr->highIndicesNode());
+        }
+    }
     ~BasicRQNode()
     {
         if (_isLeaf) {
