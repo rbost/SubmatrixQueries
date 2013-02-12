@@ -11,6 +11,8 @@
 #include <cstdlib>
 #include <cassert>
 #include <ctime>
+#include <algorithm>
+#include <climits>
 
 #define PRINT_TEST_MATRIX false
 #define BENCHMARK true
@@ -243,8 +245,8 @@ Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrix(size_t rows, si
     
     // we define these values to avoid overflows that will lead to a non inverse Monge matrix 
     int max_abscissa = (int)sqrtf(INT_MAX/3) - LINE_DISTANCE;
-    int rowInterval = max_abscissa/rows;
-    int colInterval = max_abscissa/cols;
+    int rowInterval = max<int>(max_abscissa/rows,1);
+    int colInterval = max<int>(max_abscissa/cols,1);
     
     assert(rowInterval > 0);
     assert(colInterval > 0);
