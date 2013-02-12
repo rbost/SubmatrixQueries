@@ -290,6 +290,7 @@ public:
     }
     
     T maxForRowInRange(size_t row, size_t minCol, size_t maxCol) const{
+        assert(minCol <= maxCol);
         std::vector<const ColNode<T> *> cNodes = canonicalNodes(minCol,maxCol);
         
         assert(cNodes.size() > 0);
@@ -464,7 +465,12 @@ public:
 
                 // and on the right side 
                 minCol = (*breakpoints)[_crossingBpIndex].col; // ... get the interval first index ...
-                maxCol = (*breakpoints)[_crossingBpIndex+1].col-1; // ... its last index ...
+                // for the last index, be sure that we are not out of bounds
+                if(_crossingBpIndex+1 == breakpoints->size()){
+                    maxCol = this->envelope()->maxPosition();
+                }else{
+                    maxCol = (*breakpoints)[_crossingBpIndex+1].col-1;
+                }
                 row = (*breakpoints)[_crossingBpIndex].row; // ... and the corresponding row ...
                 
                 (*_maxima)[_crossingBpIndex] = flippedTree->maxForRowInRange(row,minCol,maxCol);
