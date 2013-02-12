@@ -535,8 +535,7 @@ public:
         _rowsTree = new ExtendedRowNode<T>(matrix);
         _columnTree = new ColNode<T>(matrix);
         
-//        _rowsTree->recursivelyComputeIntervalMaxima_fast(_columnTree);
-        _rowsTree->recursivelyComputeIntervalMaxima(_columnTree);
+        _rowsTree->recursivelyComputeIntervalMaxima_fast(_columnTree);
     }
     
     ~SubmatrixQueriesDataStructure()
