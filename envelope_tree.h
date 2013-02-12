@@ -405,8 +405,8 @@ public:
         computeIntervalMaxima(flippedTree);
         
         if (!this->isLeaf()) {
-            this->lowIndicesNode()->computeIntervalMaxima(flippedTree);
-            this->highIndicesNode()->computeIntervalMaxima(flippedTree);
+            this->lowIndicesNode()->recursivelyComputeIntervalMaxima(flippedTree);
+            this->highIndicesNode()->recursivelyComputeIntervalMaxima(flippedTree);
         }
     }
     void recursivelyComputeIntervalMaxima_fast(const ColNode<T> *flippedTree)
