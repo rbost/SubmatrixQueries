@@ -5,7 +5,7 @@ CFLAGS = -Wall
 EXEC_NAME = test_queries
 INCLUDES =
 LIBS =
-OBJ_FILES = matrix.o max_value.o range_query.o envelope.o envelope_tree.o test.o main.o
+OBJ_FILES = matrix.o max_value.o range_query.o envelope.o envelope_tree.o tests.o main.o
 
 all : $(EXEC_NAME)
 
