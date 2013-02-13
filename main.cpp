@@ -7,7 +7,6 @@
 //
 
 #include <iostream>
-#include <string>
 
 #include "matrix.h"
 #include "envelope.h"
@@ -238,9 +237,10 @@ int main(int argc, const char * argv[])
     size_t nCols = 10000;
     
     if (argc >= 3) {
-        nRows = stol(argv[1]);
-        nCols = stol(argv[2]);
+        sscanf(argv[1], "%lu", &nRows);
+        sscanf(argv[2], "%lu", &nCols);
     }
+    
 //    testMatrix();
 //    testMonge();
 //    testEnvelope();
