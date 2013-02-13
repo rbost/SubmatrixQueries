@@ -7,6 +7,7 @@
 //
 
 #include <iostream>
+#include <string>
 
 #include "matrix.h"
 #include "envelope.h"
@@ -217,25 +218,11 @@ void  testSubmatrixQueries()
 
 }
 
-void testTest()
+void testTest( size_t nRows, size_t nCols)
 {
-    size_t nRows, nCols;
-    
-    nRows = 5000;
-    nCols = 5000;
-    
     cout << "Test for " << nRows << " rows and " << nCols << " columns" << endl;
     
     SubmatrixQueriesTest test = SubmatrixQueriesTest(nRows, nCols);
-    
-//    if (test.multipleColumnQueryTest(10)) {
-//        cout << "Column query test passed" << endl;
-//    }
-//    
-//    if (test.multipleRowQueryTest(10)) {
-//        cout << "Row query test passed" << endl;
-//    }
-//
     
     cout << endl << "Beginning tests ..." << endl;
     if (test.multipleSubmatrixQueryTest(10)) {
@@ -247,6 +234,13 @@ void testTest()
 
 int main(int argc, const char * argv[])
 {
+    size_t nRows = 10000; // default values for the number of columns and rows
+    size_t nCols = 10000;
+    
+    if (argc >= 3) {
+        nRows = stol(argv[1]);
+        nCols = stol(argv[2]);
+    }
 //    testMatrix();
 //    testMonge();
 //    testEnvelope();
@@ -254,7 +248,7 @@ int main(int argc, const char * argv[])
 //    testColTree();
 //    testSubmatrixQueries();
     
-    testTest();
+    testTest(nRows,nCols);
     
     return 0;
 }
