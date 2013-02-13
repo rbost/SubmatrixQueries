@@ -133,9 +133,10 @@ bool SubmatrixQueriesTest::testSubmatrixQuery(Range rowRange, Range colRange, cl
     }
     
     if (queryMax != naiveMax) {
-        cout << "query ranges : row = (" << rowRange.min <<","<<rowRange.max<<")";
+        cout << "Test failed: "<<endl;
+        cout << "\tquery ranges : row = (" << rowRange.min <<","<<rowRange.max<<")";
         cout << " col = (" << colRange.min <<","<<colRange.max<<")"<<endl;
-        cout << "queryMax: " << queryMax;
+        cout << "\tqueryMax: " << queryMax;
         cout << " ; naiveMax: " << naiveMax << endl;
         
     }
@@ -270,15 +271,12 @@ Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrix(size_t rows, si
         accumulator += rand() % rowInterval;
         rowsAbscissa[i] = accumulator;
     }
-//    cout << "row max : " << accumulator << endl;
     
     accumulator = 0;
     for (size_t j = 0; j < cols; j++) {
         accumulator += rand() % colInterval;
         colsAbscissa[cols-1-j] = accumulator;
     }
-//    cout << "col max : " << accumulator << endl;
-
     
     for (size_t i = 0; i < rows; i++) {
         for (size_t j = 0; j < cols; j++) {
