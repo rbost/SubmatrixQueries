@@ -234,7 +234,20 @@ double SubmatrixQueriesTest::naiveMaximumInSubmatrix(const Matrix<double> *m, Ra
 
 Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrix(size_t rows, size_t cols)
 {
-    Matrix<double> *m = new ComplexMatrix<double>(rows,cols);
+    Matrix<double> *m;
+    
+    cout << "Initializing matrix " << rows << "x" << cols << " ... ";
+    try {
+        m = new ComplexMatrix<double>(rows,cols);
+        cout << "Done" << endl;
+    } catch (std::bad_alloc& ba) {
+        cout << "\nbad_alloc caught: " << ba.what() << endl;
+        cout << "Try to build an other matrix ... ";
+        m = new SimpleMatrix<double>(rows,cols);
+        cout << "Done" << endl;
+    }
+    
+    cout << "Fill the Inverse Monge Matrix ... " << endl;
     
     int *rowsAbscissa, *colsAbscissa;
     
