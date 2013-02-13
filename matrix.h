@@ -79,12 +79,86 @@ namespace matrix {
         return true;
     }
 
+    /* class SimpleMatrix
+     * 
+     * This is a very simple matrix implemenation. Its purpose is to compare its performance
+     * with the ComplexMatrix class based on valarray.
+     */
+    
+    /*
+     * Apparently, for the creation of a big matrix, this version is faster but
+     * it uses a little bit more memory than the ComplexMatrix. Furthermore, for the
+     * naive algorithm, the access performances seem to be worse than the ComplexMatrix.
+     */
+    
+    template <typename T>
+    class SimpleMatrix : public Matrix<T>
+    {
+    private:
+        size_t _rows, _cols;
+        T **_data;
+                
+        void initializeData()
+        {
+            _data = new T*[this->rows()];
+            
+            for (size_t i = 0; i < this->rows(); i++) {
+                _data[i] = new T[this->cols()];
+            }
+        }
+        
+    public:
+        SimpleMatrix(size_t rows, size_t cols) : _rows(rows), _cols(cols)
+        {
+            initializeData();
+        }
+
+        SimpleMatrix(size_t rows, size_t cols, T **data)
+        {
+            initializeData();
+            for (size_t i = 0; i < this->rows(); i++) {
+                for (size_t j = 0; j < this->rows(); j++) {
+                    _data[i][j] = data[i][j];
+                }
+            }
+        }
+        SimpleMatrix(Matrix<T> *m) : _rows(m->rows()), _cols(m->cols())
+        {
+            initializeData();
+            for (size_t i = 0; i < this->rows(); i++) {
+                for (size_t j = 0; j < this->rows(); j++) {
+                    _data[i][j] = (*m)(i,j);
+                }
+            }    
+        }
+        
+        ~SimpleMatrix()
+        {
+            for (size_t i = 0; i < this->rows(); i++) {
+                delete [] _data[i];
+            }
+            
+            delete [] _data;
+        }
+        
+        size_t rows() const { return _rows; }
+        size_t cols() const { return _cols; }
+        
+        T& operator()(size_t i, size_t j)
+        {
+            return _data[i][j];
+        }
+        T operator()(size_t i, size_t j) const
+        {
+            return _data[i][j];
+        }
+    };
+    
     /* class ComplexMatrix
      * This is a basic implementation of matrices based on the STL's valarray.
      * In the implementation of the KMNS article, we are supposed to have a matrix implementation that 
      * can answer data queries on one entry in O(1) time. This is the case here.
      *
-     * I also added methods to test the Monge and monotonicity properties of the matrix.
      */
 
     template <typename T>
