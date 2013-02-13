@@ -7,6 +7,7 @@
 //
 
 #include <iostream>
+#include <cstdio>
 
 #include "matrix.h"
 #include "envelope.h"
