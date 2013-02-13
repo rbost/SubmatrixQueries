@@ -21,7 +21,7 @@ SubmatrixQueriesTest::SubmatrixQueriesTest(Matrix<double> *m)
 {
     assert(m->isInverseMonge());
     // copy the matrix
-    _testMatrix = new Matrix<double>(m);
+    _testMatrix = new ComplexMatrix<double>(m);
     
 #if BENCHMARK
     clock_t time = clock();
@@ -234,7 +234,7 @@ double SubmatrixQueriesTest::naiveMaximumInSubmatrix(const Matrix<double> *m, Ra
 
 Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrix(size_t rows, size_t cols)
 {
-    Matrix<double> *m = new Matrix<double>(rows,cols);
+    Matrix<double> *m = new ComplexMatrix<double>(rows,cols);
     
     int *rowsAbscissa, *colsAbscissa;
     

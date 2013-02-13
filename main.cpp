@@ -35,7 +35,7 @@ void testEnvelope()
     foo[25] = 6;    foo[26] = 21;   foo[27] = 19;   foo[28] = 33;   foo[29] = 36;
     foo[30] = 34;   foo[31] = 53;   foo[32] = 51;   foo[33] = 66;   foo[34] = 75;
 
-    Matrix<int> m = Matrix<int>(7,5,foo);
+    ComplexMatrix<int> m = ComplexMatrix<int>(7,5,foo);
     
     if (m.isMonge()) {
         cout << "Is Monge" << endl;
@@ -92,7 +92,7 @@ void testRowTree()
     foo[25] = 6;    foo[26] = 21;   foo[27] = 19;   foo[28] = 33;   foo[29] = 36;
     foo[30] = 34;   foo[31] = 53;   foo[32] = 51;   foo[33] = 66;   foo[34] = 75;
     
-    Matrix<int> m = Matrix<int>(7,5,foo);
+    ComplexMatrix<int> m = ComplexMatrix<int>(7,5,foo);
     
     if (m.isMonge()) {
         cout << "Is Monge" << endl;
@@ -122,7 +122,7 @@ void testColTree()
     foo[25] = 6;    foo[26] = 21;   foo[27] = 19;   foo[28] = 33;   foo[29] = 36;
     foo[30] = 34;   foo[31] = 53;   foo[32] = 51;   foo[33] = 66;   foo[34] = 75;
     
-    Matrix<int> m = Matrix<int>(7,5,foo);
+    ComplexMatrix<int> m = ComplexMatrix<int>(7,5,foo);
     
     if (m.isMonge()) {
         cout << "Is Monge" << endl;
@@ -144,7 +144,7 @@ void testMatrix()
     valarray<int> foo (12);
     for (int i=0; i<12; ++i) foo[i]=i;
     
-    Matrix<int> m = Matrix<int>(3,4,foo);
+    ComplexMatrix<int> m = ComplexMatrix<int>(3,4,foo);
     
     valarray<int> bar = m.row(1,0,2);
     
@@ -167,7 +167,7 @@ void testMonge()
     foo[0] = 11; foo[1] = 7;
     foo[2] = 17; foo[3] = 23;
     
-    Matrix<int> m = Matrix<int>(2,2,foo);
+    ComplexMatrix<int> m = ComplexMatrix<int>(2,2,foo);
     if (m.isMonge()) {
         cout << "Is Monge" << endl;
     }
@@ -199,7 +199,7 @@ void  testSubmatrixQueries()
     
     
     
-    Matrix<int> m = Matrix<int>(5,5,foo);
+    ComplexMatrix<int> m = ComplexMatrix<int>(5,5,foo);
     
     if (m.isMonge()) {
         cout << "Is Monge" << endl;
