@@ -37,7 +37,8 @@ private:
     bool _isLeaf;
 
     RowEnvelope<T> *_envelope;
-    
+    size_t _crossingBpIndex; // the index of the breakpoint inserted when merging the children envelopes
+
 protected:
     void setEnvelope(RowEnvelope< T > *newEnvelope){
         _envelope = newEnvelope;
@@ -53,6 +54,9 @@ protected:
         _highIndicesNode = newHighNode;
     }
     
+    // _crossingBpIndex is mutable only for the subclasses
+    size_t& crossingBreakpointIndex() { return _crossingBpIndex; }
+
 public:
     
     // This constructor creates a new RowNode with the specified children.
@@ -71,7 +75,7 @@ public:
             _highIndicesNode = highIndices;
             
             if (_lowIndicesNode && _highIndicesNode) { // if we can merge the envelopes of the children, do it immediately
-                this->setEnvelope(mergeRowEnvelopes(this->lowIndicesNode()->envelope(), this->highIndicesNode()->envelope()));
+                this->setEnvelope(mergeRowEnvelopes(this->lowIndicesNode()->envelope(), this->highIndicesNode()->envelope(), &(this->crossingBreakpointIndex()) ));
             }
         }
     }
@@ -94,7 +98,7 @@ public:
             _lowIndicesNode = new RowNode<T>(minRow,midRow,matrix);
             _highIndicesNode= new RowNode<T>(midRow+1,maxRow,matrix);
             
-            this->setEnvelope(mergeRowEnvelopes(this->lowIndicesNode()->envelope(), this->highIndicesNode()->envelope()));
+            this->setEnvelope(mergeRowEnvelopes(this->lowIndicesNode()->envelope(), this->highIndicesNode()->envelope(), &(this->crossingBreakpointIndex()) ));
         }
     }
     
@@ -135,6 +139,7 @@ public:
     virtual RowNode<T>* highIndicesNode() const { return _highIndicesNode; }
     size_t minRow() const { return _minRow; }
     size_t maxRow() const { return _maxRow; }
+    size_t crossingBreakpointIndex() const { return _crossingBpIndex; }
     
     // Returns the canonical nodes (cf. the article) for the specified indices
     // COMPLEXITY : O(log(number of rows)
@@ -209,7 +214,13 @@ class ColNode {
     bool _isLeaf;
     
     ColumnEnvelope<T> *_envelope;
-    
+    size_t _crossingBpIndex; // the index of the breakpoint inserted when merging the children envelopes
+
+protected:
+
+    // _crossingBpIndex is mutable only for the subclasses
+    size_t& crossingBreakpointIndex() { return _crossingBpIndex; }
+
 public:
     
     ColNode(size_t minCol, size_t maxCol, Matrix<T> const& matrix):
@@ -226,7 +237,7 @@ public:
             _lowIndicesNode = new ColNode<T>(minCol,midRow,matrix);
             _highIndicesNode= new ColNode<T>(midRow+1,maxCol,matrix);
             
-            _envelope = mergeColumnEnvelopes(this->lowIndicesNode()->envelope(), this->highIndicesNode()->envelope());
+            _envelope = mergeColumnEnvelopes(this->lowIndicesNode()->envelope(), this->highIndicesNode()->envelope(), &(this->crossingBreakpointIndex()) );
         }
     }
     
@@ -238,7 +249,7 @@ public:
         _lowIndicesNode = new ColNode<T>(_minCol,midRow,matrix);
         _highIndicesNode= new ColNode<T>(midRow+1,_maxCol,matrix);
         
-        _envelope = mergeColumnEnvelopes(this->lowIndicesNode()->envelope(), this->highIndicesNode()->envelope());
+        _envelope = mergeColumnEnvelopes(this->lowIndicesNode()->envelope(), this->highIndicesNode()->envelope(), &(this->crossingBreakpointIndex()) );
     }
     
     ~ColNode()
@@ -254,7 +265,8 @@ public:
     bool isLeaf() const { return _isLeaf; }
     size_t minCol() const { return _minCol; }
     size_t maxCol() const { return _maxCol; }
-    
+    size_t crossingBreakpointIndex() const { return _crossingBpIndex; }
+
     ColumnEnvelope<T>* envelope() const
     {
         return _envelope;
@@ -318,7 +330,6 @@ public:
 template <typename T>
 class ExtendedRowNode : public RowNode<T> {
     vector< T > *_maxima; // the _maxima vector stores the maxima of breakpoints intervals
-    size_t _crossingBpIndex; // the index of the breakpoint inserted when merging the children envelopes
     BasicRQNode< T > *_rangeMaxima;
     
 public:
@@ -328,7 +339,7 @@ public:
             size_t midRow = minRow + ((maxRow - minRow)/2);
             this->setLowIndicesNode(new ExtendedRowNode<T>(minRow,midRow,matrix));
             this->setHighIndicesNode(new ExtendedRowNode<T>(midRow+1,maxRow,matrix));
-            this->setEnvelope(mergeRowEnvelopes(this->lowIndicesNode()->envelope(), this->highIndicesNode()->envelope(),&_crossingBpIndex));
+            this->setEnvelope(mergeRowEnvelopes(this->lowIndicesNode()->envelope(), this->highIndicesNode()->envelope(),&(this->crossingBreakpointIndex()) ));
         }
     }
     
@@ -340,7 +351,7 @@ public:
         
         this->setLowIndicesNode(new ExtendedRowNode<T>(minRow,midRow,matrix));
         this->setHighIndicesNode(new ExtendedRowNode<T>(midRow+1,maxRow,matrix));
-        this->setEnvelope(mergeRowEnvelopes(this->lowIndicesNode()->envelope(), this->highIndicesNode()->envelope(),&_crossingBpIndex));
+        this->setEnvelope(mergeRowEnvelopes(this->lowIndicesNode()->envelope(), this->highIndicesNode()->envelope(),&(this->crossingBreakpointIndex()) ));
     }
     
     ~ExtendedRowNode<T>()
@@ -351,8 +362,6 @@ public:
     
     virtual ExtendedRowNode<T>* lowIndicesNode() const { return (ExtendedRowNode<T>*) RowNode<T>::lowIndicesNode(); }
     virtual ExtendedRowNode<T>* highIndicesNode() const { return (ExtendedRowNode<T>*) RowNode<T>::highIndicesNode(); }
-
-    size_t crossingBreakpointIndex() const { return _crossingBpIndex; }
     
     const vector< T > *maxima() const
     {
@@ -448,7 +457,7 @@ public:
                 _maxima = new vector< T >(n); // create a new vector of the same size than the breakpoints one
                 
                 // for the first breakpoints, just copy the maxima table from the lowIndicesNode
-                for (size_t i = 0; i < _crossingBpIndex - 1; i++) {
+                for (size_t i = 0; i < this->crossingBreakpointIndex() - 1; i++) {
                     _maxima[i] = (this->lowIndicesNode()->maxima())[i];
                 }
                 
@@ -457,29 +466,29 @@ public:
                 size_t row;
 
                 // on the left side
-                minCol = (*breakpoints)[_crossingBpIndex - 1].col; // ... get the interval first index ...
-                maxCol = (*breakpoints)[_crossingBpIndex].col-1; // ... its last index ...
-                row = (*breakpoints)[_crossingBpIndex - 1].row; // ... and the corresponding row ...
+                minCol = (*breakpoints)[this->crossingBreakpointIndex() - 1].col; // ... get the interval first index ...
+                maxCol = (*breakpoints)[this->crossingBreakpointIndex()].col-1; // ... its last index ...
+                row = (*breakpoints)[this->crossingBreakpointIndex() - 1].row; // ... and the corresponding row ...
 
-                (*_maxima)[_crossingBpIndex - 1] = flippedTree->maxForRowInRange(row,minCol,maxCol);
+                (*_maxima)[this->crossingBreakpointIndex() - 1] = flippedTree->maxForRowInRange(row,minCol,maxCol);
 
                 // and on the right side 
-                minCol = (*breakpoints)[_crossingBpIndex].col; // ... get the interval first index ...
+                minCol = (*breakpoints)[this->crossingBreakpointIndex()].col; // ... get the interval first index ...
                 // for the last index, be sure that we are not out of bounds
-                if(_crossingBpIndex+1 == breakpoints->size()){
+                if(this->crossingBreakpointIndex()+1 == breakpoints->size()){
                     maxCol = this->envelope()->maxPosition();
                 }else{
-                    maxCol = (*breakpoints)[_crossingBpIndex+1].col-1;
+                    maxCol = (*breakpoints)[this->crossingBreakpointIndex()+1].col-1;
                 }
-                row = (*breakpoints)[_crossingBpIndex].row; // ... and the corresponding row ...
+                row = (*breakpoints)[this->crossingBreakpointIndex()].row; // ... and the corresponding row ...
                 
-                (*_maxima)[_crossingBpIndex] = flippedTree->maxForRowInRange(row,minCol,maxCol);
+                (*_maxima)[this->crossingBreakpointIndex()] = flippedTree->maxForRowInRange(row,minCol,maxCol);
                 
                 // for the last part of the breakpoints, we again have to copy the maxima table for the highIndicesNode
                 // to avoid computing the beginning index of the copy in the child max table, we do the copy backward
                 size_t m = this->highIndicesNode()->envelope()->numberOfBreakpoints();
                 
-                for (size_t i = 1; n-i > _crossingBpIndex; i++) {
+                for (size_t i = 1; n-i > this->crossingBreakpointIndex(); i++) {
                     _maxima[n-i] = (this->highIndicesNode()->maxima())[m-i];
                 }
 
