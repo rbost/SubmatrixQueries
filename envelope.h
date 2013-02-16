@@ -43,6 +43,11 @@ namespace envelope {
         inline Range(size_t minimun, size_t maximum) : min(minimun), max(maximum){
             assert(minimun <= maximum);
         }
+        
+        inline bool isInRange(size_t i)
+        {
+            return (i >= min) && (i <= max);
+        }
     };
     
 
