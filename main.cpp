@@ -10,6 +10,7 @@
 #include <cstdio>
 
 #include "matrix.h"
+#include "range.h"
 #include "envelope.h"
 #include "envelope_tree.h"
 #include "tests.h"

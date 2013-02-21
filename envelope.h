@@ -32,26 +32,6 @@ namespace envelope {
     };
     
     /*
-     *  class Breakpoint
-     *  This structure represents a range of indices
-     *
-     */
-    
-    struct Range {
-        const size_t min, max;
-        
-        inline Range(size_t minimun, size_t maximum) : min(minimun), max(maximum){
-            assert(minimun <= maximum);
-        }
-        
-        inline bool isInRange(size_t i)
-        {
-            return (i >= min) && (i <= max);
-        }
-    };
-    
-
-    /*
      *  class Envelope
      *  This represents the envelope data structure of the KMNS's article.
      *  We implicitly represent it by using a breakpoint vector.

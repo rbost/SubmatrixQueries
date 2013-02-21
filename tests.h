@@ -11,6 +11,7 @@
 
 #include <iostream>
 #include "matrix.h"
+#include "range.h"
 #include "envelope_tree.h"
 
 using namespace matrix;

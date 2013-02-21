@@ -14,6 +14,7 @@
 #include <iostream>
 
 #include "envelope.h"
+#include "range.h"
 #include "matrix.h"
 #include "max_value.h"
 #include "range_query.h"
