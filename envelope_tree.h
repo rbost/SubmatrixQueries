@@ -32,7 +32,7 @@ using namespace matrix;
 template <typename T>
 class RowNode {
 private:
-    size_t _minRow, _maxRow;
+    Range _range;
     
     RowNode<T> *_lowIndicesNode, *_highIndicesNode;
     bool _isLeaf;
@@ -62,8 +62,11 @@ public:
     
     // This constructor creates a new RowNode with the specified children.
     // If they are not NULL, it will also compute the merged envelope.
-    RowNode(size_t minRow, size_t maxRow,RowNode<T> *lowIndices, RowNode<T> *highIndices ,Matrix<T> const& matrix):
-    _minRow(minRow),_maxRow(maxRow)
+    RowNode(Range r,RowNode<T> *lowIndices, RowNode<T> *highIndices ,Matrix<T> const& matrix): RowNode(r.min,r.max,lowIndices,highIndices,matrix)
+    {
+    }
+    
+    RowNode(size_t minRow, size_t maxRow,RowNode<T> *lowIndices, RowNode<T> *highIndices ,Matrix<T> const& matrix): _range(minRow,maxRow)
     {
         assert(minRow <= maxRow);
         if (minRow == maxRow) { // it is a leaf
@@ -85,7 +88,7 @@ public:
     // This also will creates its children and merge their envelopes.
 
     RowNode(size_t minRow, size_t maxRow, Matrix<T> const& matrix):
-    _minRow(minRow),_maxRow(maxRow)
+    _range(minRow,maxRow)
     {
         assert(minRow <= maxRow);
         if (minRow == maxRow) { // it is a leaf
@@ -106,11 +109,11 @@ public:
     // Use this constructor to build the root of the row envelope binary tree for the specified matrix
     // COMPLEXITY: O(number_of_rows*( log(number_of_cols) + log(number_of_rows) ))
     // SIZE: O(number_of_rows* log(number_of_rows))
-    RowNode(Matrix<T> const& matrix) : _minRow(0), _maxRow(matrix.rows()-1)
+    RowNode(Matrix<T> const& matrix) : _range(0,matrix.rows()-1)
     {
         _isLeaf = false;
         
-        size_t minRow = this-> minRow();
+        size_t minRow = this->minRow();
         size_t maxRow = this->maxRow();
         size_t midRow = minRow + ((maxRow - minRow)/2);
         
@@ -138,8 +141,8 @@ public:
     bool isLeaf() const { return _isLeaf; }
     virtual RowNode<T>* lowIndicesNode() const { return _lowIndicesNode; }
     virtual RowNode<T>* highIndicesNode() const { return _highIndicesNode; }
-    size_t minRow() const { return _minRow; }
-    size_t maxRow() const { return _maxRow; }
+    size_t minRow() const { return _range.min; }
+    size_t maxRow() const { return _range.max; }
     size_t crossingBreakpointIndex() const { return _crossingBpIndex; }
     
     // Returns the canonical nodes (cf. the article) for the specified indices
@@ -209,7 +212,7 @@ public:
 template <typename T>
 class ColNode {
 
-    size_t _minCol, _maxCol;
+    Range _range;
     
     ColNode<T> *_lowIndicesNode, *_highIndicesNode;
     bool _isLeaf;
@@ -224,8 +227,7 @@ protected:
 
 public:
     
-    ColNode(size_t minCol, size_t maxCol, Matrix<T> const& matrix):
-    _minCol(minCol),_maxCol(maxCol)
+    ColNode(size_t minCol, size_t maxCol, Matrix<T> const& matrix): _range(minCol,maxCol)
     {
         assert(minCol <= maxCol);
         if (minCol == maxCol) { // it is a leaf
@@ -243,12 +245,15 @@ public:
     }
     
     
-    ColNode(Matrix<T> const& matrix) : _minCol(0), _maxCol(matrix.cols()-1)
+    ColNode(Matrix<T> const& matrix) : _range(0,matrix.cols()-1)
     {
-        size_t midRow = _minCol + ((_maxCol - _minCol)/2);
+        size_t minCol = this->minCol();
+        size_t maxCol = this->maxCol();
+        size_t midCol = minCol + ((maxCol - minCol)/2);
         
-        _lowIndicesNode = new ColNode<T>(_minCol,midRow,matrix);
-        _highIndicesNode= new ColNode<T>(midRow+1,_maxCol,matrix);
+        
+        _lowIndicesNode = new ColNode<T>(minCol,midCol,matrix);
+        _highIndicesNode= new ColNode<T>(midCol+1,maxCol,matrix);
         
         _envelope = mergeColumnEnvelopes(this->lowIndicesNode()->envelope(), this->highIndicesNode()->envelope(), &(this->crossingBreakpointIndex()) );
     }
@@ -264,8 +269,8 @@ public:
     }
     
     bool isLeaf() const { return _isLeaf; }
-    size_t minCol() const { return _minCol; }
-    size_t maxCol() const { return _maxCol; }
+    size_t minCol() const { return _range.min; }
+    size_t maxCol() const { return _range.max; }
     size_t crossingBreakpointIndex() const { return _crossingBpIndex; }
 
     ColumnEnvelope<T>* envelope() const
