@@ -29,7 +29,6 @@ private:
     Range _range;
     
     EnvTreeNode<T> *_lowIndicesNode, *_highIndicesNode;
-    bool _isLeaf;
  
     Envelope<T> *_envelope;
     size_t _crossingBpIndex; // the index of the breakpoint inserted when merging the children envelopes
@@ -67,7 +66,7 @@ public:
 
     ~EnvTreeNode()
     {
-        if(!_isLeaf )
+        if(!(this->isLeaf()) )
         {
             delete _lowIndicesNode;
             delete _highIndicesNode;
@@ -80,7 +79,10 @@ public:
         return _envelope;
     }
     
-    bool isLeaf() const { return _isLeaf; }
+    bool isLeaf() const {
+        Range r = this->range();
+        return (r.max - r.min) <= 0;
+    }
     virtual EnvTreeNode<T>* lowIndicesNode() const { return _lowIndicesNode; }
     virtual EnvTreeNode<T>* highIndicesNode() const { return _highIndicesNode; }
     Range range() const { return _range; }
@@ -90,7 +92,7 @@ public:
     // COMPLEXITY : O(log(number of rows)
     vector<const EnvTreeNode<T> *> canonicalNodes(size_t minIndex, size_t maxIndex) const
     {
-        std::vector<const Envelope<T> *> buffer;
+        std::vector<const EnvTreeNode<T> *> buffer;
         this->getCanonicalNodes(buffer, minIndex, maxIndex);
         
         return buffer;
@@ -99,7 +101,7 @@ public:
     // Auxiliary method for the previous one.
     // It adds itself to the buffer if the query range contains the row range the node represents.
     // Otherwise, it recursively calls its children.
-    virtual void getCanonicalNodes(std::vector<const EnvTreeNode<T> *> & buffer, size_t minIndex, size_t maxIndex) const
+    void getCanonicalNodes(std::vector<const EnvTreeNode<T> *> & buffer, size_t minIndex, size_t maxIndex) const
     {
         assert(minIndex <= maxIndex);
         Range r = this->range();
@@ -118,8 +120,29 @@ public:
             this->highIndicesNode()->getCanonicalNodes(buffer,minIndex,maxIndex);
         }
     }
+    
+    // Returns the maximum value of the matrix in the specified column and in the specified row range
+    T maxInRange(size_t position, Range r) const{        
+        // First of all, we get the canonical nodes
+        std::vector<const EnvTreeNode<T> *> cNodes = this->canonicalNodes(r.min,r.max);
+        
+        // If the set of canonical nodes is empty, it means that the query range is empty
+        assert(cNodes.size() > 0);
+        
+        // Compute the maximum over the canonical nodes
+        T max = cNodes[0]->envelope()->valueForPosition(position);
+        
+        for (size_t i = 1; i < cNodes.size(); i++) {
+            T value = cNodes[i]->envelope()->valueForPosition(position);
+            
+            if (value > max) {
+                max = value;
+            }
+        }
+        
+        return max;
+    }
 
-//    virtual T maxInRange(size_t position, Range r) = 0;
 };
 
 
@@ -131,33 +154,8 @@ public:
  *
  */
 template <typename T>
-class RowNode {
+class RowNode : public EnvTreeNode<T>{
 private:
-    Range _range;
-    
-    RowNode<T> *_lowIndicesNode, *_highIndicesNode;
-    bool _isLeaf;
-
-    RowEnvelope<T> *_envelope;
-    size_t _crossingBpIndex; // the index of the breakpoint inserted when merging the children envelopes
-
-protected:
-    void setEnvelope(RowEnvelope< T > *newEnvelope){
-        _envelope = newEnvelope;
-    }
-    
-    void setLowIndicesNode(RowNode<T> *newLowNode)
-    {
-        _lowIndicesNode = newLowNode;
-    }
-    
-    void setHighIndicesNode(RowNode<T> *newHighNode)
-    {
-        _highIndicesNode = newHighNode;
-    }
-    
-    // _crossingBpIndex is mutable only for the subclasses
-    size_t& crossingBreakpointIndex() { return _crossingBpIndex; }
 
 public:
     
@@ -167,19 +165,16 @@ public:
     {
     }
     
-    RowNode(size_t minRow, size_t maxRow,RowNode<T> *lowIndices, RowNode<T> *highIndices ,Matrix<T> const& matrix): _range(minRow,maxRow)
+    RowNode(size_t minRow, size_t maxRow,RowNode<T> *lowIndices, RowNode<T> *highIndices ,Matrix<T> const& matrix):EnvTreeNode<T>(minRow,maxRow)
     {
         assert(minRow <= maxRow);
         if (minRow == maxRow) { // it is a leaf
-            _isLeaf = true;
-            _envelope = new RowEnvelope<T>(matrix, minRow);
-        }else{
-            _isLeaf = false;
-            
-            _lowIndicesNode = lowIndices;
-            _highIndicesNode = highIndices;
-            
-            if (_lowIndicesNode && _highIndicesNode) { // if we can merge the envelopes of the children, do it immediately
+            this->setEnvelope(new RowEnvelope<T>(matrix, minRow));
+        }else{            
+            this->setLowIndicesNode(lowIndices);
+            this->setHighIndicesNode(highIndices);
+
+            if (this->lowIndicesNode() && this->highIndicesNode()) { // if we can merge the envelopes of the children, do it immediately
                 this->setEnvelope(mergeRowEnvelopes(this->lowIndicesNode()->envelope(), this->highIndicesNode()->envelope(), &(this->crossingBreakpointIndex()) ));
             }
         }
@@ -188,21 +183,22 @@ public:
     // Creates a row envelope binary tree node for the specified interval.
     // This also will creates its children and merge their envelopes.
 
-    RowNode(size_t minRow, size_t maxRow, Matrix<T> const& matrix):
-    _range(minRow,maxRow)
+    RowNode(size_t minRow, size_t maxRow, Matrix<T> const& matrix): EnvTreeNode<T>(minRow,maxRow)
     {
         assert(minRow <= maxRow);
         if (minRow == maxRow) { // it is a leaf
-            _isLeaf = true;
-            _envelope = new RowEnvelope<T>(matrix, minRow);
+            this->setEnvelope(new RowEnvelope<T>(matrix, minRow));
         }else{
-            _isLeaf = false;
             
             size_t midRow = minRow + ((maxRow - minRow)/2);
             
-            _lowIndicesNode = new RowNode<T>(minRow,midRow,matrix);
-            _highIndicesNode= new RowNode<T>(midRow+1,maxRow,matrix);
-            
+            RowNode<T> *lowIndices;
+            RowNode<T> *highIndices;
+            lowIndices = new RowNode<T>(minRow,midRow,matrix);
+            highIndices= new RowNode<T>(midRow+1,maxRow,matrix);
+            setLowIndicesNode(lowIndices);
+            setHighIndicesNode(highIndices);
+
             this->setEnvelope(mergeRowEnvelopes(this->lowIndicesNode()->envelope(), this->highIndicesNode()->envelope(), &(this->crossingBreakpointIndex()) ));
         }
     }
@@ -210,97 +206,38 @@ public:
     // Use this constructor to build the root of the row envelope binary tree for the specified matrix
     // COMPLEXITY: O(number_of_rows*( log(number_of_cols) + log(number_of_rows) ))
     // SIZE: O(number_of_rows* log(number_of_rows))
-    RowNode(Matrix<T> const& matrix) : _range(0,matrix.rows()-1)
-    {
-        _isLeaf = false;
-        
+    RowNode(Matrix<T> const& matrix) : EnvTreeNode<T>(0,matrix.rows()-1)
+    {        
         size_t minRow = this->minRow();
         size_t maxRow = this->maxRow();
         size_t midRow = minRow + ((maxRow - minRow)/2);
         
-        _lowIndicesNode = new RowNode<T>(minRow,midRow,matrix);
-        _highIndicesNode= new RowNode<T>(midRow+1,maxRow,matrix);
-        
+        RowNode<T> *lowIndices;
+        RowNode<T> *highIndices;
+        lowIndices = new RowNode<T>(minRow,midRow,matrix);
+        highIndices= new RowNode<T>(midRow+1,maxRow,matrix);
+        setLowIndicesNode(lowIndices);
+        setHighIndicesNode(highIndices);
+
         this->setEnvelope(mergeRowEnvelopes(this->lowIndicesNode()->envelope(), this->highIndicesNode()->envelope()));
-    }
-    
-    ~RowNode()
-    {
-        if(!_isLeaf )
-        {
-            delete _lowIndicesNode;
-            delete _highIndicesNode;
-        }
-        delete _envelope;
     }
     
     RowEnvelope<T>* envelope() const
     {
-        return _envelope;
+        return (RowEnvelope<T>*) EnvTreeNode<T>::envelope();
     }
     
-    bool isLeaf() const { return _isLeaf; }
-    virtual RowNode<T>* lowIndicesNode() const { return _lowIndicesNode; }
-    virtual RowNode<T>* highIndicesNode() const { return _highIndicesNode; }
-    size_t minRow() const { return _range.min; }
-    size_t maxRow() const { return _range.max; }
-    size_t crossingBreakpointIndex() const { return _crossingBpIndex; }
-    
-    // Returns the canonical nodes (cf. the article) for the specified indices
-    // COMPLEXITY : O(log(number of rows)
-    vector<const RowNode<T> *> canonicalNodes(size_t minRow, size_t maxRow) const
-    {
-        std::vector<const RowNode<T> *> buffer;
-        this->getCanonicalNodes(buffer, minRow, maxRow);
-        
-        return buffer;
-    }
-    
-    // Auxiliary method for the previous one.
-    // It adds itself to the buffer if the query range contains the row range the node represents.
-    // Otherwise, it recursively calls its children.
-    virtual void getCanonicalNodes(std::vector<const RowNode<T> *> & buffer, size_t minRow, size_t maxRow) const
-    {
-        assert(minRow <= maxRow);
-        if (minRow > this->maxRow() || maxRow < this->minRow()) { // check if the interval intersects the node's rows
-            return; // if not, exit
-        }
-        
-        if (minRow <= this->minRow() && maxRow >= this->maxRow()) { // check if the interval includes the node's rows
-            buffer.push_back(this); // in this the case, add the entire node to the buffer
-            return;
-        }
-        
-        if(!this->isLeaf()){
-            this->lowIndicesNode()->getCanonicalNodes(buffer,minRow,maxRow);
-            this->highIndicesNode()->getCanonicalNodes(buffer,minRow,maxRow);
-        }
-    }
+    virtual RowNode<T>* lowIndicesNode() const { return (RowNode<T>*) EnvTreeNode<T>::lowIndicesNode(); }
+    virtual RowNode<T>* highIndicesNode() const { return (RowNode<T>*) EnvTreeNode<T>::highIndicesNode(); }
+    size_t minRow() const { return (this->range()).min; }
+    size_t maxRow() const { return (this->range()).max; }
     
     // Returns the maximum value of the matrix in the specified column and in the specified row range
     T maxForColumnInRange(size_t col, size_t minRow, size_t maxRow) const{
-        assert(minRow <= maxRow);
-        
-        // First of all, we get the canonical nodes
-        std::vector<const RowNode<T> *> cNodes = this->canonicalNodes(minRow,maxRow);
-        
-        // If the set of canonical nodes is empty, it means that the query range is empty
-        assert(cNodes.size() > 0);
-        
-        // Compute the maximum over the canonical nodes
-        T max = cNodes[0]->envelope()->valueForColumn(col);
-        
-        for (size_t i = 1; i < cNodes.size(); i++) {
-            T value = cNodes[i]->envelope()->valueForColumn(col);
-            
-            if (value > max) {
-                max = value;
-            }
-        }
-        
-        return max;
+        return this->maxInRange(col,Range(minRow,maxRow));
     }
 };
+
 /*
  * class ColNode
  *
