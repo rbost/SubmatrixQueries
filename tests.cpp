@@ -67,17 +67,29 @@ SubmatrixQueriesTest::~SubmatrixQueriesTest()
     delete _queryDS;
 }
 
-bool SubmatrixQueriesTest::testColumnQuery(Range rowRange, size_t col)
+bool SubmatrixQueriesTest::testColumnQuery(Range rowRange, size_t col, clock_t *naiveTime, clock_t *queryTime)
 {
     double naiveMax, queryMax;
-    
+    clock_t clock1, clock2, clock3;
+
+    clock1 = clock();
     queryMax = _queryDS->rowsTree()->maxForColumnInRange(col, rowRange.min, rowRange.max);
+    clock2 = clock();
     naiveMax = SubmatrixQueriesTest::naiveMaximumInColumn(_testMatrix, rowRange, col);
+    
+    clock3 = clock();
+    
+    if (naiveTime) {
+        *naiveTime += clock3 - clock2;
+    }
+    if (queryTime) {
+        *queryTime += clock2 - clock1;
+    }
     
     return queryMax == naiveMax;
 }
 
-bool SubmatrixQueriesTest::testColumnQuery()
+bool SubmatrixQueriesTest::testColumnQuery(clock_t *naiveTime, clock_t *queryTime)
 {
     size_t col = rand() % (_testMatrix->cols());
     
@@ -87,20 +99,33 @@ bool SubmatrixQueriesTest::testColumnQuery()
     
     Range r = Range(min(r1,r2),max(r1,r2));
     
-    return testColumnQuery(r, col);
+    return testColumnQuery(r, col, naiveTime, queryTime);
 }
 
-bool SubmatrixQueriesTest::testRowQuery(Range colRange, size_t row)
+bool SubmatrixQueriesTest::testRowQuery(Range colRange, size_t row, clock_t *naiveTime, clock_t *queryTime)
 {
     double naiveMax, queryMax;
+    clock_t clock1, clock2, clock3;
     
+    clock1 = clock();
     queryMax = _queryDS->columnTree()->maxForRowInRange(row, colRange.min, colRange.max);
+    
+    clock2 = clock();
     naiveMax = SubmatrixQueriesTest::naiveMaximumInRow(_testMatrix, colRange, row);
     
+    clock3 = clock();
+
+    if (naiveTime) {
+        *naiveTime += clock3 - clock2;
+    }
+    if (queryTime) {
+        *queryTime += clock2 - clock1;
+    }
+
     return queryMax == naiveMax;
 }
 
-bool SubmatrixQueriesTest::testRowQuery()
+bool SubmatrixQueriesTest::testRowQuery(clock_t *naiveTime, clock_t *queryTime)
 {
     size_t row = rand() % (_testMatrix->rows());
     
@@ -110,7 +135,7 @@ bool SubmatrixQueriesTest::testRowQuery()
     
     Range c = Range(min(c1,c2),max(c1,c2));
     
-    return testRowQuery(c, row);
+    return testRowQuery(c, row,naiveTime,queryTime);
 }
 
 bool SubmatrixQueriesTest::testSubmatrixQuery(Range rowRange, Range colRange, clock_t *naiveTime, clock_t *queryTime)
@@ -163,20 +188,33 @@ bool SubmatrixQueriesTest::testSubmatrixQuery(clock_t *naiveTime, clock_t *query
 bool SubmatrixQueriesTest::multipleColumnQueryTest(size_t n)
 {
     bool result = true;
+    clock_t naiveTime = 0, queryTime = 0;
     
     for (size_t i = 0; i < n && result; i++) {
-        result = result && testColumnQuery();
+        result = result && testColumnQuery(&naiveTime, &queryTime);
     }
+#if BENCHMARK
+    cout << "Benchmark for " << n << " column queries:" <<endl;
+    cout << "Naive algorithm: " << 1000*((double)naiveTime)/CLOCKS_PER_SEC << " ms" << endl;
+    cout << "Submatrix queries: " << 1000*((double)queryTime)/CLOCKS_PER_SEC << " ms" << endl;
+#endif
     return result;
 }
 
 bool SubmatrixQueriesTest::multipleRowQueryTest(size_t n)
 {
     bool result = true;
+    clock_t naiveTime = 0, queryTime = 0;
     
     for (size_t i = 0; i < n && result; i++) {
-        result = result && testRowQuery();
+        result = result && testRowQuery(&naiveTime, &queryTime);
     }
+
+#if BENCHMARK
+    cout << "Benchmark for " << n << " row queries:" <<endl;
+    cout << "Naive algorithm: " << 1000*((double)naiveTime)/CLOCKS_PER_SEC << " ms" << endl;
+    cout << "Submatrix queries: " << 1000*((double)queryTime)/CLOCKS_PER_SEC << " ms" << endl;
+#endif
     return result;
 }
 
@@ -190,7 +228,7 @@ bool SubmatrixQueriesTest::multipleSubmatrixQueryTest(size_t n)
     }
     
 #if BENCHMARK
-    cout << "Benchmark for " << n << " queries:" <<endl;
+    cout << "Benchmark for " << n << " submatrix queries:" <<endl;
     cout << "Naive algorithm: " << 1000*((double)naiveTime)/CLOCKS_PER_SEC << " ms" << endl;
     cout << "Submatrix queries: " << 1000*((double)queryTime)/CLOCKS_PER_SEC << " ms" << endl;
 #endif

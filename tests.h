@@ -37,10 +37,10 @@ public:
     ~SubmatrixQueriesTest();
 
     
-    bool testColumnQuery(Range rowRange, size_t col);
-    bool testColumnQuery();
-    bool testRowQuery(Range colRange, size_t row);
-    bool testRowQuery();
+    bool testColumnQuery(Range rowRange, size_t col, clock_t *naiveTime, clock_t *queryTime);
+    bool testColumnQuery(clock_t *naiveTime, clock_t *queryTime);
+    bool testRowQuery(Range colRange, size_t row, clock_t *naiveTime, clock_t *queryTime);
+    bool testRowQuery(clock_t *naiveTime, clock_t *queryTime);
     bool testSubmatrixQuery(Range rowRange, Range colRange, clock_t *naiveTime, clock_t *queryTime);
     bool testSubmatrixQuery(clock_t *naiveTime, clock_t *queryTime);
     
