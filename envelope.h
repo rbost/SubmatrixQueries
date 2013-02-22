@@ -302,7 +302,7 @@ namespace envelope {
         
         T firstValue() const
         {
-            return (this->values())(0,(this->breakpoints())->front().row);
+            return (this->values())(0,(this->breakpoints())->front().col);
         }
         T lastValue() const
         {
