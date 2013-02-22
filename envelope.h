@@ -1,13 +1,13 @@
 //
 //  envelope.h
-//  KMNS
+//  SubmatrixQueries
 //
 //  Created by Raphael Bost on 03/01/13.
 //  Copyright (c) 2013 Raphael Bost. All rights reserved.
 //
 
-#ifndef __KMNS__envelope__
-#define __KMNS__envelope__
+#ifndef __SubmatrixQueries__envelope__
+#define __SubmatrixQueries__envelope__
 
 #include <vector>
 #include "matrix.h"
@@ -33,7 +33,7 @@ namespace envelope {
     
     /*
      *  class Envelope
-     *  This represents the envelope data structure of the KMNS's article.
+     *  This represents the envelope data structure of the SubmatrixQueries's article.
      *  We implicitly represent it by using a breakpoint vector.
      *
      *  The matrix used to build the envelope is referenced by the _values reference.
@@ -463,4 +463,4 @@ namespace envelope {
 
 }
 
-#endif /* defined(__KMNS__envelope__) */
+#endif /* defined(__SubmatrixQueries__envelope__) */

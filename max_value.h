@@ -1,13 +1,13 @@
 //
 //  max_value.h
-//  KMNS
+//  SubmatrixQueries
 //
 //  Created by Raphael Bost on 16/01/13.
 //  Copyright (c) 2013 Raphael Bost. All rights reserved.
 //
 
-#ifndef __KMNS__max_value__
-#define __KMNS__max_value__
+#ifndef __SubmatrixQueries__max_value__
+#define __SubmatrixQueries__max_value__
 
 #include <algorithm>
 #include <cassert>
@@ -45,4 +45,4 @@ public:
     bool hasBeenSet() const { return _hasBeenSet;}
     T  value() const { assert(_hasBeenSet); return _value; }
 };
-#endif /* defined(__KMNS__max_value__) */
+#endif /* defined(__SubmatrixQueries__max_value__) */

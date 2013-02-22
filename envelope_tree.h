@@ -1,13 +1,13 @@
 //
 //  enveloppe_tree.h
-//  KMNS
+//  SubmatrixQueries
 //
 //  Created by Raphael Bost on 08/01/13.
 //  Copyright (c) 2013 Raphael Bost. All rights reserved.
 //
 
-#ifndef __KMNS__envelope_tree__
-#define __KMNS__envelope_tree__
+#ifndef __SubmatrixQueries__envelope_tree__
+#define __SubmatrixQueries__envelope_tree__
 
 #include <vector>
 #include <cassert>
@@ -543,8 +543,8 @@ public:
 
 template <typename T>
 class SubmatrixQueriesDataStructure {
-    ExtendedRowNode<T> *_rowsTree; // denoted T_h in the KMNS article
-    ColNode<T> *_columnTree; // denoted \mathcal{B} in the KMNS article
+    ExtendedRowNode<T> *_rowsTree; // denoted T_h in the SubmatrixQueries article
+    ColNode<T> *_columnTree; // denoted \mathcal{B} in the SubmatrixQueries article
     
 public:
     // Constructs a new submatrix query datastructure for the given inverse Monge matrix.
@@ -714,4 +714,4 @@ public:
     }
 
 };
-#endif /* defined(__KMNS__enveloppe_tree__) */
+#endif /* defined(__SubmatrixQueries__enveloppe_tree__) */

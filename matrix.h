@@ -1,13 +1,13 @@
 //
 //  matrix.h
-//  KMNS
+//  SubmatrixQueries
 //
 //  Created by Raphael Bost on 02/01/13.
 //  Copyright (c) 2013 Raphael Bost. All rights reserved.
 //
 
-#ifndef __KMNS__matrix__
-#define __KMNS__matrix__
+#ifndef __SubmatrixQueries__matrix__
+#define __SubmatrixQueries__matrix__
 
 #include <valarray>
 #include <cassert>
@@ -156,7 +156,7 @@ namespace matrix {
     
     /* class ComplexMatrix
      * This is a basic implementation of matrices based on the STL's valarray.
-     * In the implementation of the KMNS article, we are supposed to have a matrix implementation that 
+     * In the implementation of the SubmatrixQueries article, we are supposed to have a matrix implementation that 
      * can answer data queries on one entry in O(1) time. This is the case here.
      *
      */
@@ -346,4 +346,4 @@ namespace matrix {
         return m;
     }
 }
-#endif /* defined(__KMNS__matrix__) */
+#endif /* defined(__SubmatrixQueries__matrix__) */
