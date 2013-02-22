@@ -25,6 +25,8 @@ namespace matrix {
     template <typename T>
     class Matrix {
     public:        
+        virtual ~Matrix() {}
+        
         virtual size_t rows() const = 0;
         virtual size_t cols() const = 0;
         

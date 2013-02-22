@@ -56,7 +56,7 @@ namespace envelope {
         {
         }
         
-        ~Envelope()
+        virtual ~Envelope()
         {
             delete _breakpoints;
         }
