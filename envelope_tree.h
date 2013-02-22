@@ -248,120 +248,65 @@ public:
  * For a better documentation of the methods, just refer to their equivalents in the RowNode class.
  */
 template <typename T>
-class ColNode {
-
-    Range _range;
-    
-    ColNode<T> *_lowIndicesNode, *_highIndicesNode;
-    bool _isLeaf;
-    
-    ColumnEnvelope<T> *_envelope;
-    size_t _crossingBpIndex; // the index of the breakpoint inserted when merging the children envelopes
-
-protected:
-
-    // _crossingBpIndex is mutable only for the subclasses
-    size_t& crossingBreakpointIndex() { return _crossingBpIndex; }
+class ColNode : public EnvTreeNode<T>{
 
 public:
     
-    ColNode(size_t minCol, size_t maxCol, Matrix<T> const& matrix): _range(minCol,maxCol)
+    ColNode(size_t minCol, size_t maxCol, Matrix<T> const& matrix): EnvTreeNode<T>(minCol,maxCol)
     {
         assert(minCol <= maxCol);
         if (minCol == maxCol) { // it is a leaf
-            _isLeaf = true;
-            _envelope = new ColumnEnvelope<T>(matrix, minCol);
+            ColumnEnvelope<T>* envelope = new ColumnEnvelope<T>(matrix, minCol);
+            this->setEnvelope(envelope);
         }else{
-            _isLeaf = false;
-            size_t midRow = minCol + ((maxCol - minCol)/2);
+            size_t midCol = minCol + ((maxCol - minCol)/2);
             
-            _lowIndicesNode = new ColNode<T>(minCol,midRow,matrix);
-            _highIndicesNode= new ColNode<T>(midRow+1,maxCol,matrix);
             
-            _envelope = mergeColumnEnvelopes(this->lowIndicesNode()->envelope(), this->highIndicesNode()->envelope(), &(this->crossingBreakpointIndex()) );
+            ColNode<T> *lowIndices;
+            ColNode<T> *highIndices;
+            lowIndices = new ColNode<T>(minCol,midCol,matrix);
+            highIndices= new ColNode<T>(midCol+1,maxCol,matrix);
+            this->setLowIndicesNode(lowIndices);
+            this->setHighIndicesNode(highIndices);
+            
+            ColumnEnvelope<T>*  envelope = mergeColumnEnvelopes(this->lowIndicesNode()->envelope(), this->highIndicesNode()->envelope(), &(this->crossingBreakpointIndex()) );
+            this->setEnvelope(envelope);
         }
     }
     
     
-    ColNode(Matrix<T> const& matrix) : _range(0,matrix.cols()-1)
+    ColNode(Matrix<T> const& matrix) : EnvTreeNode<T>(0,matrix.cols()-1)
     {
         size_t minCol = this->minCol();
         size_t maxCol = this->maxCol();
         size_t midCol = minCol + ((maxCol - minCol)/2);
         
         
-        _lowIndicesNode = new ColNode<T>(minCol,midCol,matrix);
-        _highIndicesNode= new ColNode<T>(midCol+1,maxCol,matrix);
+        ColNode<T> *lowIndices;
+        ColNode<T> *highIndices;
+        lowIndices = new ColNode<T>(minCol,midCol,matrix);
+        highIndices= new ColNode<T>(midCol+1,maxCol,matrix);
+        this->setLowIndicesNode(lowIndices);
+        this->setHighIndicesNode(highIndices);
         
-        _envelope = mergeColumnEnvelopes(this->lowIndicesNode()->envelope(), this->highIndicesNode()->envelope(), &(this->crossingBreakpointIndex()) );
+        ColumnEnvelope<T>* envelope = mergeColumnEnvelopes(this->lowIndicesNode()->envelope(), this->highIndicesNode()->envelope(), &(this->crossingBreakpointIndex()) );
+        
+        this->setEnvelope(envelope);
     }
     
-    ~ColNode()
-    {
-        if(!this->isLeaf() )
-        {
-            delete _lowIndicesNode;
-            delete _highIndicesNode;
-        }
-        delete _envelope;
-    }
-    
-    bool isLeaf() const { return _isLeaf; }
-    size_t minCol() const { return _range.min; }
-    size_t maxCol() const { return _range.max; }
-    size_t crossingBreakpointIndex() const { return _crossingBpIndex; }
+    size_t minCol() const  { return (this->range()).min; }
+    size_t maxCol() const { return (this->range()).max; }
 
     ColumnEnvelope<T>* envelope() const
     {
-        return _envelope;
+        return (ColumnEnvelope<T>*)EnvTreeNode<T>::envelope();
     }
-    ColNode<T>* lowIndicesNode() const { return _lowIndicesNode; }
-    ColNode<T>* highIndicesNode() const { return _highIndicesNode; }
+    ColNode<T>* lowIndicesNode() const { return (ColNode<T>* ) EnvTreeNode<T>::lowIndicesNode(); }
+    ColNode<T>* highIndicesNode() const { return (ColNode<T>* ) EnvTreeNode<T>::highIndicesNode(); }
 
-    // Returns the canonical nodes (cf. the article) for the specified indices
-    std::vector<const ColNode<T> *> canonicalNodes(size_t minCol, size_t maxCol) const
-    {
-        std::vector<const ColNode<T> *> buffer;
-        getCanonicalNodes(buffer, minCol, maxCol);
-        
-        return buffer;
-    }
-    
-    void getCanonicalNodes(std::vector<const ColNode<T> *> & buffer, size_t minCol, size_t maxCol) const
-    {
-        assert(minCol <= maxCol);
-        if (minCol > this->maxCol() || maxCol <  this->minCol()) { // check if the interval intersects the node's rows
-            return;
-        }
-        
-        if (minCol <=  this->minCol() && maxCol >= this->maxCol()) { // check if the interval include the node's rows
-            buffer.push_back(this); // in this the case, add the entire node to the buffer
-            return;
-        }
-        
-        if(!this->isLeaf()){
-            this->lowIndicesNode()->getCanonicalNodes(buffer,minCol,maxCol);
-            this->highIndicesNode()->getCanonicalNodes(buffer,minCol,maxCol);
-        }
-    }
     
     T maxForRowInRange(size_t row, size_t minCol, size_t maxCol) const{
-        assert(minCol <= maxCol);
-        std::vector<const ColNode<T> *> cNodes = canonicalNodes(minCol,maxCol);
-        
-        assert(cNodes.size() > 0);
-        
-        T max = cNodes[0]->envelope()->valueForRow(row);
-        
-        for (size_t i = 1; i < cNodes.size(); i++) {
-            T value = cNodes[i]->envelope()->valueForRow(row);
-            
-            if (value > max) {
-                max = value;
-            }
-        }
-        
-        return max;
+        return this->maxInRange(row,Range(minCol,maxCol));
     }
 };
 
