@@ -22,6 +22,107 @@
 using namespace envelope;
 using namespace matrix;
 
+
+template <typename T>
+class EnvTreeNode {
+private:
+    Range _range;
+    
+    EnvTreeNode<T> *_lowIndicesNode, *_highIndicesNode;
+    bool _isLeaf;
+ 
+    Envelope<T> *_envelope;
+    size_t _crossingBpIndex; // the index of the breakpoint inserted when merging the children envelopes
+
+protected:
+    void setEnvelope(Envelope< T > *newEnvelope){
+        _envelope = newEnvelope;
+    }
+    
+    void setLowIndicesNode(EnvTreeNode<T> *newLowNode)
+    {
+        _lowIndicesNode = newLowNode;
+    }
+    
+    void setHighIndicesNode(EnvTreeNode<T> *newHighNode)
+    {
+        _highIndicesNode = newHighNode;
+    }
+    
+    // _crossingBpIndex is mutable only for the subclasses
+    size_t& crossingBreakpointIndex() { return _crossingBpIndex; }
+
+public:
+
+    // This constructor creates a new RowNode with the specified children.
+    // If they are not NULL, it will also compute the merged envelope.
+    EnvTreeNode(Range r): EnvTreeNode(r.min,r.max)
+    {
+    }
+    
+    EnvTreeNode(size_t minRow, size_t maxRow): _range(minRow,maxRow)
+    {
+        assert(minRow <= maxRow);
+    }
+
+    ~EnvTreeNode()
+    {
+        if(!_isLeaf )
+        {
+            delete _lowIndicesNode;
+            delete _highIndicesNode;
+        }
+        delete _envelope;
+    }
+    
+    Envelope<T>* envelope() const
+    {
+        return _envelope;
+    }
+    
+    bool isLeaf() const { return _isLeaf; }
+    virtual EnvTreeNode<T>* lowIndicesNode() const { return _lowIndicesNode; }
+    virtual EnvTreeNode<T>* highIndicesNode() const { return _highIndicesNode; }
+    Range range() const { return _range; }
+    size_t crossingBreakpointIndex() const { return _crossingBpIndex; }
+    
+    // Returns the canonical nodes (cf. the article) for the specified indices
+    // COMPLEXITY : O(log(number of rows)
+    vector<const EnvTreeNode<T> *> canonicalNodes(size_t minIndex, size_t maxIndex) const
+    {
+        std::vector<const Envelope<T> *> buffer;
+        this->getCanonicalNodes(buffer, minIndex, maxIndex);
+        
+        return buffer;
+    }
+    
+    // Auxiliary method for the previous one.
+    // It adds itself to the buffer if the query range contains the row range the node represents.
+    // Otherwise, it recursively calls its children.
+    virtual void getCanonicalNodes(std::vector<const EnvTreeNode<T> *> & buffer, size_t minIndex, size_t maxIndex) const
+    {
+        assert(minIndex <= maxIndex);
+        Range r = this->range();
+        
+        if (minIndex > r.max || maxIndex < r.min) { // check if the interval intersects the node's rows
+            return; // if not, exit
+        }
+        
+        if (minIndex <= r.min && maxIndex >= r.max) { // check if the interval includes the node's rows
+            buffer.push_back(this); // in this the case, add the entire node to the buffer
+            return;
+        }
+        
+        if(!this->isLeaf()){
+            this->lowIndicesNode()->getCanonicalNodes(buffer,minIndex,maxIndex);
+            this->highIndicesNode()->getCanonicalNodes(buffer,minIndex,maxIndex);
+        }
+    }
+
+//    virtual T maxInRange(size_t position, Range r) = 0;
+};
+
+
 /*
  * class RowNode
  *
