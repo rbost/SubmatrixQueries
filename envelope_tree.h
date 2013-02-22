@@ -64,7 +64,7 @@ public:
         assert(minRow <= maxRow);
     }
 
-    ~EnvTreeNode()
+    virtual ~EnvTreeNode()
     {
         if(!(this->isLeaf()) )
         {
