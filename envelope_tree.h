@@ -490,31 +490,16 @@ public:
     // We override this to avoid compile-time errors (thank you C++) 
     vector<const ExtendedRowNode<T> *> canonicalNodes(size_t minRow, size_t maxRow) const
     {
-        std::vector<const ExtendedRowNode<T> *> buffer;
-        getCanonicalNodes(buffer, minRow, maxRow);
+        std::vector<const EnvTreeNode<T> *> buffer;
+        this->getCanonicalNodes(buffer, minRow, maxRow);
         
-        return buffer;
+        vector<const ExtendedRowNode<T> *> castedBuffer(buffer.size());
+        
+        for (size_t i = 0 ; i < buffer.size(); i++) {
+            castedBuffer[i] = (const ExtendedRowNode<T> *)buffer[i];
+        }
+        return castedBuffer;
     }
-    
-    // idem.
-    void getCanonicalNodes(std::vector<const ExtendedRowNode<T> *> & buffer, size_t minRow, size_t maxRow) const
-    {
-        assert(minRow <= maxRow);
-        if (minRow > this->maxRow() || maxRow < this->minRow()) { // check if the interval intersects the node's rows
-            return; // if not, exit
-        }
-        
-        if (minRow <= this->minRow() && maxRow >= this->maxRow()) { // check if the interval includes the node's rows
-            buffer.push_back(this); // in this the case, add the entire node to the buffer
-            return;
-        }
-        
-        if(!this->isLeaf()){
-            this->lowIndicesNode()->getCanonicalNodes(buffer,minRow,maxRow);
-            this->highIndicesNode()->getCanonicalNodes(buffer,minRow,maxRow);
-        }
-    }
-
 };
 
 /*
