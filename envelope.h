@@ -70,7 +70,7 @@ namespace envelope {
             return this->breakpoints()->size();
         }
         
-        Matrix<T> const& values()
+        Matrix<T> const& values() const
         {
             return this->_values;
         }
@@ -140,10 +140,18 @@ namespace envelope {
         virtual size_t maxPosition() const = 0;
         
         // ABSTRACT METHOD
-        // Implementations must return the position associated to the breakpoint at index i in the breakpoint array.
-        // (basically the row or the column of the breakpoint).
-        virtual size_t positionForBreakpointAtIndex(size_t i) const = 0;
+        // Implementations must return the position of the breakpoint given as an argument.
+        virtual inline size_t positionForBreakpoint(Breakpoint bp) const = 0;
+        
+        virtual size_t positionForBreakpointAtIndex(size_t i) const
+        {
+            Breakpoint bp = (*this->breakpoints())[i];
+            return this->positionForBreakpoint(bp);
+        }
 
+        virtual T firstValue() const = 0;
+        virtual T lastValue() const = 0;
+        
 
         Breakpoint firstBreakpoint() const
         {
@@ -218,9 +226,19 @@ namespace envelope {
             return Breakpoint(mappedPosition(index),index);
         }
         
-        size_t positionForBreakpointAtIndex(size_t i) const
+        inline size_t positionForBreakpoint(Breakpoint bp) const
         {
-            return (*this->breakpoints())[i].col;
+            return bp.col;
+        }
+        
+        T firstValue() const
+        {
+            return (this->values())((this->breakpoints())->front().row,0);
+        }
+        T lastValue() const
+        {
+            size_t lastCol = this->values().cols()-1;
+            return (this->values())((this->breakpoints())->back().row,lastCol);
         }
     };
 
@@ -277,9 +295,19 @@ namespace envelope {
             return Breakpoint(index,mappedPosition(index));
         }
 
-        size_t positionForBreakpointAtIndex(size_t i) const
+        inline size_t positionForBreakpoint(Breakpoint bp) const
         {
-            return (*this->breakpoints())[i].row;
+            return bp.row;
+        }
+        
+        T firstValue() const
+        {
+            return (this->values())(0,(this->breakpoints())->front().row);
+        }
+        T lastValue() const
+        {
+            size_t lastRow = this->values().rows()-1;
+            return (this->values())(lastRow,(this->breakpoints())->back().col);
         }
 
     };
@@ -319,16 +347,13 @@ namespace envelope {
     // COMPLEXITY: O( log(number_of_breakpoints) * log(number_of_columns) + number_of_breakpoints)
     
     // WARNING: THIS RETURNS A NEWLY ALLOCATED ENVELOPE. IT MEANS YOU ARE RESPONSIBLE FOR DESTROYING IT WHEN YOU ARE DONE WITH IT!
-    
-    template <typename T> RowEnvelope<T> * mergeRowEnvelopes(RowEnvelope<T> * e1, RowEnvelope<T> * e2, size_t *crossingBpIndex) {
-        // We begin to check if we really need to merge the envelopes.
-        T firstValue1 = (e1->values())((e1->breakpoints())->front().row,0);
-        T firstValue2 = (e2->values())((e2->breakpoints())->front().row,0);
+    template <typename T> vector<Breakpoint>* mergeEnvelopes(Envelope<T> *e1, Envelope<T> *e2, size_t *crossingBpIndex)
+    {
+        T firstValue1 = e1->firstValue();
+        T firstValue2 = e2->firstValue();
         
-        size_t lastCol = e1->values().cols()-1;
-        T lastValue1 = (e1->values())((e1->breakpoints())->back().row,lastCol);
-        T lastValue2 = (e2->values())((e2->breakpoints())->back().row,lastCol);
-        
+        T lastValue1 = e1->lastValue(); 
+        T lastValue2 = e2->lastValue();
         
         if ((firstValue1 - firstValue2)*(lastValue1 - lastValue2) >= 0) {
             // The two expressions have the same sign, we do not have to compute a breakpoint.
@@ -338,16 +363,16 @@ namespace envelope {
                 if (crossingBpIndex) {
                     *crossingBpIndex = e1->breakpoints()->size();
                 }
-                return new RowEnvelope<T>(e1->values(), new vector<Breakpoint>(*e1->breakpoints()));
+                return new vector<Breakpoint>(*e1->breakpoints());
             }else{
                 // e2 is "over" e1
                 if (crossingBpIndex) {
                     *crossingBpIndex =-1;
                 }
-                return new RowEnvelope<T>(e2->values(), new vector<Breakpoint>(*e2->breakpoints()));
+                return new vector<Breakpoint>(*e2->breakpoints());
             }
         }
-        
+
         // first, we find the new breakpoint ...
         Breakpoint newBreakpoint = mergeBreakPoint(e1, e2);
         
@@ -356,11 +381,13 @@ namespace envelope {
         // first, insert the breakpoints of the first envelope
         vector<Breakpoint> *newBpList = new vector<Breakpoint>();
         size_t i = 0;
+        size_t newBpPosition = e1->positionForBreakpoint(newBreakpoint);
         
-        while (i < e1->breakpoints()->size() && (*(e1->breakpoints()))[i].col < newBreakpoint.col) {
+        while (i < e1->breakpoints()->size() && e1->positionForBreakpointAtIndex(i) < newBpPosition) {
             newBpList->push_back((*(e1->breakpoints()))[i]);
             i++;
         }
+
         
         // add the new breakpoint
         newBpList->push_back(newBreakpoint);
@@ -374,7 +401,7 @@ namespace envelope {
         // To improve performances, here, we just just jump to the first breakpoint to insert using a
         // logarithmic complexity method instead of just going through all the useless breakpoints.
         size_t beginningIndex;
-        e2->breakpointBeforePosition(newBreakpoint.col,&beginningIndex);
+        e2->breakpointBeforePosition(newBpPosition,&beginningIndex);
         i = beginningIndex+1;
         
         while (i < e2->breakpoints()->size()){
@@ -382,80 +409,27 @@ namespace envelope {
             i++;
         }
         
-        // ... in order to create a new one
-        return new RowEnvelope<T>(e1->values(), newBpList);
+        return newBpList;
+    }
+    
+    template <typename T> RowEnvelope<T> * mergeRowEnvelopes(RowEnvelope<T> * e1, RowEnvelope<T> * e2, size_t *crossingBpIndex) {
+        vector<Breakpoint>* newBreakpoints = mergeEnvelopes(e1, e2, crossingBpIndex);
+        
+        return new RowEnvelope<T>(e1->values(),newBreakpoints);
+        
     }
     
     template <typename T> RowEnvelope<T> * mergeRowEnvelopes(RowEnvelope<T> * e1, RowEnvelope<T> * e2)
     {
         return mergeRowEnvelopes(e1,e2,NULL);
     }
-    
+
     template <typename T> ColumnEnvelope<T> * mergeColumnEnvelopes(ColumnEnvelope<T> * e1, ColumnEnvelope<T> * e2, size_t *crossingBpIndex) {
+        vector<Breakpoint>* newBreakpoints = mergeEnvelopes(e1, e2, crossingBpIndex);
         
-        const vector<Breakpoint> *breakpoints1 = e1->breakpoints();
-        const vector<Breakpoint> *breakpoints2 = e2->breakpoints();
-        
-        // We begin to check if we really need to merge the envelopes.
-        T firstValue1 = (e1->values())(0,breakpoints1->front().col);
-        T firstValue2 = (e2->values())(0,breakpoints2->front().col);
-        
-        size_t lastRow = e1->values().rows()-1;
-        T lastValue1 = (e1->values())(lastRow,breakpoints1->back().col);
-        T lastValue2 = (e2->values())(lastRow,breakpoints2->back().col);
-        
-        
-        if ((firstValue1 - firstValue2)*(lastValue1 - lastValue2) >= 0) {
-            // The two expressions have the same sign, we do not have to compute a breakpoint.
-            // The pseudo lines corresponding to the envelopes are not crossing, so we have to return the "upper" one.
-            if (firstValue1 > firstValue2 || lastValue1 >= lastValue2) {
-                // e1 is "over" e2
-                if (crossingBpIndex) {
-                    *crossingBpIndex = e1->breakpoints()->size();
-                }
-                return new ColumnEnvelope<T>(e1->values(), new vector<Breakpoint>(*breakpoints1));
-            }else{
-                // e2 is "over" e1
-                if (crossingBpIndex) {
-                    *crossingBpIndex = -1;
-                }
-                return new ColumnEnvelope<T>(e2->values(), new vector<Breakpoint>(*breakpoints2));
-            }
-        }
-        
-        // first, we find the new breakpoint ...
-        Breakpoint newBreakpoint = mergeBreakPoint(e1, e2);
-        
-        // ... and then we concatenate the two envelopes and the new breakpoint ...
-        vector<Breakpoint> *newBpList = new vector<Breakpoint> ();
-        size_t i = 0;
-        
-        while (i < e1->breakpoints()->size() && (*breakpoints1)[i].row < newBreakpoint.row) {
-            newBpList->push_back((*breakpoints1)[i]);
-            i++;
-        }
-        
-        newBpList->push_back(newBreakpoint);
-        // save the position of the crossing breakpoint in the new enveloppe
-        if (crossingBpIndex) {
-            *crossingBpIndex = i;
-        }
-
-        // To improve performances, here, we just just jump to the first breakpoint to insert using a
-        // logarithmic complexity method instead of just going through all the useless breakpoints.
-        size_t beginningIndex;
-        e2->breakpointBeforePosition(newBreakpoint.row,&beginningIndex);
-        i = beginningIndex+1;
-
-        while (i < e2->breakpoints()->size()){
-            newBpList->push_back((*breakpoints2)[i]);
-            i++;
-        }
-        
-        // ... in order to create a new one
-        return new ColumnEnvelope<T>(e1->values(), newBpList);
+        return new ColumnEnvelope<T>(e1->values(),newBreakpoints);    
     }
-    
+
     template <typename T> ColumnEnvelope<T> * mergeColumnEnvelopes(ColumnEnvelope<T> * e1, ColumnEnvelope<T> * e2)
     {
         return mergeColumnEnvelopes(e1,e2,NULL);
