@@ -131,9 +131,12 @@ namespace envelope {
         // Implementation must return a breakpoint that will be on the envelope at the given position
         virtual Breakpoint newBreakPointAtPosition(size_t index) const = 0;
         
-        // ABSTRACT METHOD
-        // Implementations must return the value of the pseudo line they represent at the givent position
-        virtual T valueForPosition(size_t index) const = 0;
+        // Returns the value of the envelope for the given position
+        virtual T valueForPosition(size_t position) const
+        {
+            Breakpoint bp = this->breakpointBeforePosition(position);
+            return this->valueForPositionAfterBreakpoint(position,bp);
+        }
         
         // ABSTRACT METHOD
         // Implementations must return the maximum position for a breakpoint.
@@ -142,6 +145,11 @@ namespace envelope {
         // ABSTRACT METHOD
         // Implementations must return the position of the breakpoint given as an argument.
         virtual inline size_t positionForBreakpoint(Breakpoint bp) const = 0;
+        virtual inline size_t mappedPositionForBreakpoint(Breakpoint bp) const = 0;
+
+        // ABSTRACT METHOD
+        // Implementations must return the value at position given that bp is the last breakpoint before position 
+        virtual T valueForPositionAfterBreakpoint(size_t position, Breakpoint bp) const = 0;
         
         virtual size_t positionForBreakpointAtIndex(size_t i) const
         {
@@ -211,11 +219,6 @@ namespace envelope {
             return rowForColumn(index);
         }
         
-        T valueForPosition(size_t index) const
-        {
-            return valueForColumn(index);
-        }
-        
         size_t maxPosition() const
         {
             return numberOfColumns()-1;
@@ -229,6 +232,16 @@ namespace envelope {
         inline size_t positionForBreakpoint(Breakpoint bp) const
         {
             return bp.col;
+        }
+        
+        inline size_t mappedPositionForBreakpoint(Breakpoint bp) const
+        {
+            return bp.row;
+        }
+        
+        T valueForPositionAfterBreakpoint(size_t position, Breakpoint bp) const
+        {
+            return (this->values())(bp.row,position);
         }
         
         T firstValue() const
@@ -280,11 +293,6 @@ namespace envelope {
             return columnForRow(index);
         }
         
-        T valueForPosition(size_t index) const
-        {
-            return valueForRow(index);
-        }
-        
         size_t maxPosition() const
         {
             return numberOfRows()-1;
@@ -300,6 +308,16 @@ namespace envelope {
             return bp.row;
         }
         
+        inline size_t mappedPositionForBreakpoint(Breakpoint bp) const
+        {
+            return bp.col;
+        }
+
+        T valueForPositionAfterBreakpoint(size_t position, Breakpoint bp) const
+        {
+            return (this->values())(position,bp.col);
+        }
+
         T firstValue() const
         {
             return (this->values())(0,(this->breakpoints())->front().col);
