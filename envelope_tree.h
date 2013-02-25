@@ -163,6 +163,38 @@ public:
                    this->envelope()->numberOfBreakpoints());
     }
     
+    T cascadingMaxInRange(size_t position, Range r) const{
+        MaxValue<T> max;
+        
+        this->updateRecursiveMaxInRange(position, r, &max);
+        
+        return max.value();
+    }
+    
+    void updateRecursiveMaxInRange(size_t position, Range r, MaxValue<T>* max) const{
+        if (!r.intersects(this->range())) {
+            return;
+        }
+            
+        Breakpoint bp = this->envelope()->breakpointBeforePosition(position,NULL);
+        
+        if (r.isInRange(this->envelope()->mappedPositionForBreakpoint(bp))) {
+            // If the breakpoint mapped position is in the range, we have the max for this node
+            // Just update it an return
+            T value = this->envelope()->valueForPositionAfterBreakpoint(position,bp);
+            
+            max->updateMax(value);
+            return;
+        }
+        
+        // Here, the returned breakpoint is out of range
+        // We will have to make a recursive call on the node's children
+        
+        if (!this->isLeaf()) {
+            this->lowIndicesNode()->updateRecursiveMaxInRange(position,r,max);
+            this->highIndicesNode()->updateRecursiveMaxInRange(position,r,max);
+        }
+    }
 };
 
 
