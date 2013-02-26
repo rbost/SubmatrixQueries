@@ -77,13 +77,16 @@ namespace envelope {
 
         
         // Finds the last breakpoint before col in the breakpoint list using binary search
+        // In the first method, we specify the index in between we have to search
         // COMPLEXITY: O( log(number_of_breakpoints) )
-
-        Breakpoint breakpointBeforePosition(size_t pos, size_t *foundPosition) const
+        
+        Breakpoint breakpointBeforePosition(size_t pos, size_t iMin, size_t iMax, size_t *foundPosition) const
         {
-            size_t iMin, iMax, iMid;
+            assert(iMin >= 0);
+            assert(iMax < this->numberOfBreakpoints());
+            
+            size_t iMid;
             size_t i;
-            iMin = 0; iMax = this->numberOfBreakpoints() - 1;
             i = 0;
             
             while (iMax > iMin) {
@@ -91,8 +94,8 @@ namespace envelope {
                 
                 size_t selectedPosition = this->positionForBreakpointAtIndex(iMid);// (*this->breakpoints())[iMid].col;
                 
-                if (iMid == numberOfBreakpoints()-1) {
-                    // in case we selected the last breakpoint
+                if (iMid == iMax) {
+                    // in case we selected the last available breakpoint
                     if (selectedPosition > pos){ // we have to select a lower breakpoint
                         iMax = iMid - 1;
                     }else{
@@ -118,6 +121,11 @@ namespace envelope {
                 *foundPosition = i;
             }
             return (*this->breakpoints())[i];
+        }
+        
+        Breakpoint breakpointBeforePosition(size_t pos, size_t *foundPosition) const
+        {
+            return breakpointBeforePosition(pos,0,this->numberOfBreakpoints() - 1,foundPosition);
         }
         
         Breakpoint breakpointBeforePosition(size_t pos) const
