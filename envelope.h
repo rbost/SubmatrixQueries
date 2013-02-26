@@ -368,7 +368,7 @@ namespace envelope {
     // we suppose that the envelope e1 is the envelope for lower indices than e2
     // if a valid pointer crossingBpIndex is provided. In the new enveloppe, every breakpoint whose index is strictly less than crossingBpIndex
     // comes from e1, and if striclty more than crossingBpIndex comes from e2. If the returned envelope is not a "merge" of e1 and e2,
-    // crossingBpIndex is set to -1 if a copy of e2 is returned, and is set to number_of_breakpoints of e1 if a copy of e1 is returned. 
+    // crossingBpIndex is set to 0 if a copy of e2 is returned, and is set to number_of_breakpoints of e1 if a copy of e1 is returned. 
     
     // COMPLEXITY: O( log(number_of_breakpoints) * log(number_of_columns) + number_of_breakpoints)
     
@@ -393,7 +393,7 @@ namespace envelope {
             }else{
                 // e2 is "over" e1
                 if (crossingBpIndex) {
-                    *crossingBpIndex =-1;
+                    *crossingBpIndex = 0;
                 }
                 return new vector<Breakpoint>(*e2->breakpoints());
             }

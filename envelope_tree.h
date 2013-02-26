@@ -475,7 +475,7 @@ public:
             this->lowIndicesNode()->recursivelyComputeIntervalMaxima_fast(flippedTree);
             this->highIndicesNode()->recursivelyComputeIntervalMaxima_fast(flippedTree);
             
-            if (this->crossingBreakpointIndex() == -1) {
+            if (this->crossingBreakpointIndex() <= 0) {
                 
                 // only the envelope of the highIndicesNode has been kept when merging
                 // we duplicate the RMQ DS of this node
