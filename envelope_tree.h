@@ -456,7 +456,7 @@ public:
             this->lowIndicesNode()->recursivelyComputeIntervalMaxima_fast(flippedTree);
             this->highIndicesNode()->recursivelyComputeIntervalMaxima_fast(flippedTree);
             
-            if (this->crossingBreakpointIndex() == -1) {
+            if (this->crossingBreakpointIndex() <= 0) {
                 
                 // only the envelope of the highIndicesNode has been kept when merging
                 // we copy the RMQ DS of this node
@@ -464,7 +464,7 @@ public:
                 // and the maxima vector
                 _maxima = new vector<T>(*this->highIndicesNode()->maxima());
                 
-            }else if (this->crossingBreakpointIndex() == this->lowIndicesNode()->envelope()->numberOfBreakpoints()){
+            }else if (this->crossingBreakpointIndex() >= this->lowIndicesNode()->envelope()->numberOfBreakpoints()){
                 
                 // only the envelope of the lowIndicesNode has been kept when merging
                 // we copy the RMQ DS of this node
