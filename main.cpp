@@ -216,7 +216,7 @@ void testTest( size_t nRows, size_t nCols)
     SubmatrixQueriesTest test = SubmatrixQueriesTest(nRows, nCols);
     
     cout << endl << "Beginning row queries tests ..." << endl;
-    if (test.multipleRowQueryTest(10)) {
+    if (test.multipleRowQueryTestVsCascading(100)) {
         cout << "Row queries tests passed" << endl;
     }else{
         cout << "Tests failed" << endl;
