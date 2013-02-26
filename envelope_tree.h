@@ -156,6 +156,19 @@ public:
             return;
         }
             
+    T simpleCascadingMaxInRange(size_t position, Range r) const{
+        MaxValue<T> max;
+        
+        this->updateRecursiveMaxInRange(position, r, &max, 0, this->envelope()->numberOfBreakpoints()-1);
+        
+        return max.value();
+    }
+    
+    void updateRecursiveMaxInRange(size_t position, Range r, MaxValue<T>* max) const{
+        if (!r.intersects(this->range())) {
+            return;
+        }
+        
         Breakpoint bp = this->envelope()->breakpointBeforePosition(position,NULL);
         
         if (r.isInRange(this->envelope()->mappedPositionForBreakpoint(bp))) {
