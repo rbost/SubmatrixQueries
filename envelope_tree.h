@@ -146,16 +146,88 @@ public:
     T cascadingMaxInRange(size_t position, Range r) const{
         MaxValue<T> max;
         
-        this->updateRecursiveMaxInRange(position, r, &max);
+        this->updateRecursiveMaxInRange(position, r, &max, 0, this->envelope()->numberOfBreakpoints()-1);
         
         return max.value();
     }
     
-    void updateRecursiveMaxInRange(size_t position, Range r, MaxValue<T>* max) const{
+    void updateRecursiveMaxInRange(size_t position, Range r, MaxValue<T>* max, size_t iMin, size_t iMax) const{
         if (!r.intersects(this->range())) {
             return;
         }
             
+        size_t bpIndex;
+        Breakpoint bp;
+        
+        if (iMin == iMax) {
+            bpIndex = iMin;
+            bp = (*this->envelope()->breakpoints())[bpIndex];
+        }else{
+            bp = this->envelope()->breakpointBeforePosition(position,iMin,iMax,&bpIndex);
+        }
+        
+        if (r.isInRange(this->envelope()->mappedPositionForBreakpoint(bp))) {
+            // If the breakpoint mapped position is in the range, we have the max for this node
+            // Just update it an return
+            T value = this->envelope()->valueForPositionAfterBreakpoint(position,bp);
+            
+            max->updateMax(value);
+            return;
+        }
+        
+        // Here, the returned breakpoint is out of range
+        // We will have to make a recursive call on the node's children
+        
+        if (!this->isLeaf()) {
+            size_t crossingIndex = this->crossingBreakpointIndex();
+
+            // first of all, we treat some degenerate cases
+            if (crossingIndex <= 0) {
+                // the high indices node envelope is on the top
+                this->lowIndicesNode()->updateRecursiveMaxInRange(position,r,max,0,this->lowIndicesNode()->envelope()->numberOfBreakpoints() -1);
+                this->highIndicesNode()->updateRecursiveMaxInRange(position,r,max,bpIndex,bpIndex);
+                return;
+            }else if (crossingIndex >= this->envelope()->numberOfBreakpoints()){
+                // the low indices node envelope is on the top
+                this->lowIndicesNode()->updateRecursiveMaxInRange(position,r,max,bpIndex,bpIndex);
+                this->highIndicesNode()->updateRecursiveMaxInRange(position,r,max,0,this->highIndicesNode()->envelope()->numberOfBreakpoints() -1);
+                return;
+            }
+            
+            if (bpIndex < crossingIndex) {
+                // bp belongs to the part of the envelope that comes from the low indices node
+                // That means, we do not have to search for that breakpoint in this child
+                
+                size_t reverseIndex = this->envelope()->numberOfBreakpoints() -1 - crossingIndex;
+                size_t indexInHIN = this->highIndicesNode()->envelope()->numberOfBreakpoints() -1 - reverseIndex;
+
+                this->lowIndicesNode()->updateRecursiveMaxInRange(position,r,max,bpIndex,bpIndex);
+                this->highIndicesNode()->updateRecursiveMaxInRange(position,r,max,0,indexInHIN);
+                return;
+            }
+            if (bpIndex > crossingIndex){
+                size_t reverseIndex = this->envelope()->numberOfBreakpoints() -1 - bpIndex;
+                size_t indexInHIN = this->highIndicesNode()->envelope()->numberOfBreakpoints() -1 - reverseIndex;
+
+                this->lowIndicesNode()->updateRecursiveMaxInRange(position,r,max,crossingIndex-1,this->lowIndicesNode()->envelope()->numberOfBreakpoints() -1);
+                this->highIndicesNode()->updateRecursiveMaxInRange(position,r,max,indexInHIN,indexInHIN);
+                
+                return;
+            }
+            if (bpIndex == crossingIndex) {
+                size_t reverseIndex = this->envelope()->numberOfBreakpoints() -1 - crossingIndex;
+                size_t indexInHIN = this->highIndicesNode()->envelope()->numberOfBreakpoints() -1 - reverseIndex;
+                
+                this->lowIndicesNode()->updateRecursiveMaxInRange(position,r,max,crossingIndex-1,std::min<size_t>(crossingIndex,this->lowIndicesNode()->envelope()->numberOfBreakpoints() -1));
+                this->highIndicesNode()->updateRecursiveMaxInRange(position,r,max,std::max<size_t>(0,indexInHIN-1),indexInHIN);
+                
+                return;
+            }
+            this->lowIndicesNode()->updateRecursiveMaxInRange(position,r,max,0,this->lowIndicesNode()->envelope()->numberOfBreakpoints() -1);
+            this->highIndicesNode()->updateRecursiveMaxInRange(position,r,max,0,this->highIndicesNode()->envelope()->numberOfBreakpoints() -1);
+        }
+    }
+    
     T simpleCascadingMaxInRange(size_t position, Range r) const{
         MaxValue<T> max;
         
@@ -188,7 +260,6 @@ public:
             this->highIndicesNode()->updateRecursiveMaxInRange(position,r,max);
         }
     }
-
 };
 
 
@@ -391,7 +462,7 @@ public:
     
     ~ExtendedRowNode<T>()
     {
-        delete _rangeMaxima;
+//        delete _rangeMaxima;
         delete _maxima;
     }
     
