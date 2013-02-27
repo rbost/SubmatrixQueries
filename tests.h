@@ -53,6 +53,8 @@ public:
     static double naiveMaximumInSubmatrix(const Matrix<double> *m, Range rowRange, Range colRange);
     
     static Matrix<double>* generateInverseMongeMatrix(size_t rows, size_t cols);
+    static Matrix<double>* generateInverseMongeMatrix2(size_t rows, size_t cols);
+    static Matrix<double>* generateInverseMongeMatrix3(size_t rows, size_t cols);
 };
 
 #endif /* defined(__SubmatrixQueries__tests__) */

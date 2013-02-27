@@ -13,6 +13,9 @@
 #include <ctime>
 #include <algorithm>
 #include <climits>
+#include <set>
+#include <cfloat>
+#include <random>
 
 #define PRINT_TEST_MATRIX false
 #define BENCHMARK true
@@ -38,12 +41,14 @@ SubmatrixQueriesTest::SubmatrixQueriesTest(size_t rows, size_t cols)
 #if BENCHMARK
     clock_t time = clock();
 #endif
-    _testMatrix = generateInverseMongeMatrix(rows, cols);
+    _testMatrix = generateInverseMongeMatrix3(rows, cols);
 #if BENCHMARK
     time = clock() - time;
     cout << "Building Matrix: " << 1000*((double)time)/CLOCKS_PER_SEC << " ms" << endl;
     time = clock();
 #endif
+    
+    _testMatrix->print();
     
     _queryDS = new SubmatrixQueriesDataStructure<double>(*_testMatrix);
 #if BENCHMARK
@@ -295,7 +300,7 @@ Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrix(size_t rows, si
     
     srand ( time(NULL) );
     
-    // we define these values to avoid overflows that will lead to a non inverse Monge matrix 
+    // we define these values to avoid overflows that will lead to a non inverse Monge matrix
     int max_abscissa = (int)sqrtf(INT_MAX/3) - LINE_DISTANCE;
     int rowInterval = max<int>(max_abscissa/rows,1);
     int colInterval = max<int>(max_abscissa/cols,1);
@@ -319,7 +324,7 @@ Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrix(size_t rows, si
     for (size_t i = 0; i < rows; i++) {
         for (size_t j = 0; j < cols; j++) {
             double abscissaDiff = rowsAbscissa[i]-colsAbscissa[j];
-
+            
             (*m)(i,j) = sqrt(LINE_DISTANCE + abscissaDiff*abscissaDiff);
         }
     }
@@ -327,5 +332,128 @@ Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrix(size_t rows, si
     delete [] rowsAbscissa;
     delete [] colsAbscissa;
     
+    return m;
+}
+
+Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrix2(size_t rows, size_t cols)
+{
+    Matrix<double> *m;
+    
+    cout << "Initializing matrix " << rows << "x" << cols << " ... ";
+    try {
+        m = new ComplexMatrix<double>(rows,cols);
+        cout << "Done" << endl;
+    } catch (std::bad_alloc& ba) {
+        cout << "\nbad_alloc caught: " << ba.what() << endl;
+        cout << "Try to build an other matrix ... ";
+        m = new SimpleMatrix<double>(rows,cols);
+        cout << "Done" << endl;
+    }
+    
+    cout << "Fill the Inverse Monge Matrix ... " << endl;
+    
+    int *rowsAbscissa, *colsAbscissa;
+    
+    rowsAbscissa = new int[rows];
+    colsAbscissa = new int[cols];
+    
+    srand ( time(NULL) );
+    
+    // we define these values to avoid overflows that will lead to a non inverse Monge matrix
+    // our goal is to have values in rowsAbscissa and colsAbscissa that are between -max_abscissa and +max_abscissa 
+    int max_abscissa;
+//    max_abscissa = (int)sqrtf(INT_MAX/3) - LINE_DISTANCE;
+    max_abscissa = 0.5*sqrt(INT_MAX-LINE_DISTANCE);
+    
+    int rowInterval = max<int>(2*max_abscissa/rows,1);
+    int colInterval = max<int>(2*max_abscissa/cols,1);
+    
+    assert(rowInterval > 0);
+    assert(colInterval > 0);
+    
+    int accumulator = -max_abscissa;
+    
+    for (size_t i = 0; i < rows; i++) {
+        accumulator += rand() % rowInterval +1;
+        rowsAbscissa[i] = accumulator;
+    }
+    
+    accumulator = -max_abscissa;
+    for (size_t j = 0; j < cols; j++) {
+        accumulator += rand() % colInterval +1;
+        colsAbscissa[cols-1-j] = accumulator;
+    }
+    
+    for (size_t i = 0; i < rows; i++) {
+        for (size_t j = 0; j < cols; j++) {
+            int abscissaDiff = rowsAbscissa[i]-colsAbscissa[j];
+            int diffSquare = abscissaDiff*abscissaDiff;
+            int distSquare = LINE_DISTANCE + diffSquare;
+            double v = sqrt(distSquare);
+            (*m)(i,j) = v;
+        }
+    }
+    
+    delete [] rowsAbscissa;
+    delete [] colsAbscissa;
+    
+    return m;
+}
+
+Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrix3(size_t rows, size_t cols)
+{
+    Matrix<double> *m;
+    
+    cout << "Initializing matrix " << rows << "x" << cols << " ... ";
+    try {
+        m = new ComplexMatrix<double>(rows,cols);
+        cout << "Done" << endl;
+    } catch (std::bad_alloc& ba) {
+        cout << "\nbad_alloc caught: " << ba.what() << endl;
+        cout << "Try to build an other matrix ... ";
+        m = new SimpleMatrix<double>(rows,cols);
+        cout << "Done" << endl;
+    }
+    
+    cout << "Fill the Inverse Monge Matrix ... " << endl;
+    
+    vector<double> rowsAbscissa, colsAbscissa;
+    
+    rowsAbscissa = vector<double>(rows);
+    colsAbscissa = vector<double>(cols);
+    std::pair<std::set<double>::iterator,bool> ret;
+    
+    double max_abscissa;
+//    max_abscissa = 0.5*sqrt(DBL_MAX-LINE_DISTANCE);
+    max_abscissa = 10;
+    
+    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    std::default_random_engine generator (seed);
+//    std::uniform_real_distribution<double> distribution (-max_abscissa,max_abscissa);
+    normal_distribution<double> distribution(0.0, 20);
+    for (size_t i = 0; i < rows; i++) {
+        rowsAbscissa[i] = distribution(generator);
+    }
+
+    for (size_t i = 0; i < rows; i++) {
+        colsAbscissa[i] = distribution(generator);
+    }
+    
+    std::set<double>::iterator rowIt, colIt;
+    
+    
+    std::sort(rowsAbscissa.begin(), rowsAbscissa.end());
+    std::sort(colsAbscissa.begin(), colsAbscissa.end());
+    
+    for (size_t i = 0; i < rows; i++) {
+        for (size_t j = 0; j < cols; j++) {
+            double abscissaDiff = rowsAbscissa[i]-colsAbscissa[cols-1-j];
+            double diffSquare = abscissaDiff*abscissaDiff;
+            double distSquare = LINE_DISTANCE + diffSquare;
+            double v = sqrt(distSquare);
+            v = rowsAbscissa[i]*colsAbscissa[j];
+            (*m)(i,j) = v;
+        }
+    }
     return m;
 }
