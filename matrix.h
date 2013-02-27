@@ -61,7 +61,8 @@ namespace matrix {
     {
         for (size_t i = 0; i < rows()-1; i++) {
             for (size_t j = 0; j < cols()-1; j++) {
-                if (operator()(i,j) + operator()(i+1,j+1) > operator()(i,j+1) + operator()(i+1,j)) {
+                // equivalent to the regular definition but uses substractions to avoid overflows
+                if (operator()(i,j) - operator()(i+1,j)  > operator()(i,j+1) - operator()(i+1,j+1)) {
                     return false;
                 }
             }
@@ -73,7 +74,8 @@ namespace matrix {
     {
         for (size_t i = 0; i < rows()-1; i++) {
             for (size_t j = 0; j < cols()-1; j++) {
-                if (operator()(i,j) + operator()(i+1,j+1) < operator()(i,j+1) + operator()(i+1,j)) {
+                // equivalent to the regular definition but uses substractions to avoid overflows
+                if (operator()(i,j) - operator()(i+1,j) < operator()(i,j+1)  - operator()(i+1,j+1) ) {
                     return false;
                 }
             }
