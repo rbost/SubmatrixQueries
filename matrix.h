@@ -36,6 +36,8 @@ namespace matrix {
         bool isMonotone() const;
         bool isMonge() const;
         bool isInverseMonge() const;
+        
+        void print() const;
     };
     
     // Monotone & Monge propery
@@ -83,6 +85,16 @@ namespace matrix {
         return true;
     }
 
+    template <typename T> void Matrix<T>::print() const
+    {
+        for (size_t i = 0; i < rows()-1; i++) {
+            for (size_t j = 0; j < cols()-1; j++) {
+                std::cout << (*this)(i,j) << "  ;  ";
+            }
+            std::cout<<"\n";
+        }        
+    }
+    
     /* class SimpleMatrix
      * 
      * This is a very simple matrix implemenation. Its purpose is to compare its performance
