@@ -686,7 +686,7 @@ public:
             if (endBPIndex - startBPIndex > 1) { // to have at least one interval, we need at least two breakpoints ...
                 // the range of the set of intervals is then [(*breakpoints)[startBPIndex+1].col,(*breakpoints)[endBPIndex].col-1]
                 const BasicRQNode<T> *rangeMaxima = (*nodesIterator)->rangeMaxima();
-                max.updateMax(rangeMaxima->query((*breakpoints)[startBPIndex+1].col,endBP.col-1));
+                max.updateMax(rangeMaxima->query(startBPIndex+1,rangeMaxima->maxIndex()));
             }
             
             // check for the rest of the range
