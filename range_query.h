@@ -88,7 +88,7 @@ public:
     }
     ~BasicRQNode()
     {
-        if (_isLeaf) {
+        if (!_isLeaf) {
             delete _highIndicesNode;
             delete _lowIndicesNode;
         }
@@ -101,16 +101,22 @@ public:
         size_t maxIndex = this->maxIndex();
         size_t minIndex = this->minIndex();
         
+        // make sure the ranges intersects 
         assert(startIndex >= minIndex);
         assert(endIndex <= maxIndex);
 
-        if (minIndex >= startIndex && maxIndex <= endIndex) {
+        if (minIndex >= endIndex && maxIndex <= startIndex) {
             return this->value();
         }
 
         size_t midIndex = minIndex + (maxIndex - minIndex)/2;
         
-        return (*_compare)(this->lowIndicesNode()->query(startIndex,midIndex),this->lowIndicesNode()->query(midIndex+1,endIndex));
+        if (startIndex > midIndex) {
+            return this->highIndicesNode()->query(startIndex,endIndex);
+        }else if(endIndex <= midIndex){
+            return this->lowIndicesNode()->query(startIndex,endIndex);
+        }
+        return (*_compare)(this->lowIndicesNode()->query(startIndex,midIndex),this->highIndicesNode()->query(midIndex+1,endIndex));
     }
 };
 
