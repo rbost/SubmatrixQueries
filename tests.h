@@ -52,9 +52,10 @@ public:
     static double naiveMaximumInRow(const Matrix<double> *m, Range colRange, size_t row);
     static double naiveMaximumInSubmatrix(const Matrix<double> *m, Range rowRange, Range colRange);
     
-    static Matrix<double>* generateInverseMongeMatrix(size_t rows, size_t cols);
-    static Matrix<double>* generateInverseMongeMatrix2(size_t rows, size_t cols);
-    static Matrix<double>* generateInverseMongeMatrix3(size_t rows, size_t cols);
+    static Matrix<double>* generateInverseMongeMatrixStrip1(size_t rows, size_t cols);
+    static Matrix<double>* generateInverseMongeMatrixStrip2(size_t rows, size_t cols);
+    static Matrix<double>* generateInverseMongeMatrixStripPerturbated(size_t rows, size_t cols, double pointsRange, double stripDistance);
+    static Matrix<double>* generateInverseMongeMatrixStripPerturbated2(size_t rows, size_t cols);
 };
 
 #endif /* defined(__SubmatrixQueries__tests__) */

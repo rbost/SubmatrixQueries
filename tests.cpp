@@ -54,6 +54,8 @@ SubmatrixQueriesTest::SubmatrixQueriesTest(size_t rows, size_t cols)
 #if BENCHMARK
     time = clock() - time;
     cout << "Building Data Structure: " << 1000*((double)time)/CLOCKS_PER_SEC << " ms" << endl;
+    cout << "Max/min envelope size for rows: " << _queryDS->rowsTree()->maxEnvelopeSize() << " / "<< _queryDS->rowsTree()->minEnvelopeSize() << endl;
+    cout << "Max/min envelope size for cols: " << _queryDS->columnTree()->maxEnvelopeSize()  << " / "<< _queryDS->columnTree()->minEnvelopeSize() << endl;
 #endif
     
 #if PRINT_TEST_MATRIX
@@ -276,7 +278,7 @@ double SubmatrixQueriesTest::naiveMaximumInSubmatrix(const Matrix<double> *m, Ra
 
 #define LINE_DISTANCE 5
 
-Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrix(size_t rows, size_t cols)
+Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrixStrip1(size_t rows, size_t cols)
 {
     Matrix<double> *m;
     
@@ -335,7 +337,7 @@ Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrix(size_t rows, si
     return m;
 }
 
-Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrix2(size_t rows, size_t cols)
+Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrixStrip2(size_t rows, size_t cols)
 {
     Matrix<double> *m;
     
@@ -400,7 +402,9 @@ Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrix2(size_t rows, s
     return m;
 }
 
-Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrix3(size_t rows, size_t cols)
+#define LINE_DISTANCE2 0.25*max_abscissa*max_abscissa
+
+Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrixStripPerturbated(size_t rows, size_t cols, double pointsRange, double stripDistance)
 {
     Matrix<double> *m;
     
@@ -423,14 +427,14 @@ Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrix3(size_t rows, s
     colsAbscissa = vector<double>(cols);
     std::pair<std::set<double>::iterator,bool> ret;
     
-    double max_abscissa;
-//    max_abscissa = 0.5*sqrt(DBL_MAX-LINE_DISTANCE);
-    max_abscissa = 10;
+    if (stripDistance <= 0 ) {
+        stripDistance = 2*pointsRange;
+    }
     
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
     std::default_random_engine generator (seed);
-//    std::uniform_real_distribution<double> distribution (-max_abscissa,max_abscissa);
-    normal_distribution<double> distribution(0.0, 20);
+    normal_distribution<double> distribution(0, pointsRange);
+    
     for (size_t i = 0; i < rows; i++) {
         rowsAbscissa[i] = distribution(generator);
     }
@@ -441,17 +445,18 @@ Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrix3(size_t rows, s
     
     std::set<double>::iterator rowIt, colIt;
     
-    
-    std::sort(rowsAbscissa.begin(), rowsAbscissa.end());
-    std::sort(colsAbscissa.begin(), colsAbscissa.end());
-    
     for (size_t i = 0; i < rows; i++) {
         for (size_t j = 0; j < cols; j++) {
             double abscissaDiff = rowsAbscissa[i]-colsAbscissa[cols-1-j];
             double diffSquare = abscissaDiff*abscissaDiff;
-            double distSquare = LINE_DISTANCE + diffSquare;
+            double distSquare = stripDistance*stripDistance + diffSquare;
             double v = sqrt(distSquare);
-            v = rowsAbscissa[i]*colsAbscissa[j];
+
+            (*m)(i,j) = v;
+        }
+    }
+    return m;
+}
             (*m)(i,j) = v;
         }
     }
