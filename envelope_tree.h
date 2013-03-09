@@ -142,7 +142,27 @@ public:
         
         return max;
     }
-
+    
+    size_t maxEnvelopeSize() const
+    {
+        if(this->isLeaf()){
+            return this->envelope()->numberOfBreakpoints();
+        }
+        
+        return max( max(this->lowIndicesNode()->maxEnvelopeSize(),this->highIndicesNode()->maxEnvelopeSize()),
+                   this->envelope()->numberOfBreakpoints());
+    }
+    
+    size_t minEnvelopeSize() const
+    {
+        if(this->isLeaf()){
+            return this->envelope()->numberOfBreakpoints();
+        }
+        
+        return min( min(this->lowIndicesNode()->minEnvelopeSize(),this->highIndicesNode()->minEnvelopeSize()),
+                   this->envelope()->numberOfBreakpoints());
+    }
+    
 };
 
 
