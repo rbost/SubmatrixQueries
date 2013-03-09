@@ -451,8 +451,7 @@ public:
                 // and the maxima vector
                 _maxima = new vector<T>(*this->highIndicesNode()->maxima());
                 
-            }else if (this->crossingBreakpointIndex() == this->lowIndicesNode()->envelope()->numberOfBreakpoints()){
-                
+            }else if (this->crossingBreakpointIndex() == this->envelope()->numberOfBreakpoints()){
                 // only the envelope of the lowIndicesNode has been kept when merging
                 // we copy the RMQ DS of this node
                 _rangeMaxima = new BasicRQNode<T>(*this->lowIndicesNode()->rangeMaxima());
@@ -686,7 +685,7 @@ public:
             if (endBPIndex - startBPIndex > 1) { // to have at least one interval, we need at least two breakpoints ...
                 // the range of the set of intervals is then [(*breakpoints)[startBPIndex+1].col,(*breakpoints)[endBPIndex].col-1]
                 const BasicRQNode<T> *rangeMaxima = (*nodesIterator)->rangeMaxima();
-                max.updateMax(rangeMaxima->query(startBPIndex+1,rangeMaxima->maxIndex()));
+                max.updateMax(rangeMaxima->query(startBPIndex+1,endBPIndex-1));
             }
             
             // check for the rest of the range
