@@ -87,8 +87,8 @@ namespace matrix {
 
     template <typename T> void Matrix<T>::print() const
     {
-        for (size_t i = 0; i < rows()-1; i++) {
-            for (size_t j = 0; j < cols()-1; j++) {
+        for (size_t i = 0; i < rows(); i++) {
+            for (size_t j = 0; j < cols(); j++) {
                 std::cout << (*this)(i,j) << "  ;  ";
             }
             std::cout<<"\n";
