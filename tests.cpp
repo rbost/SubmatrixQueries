@@ -41,14 +41,14 @@ SubmatrixQueriesTest::SubmatrixQueriesTest(size_t rows, size_t cols)
 #if BENCHMARK
     clock_t time = clock();
 #endif
-    _testMatrix = generateInverseMongeMatrix3(rows, cols);
+    _testMatrix = generateInverseMongeMatrixSlope(rows, cols);
 #if BENCHMARK
     time = clock() - time;
     cout << "Building Matrix: " << 1000*((double)time)/CLOCKS_PER_SEC << " ms" << endl;
     time = clock();
 #endif
-    
-    _testMatrix->print();
+    assert(_testMatrix->isInverseMonge());
+//    _testMatrix->print();
     
     _queryDS = new SubmatrixQueriesDataStructure<double>(*_testMatrix);
 #if BENCHMARK
@@ -457,8 +457,105 @@ Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrixStripPerturbated
     }
     return m;
 }
+#define LINE_DISTANCE3 300
+Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrixStripPerturbated2(size_t rows, size_t cols)
+{
+    Matrix<double> *m;
+    
+    cout << "Initializing matrix " << rows << "x" << cols << " ... ";
+    try {
+        m = new ComplexMatrix<double>(rows,cols);
+        cout << "Done" << endl;
+    } catch (std::bad_alloc& ba) {
+        cout << "\nbad_alloc caught: " << ba.what() << endl;
+        cout << "Try to build an other matrix ... ";
+        m = new SimpleMatrix<double>(rows,cols);
+        cout << "Done" << endl;
+    }
+    
+    cout << "Fill the Inverse Monge Matrix ... " << endl;
+    
+    double range = 50;
+    
+    vector<double> rowsAbscissa, colsAbscissa;
+    
+    rowsAbscissa = vector<double>(rows);
+    colsAbscissa = vector<double>(cols);
+    std::pair<std::set<double>::iterator,bool> ret;
+    
+     
+    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    std::default_random_engine generator (seed);
+    normal_distribution<double> distribution(0, 3);
+    
+    for (size_t i = 0; i < rows; i++) {
+        rowsAbscissa[i] = distribution(generator);
+    }
+    
+    for (size_t i = 0; i < rows; i++) {
+        colsAbscissa[i] = distribution(generator);
+    }
+    
+    std::set<double>::iterator rowIt, colIt;
+    
+    for (size_t i = 0; i < rows; i++) {
+        for (size_t j = 0; j < cols; j++) {
+            double rx,ry,cx,cy;
+            rx = rowsAbscissa[i];
+            cx = rowsAbscissa[cols-1-j] + LINE_DISTANCE3;
+            ry = ((((double)i)/(double)rows)-0.5)*range;
+            cy = (-(((double)j)/(double)cols)+0.5)*range;
+            
+            double xDiff = rx - cx;
+            double yDiff = ry - cy;
+            double v = sqrt(xDiff*xDiff + yDiff*yDiff);
+            
             (*m)(i,j) = v;
         }
     }
+    return m;
+}
+
+Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrixSlope(size_t rows, size_t cols)
+{
+    Matrix<double> *m;
+    
+    cout << "Initializing matrix " << rows << "x" << cols << " ... ";
+    try {
+        m = new ComplexMatrix<double>(rows,cols);
+        cout << "Done" << endl;
+    } catch (std::bad_alloc& ba) {
+        cout << "\nbad_alloc caught: " << ba.what() << endl;
+        cout << "Try to build an other matrix ... ";
+        m = new SimpleMatrix<double>(rows,cols);
+        cout << "Done" << endl;
+    }
+    
+    cout << "Fill the Inverse Monge Matrix ... " << endl;
+    
+    vector<double> slope(rows);
+
+    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    std::default_random_engine generator (seed);
+    uniform_real_distribution<double> distribution(-0.5*M_PI, 0.5*M_PI);
+
+    for (size_t i = 0; i < rows; i++) {
+        slope[i] = distribution(generator);
+    }
+    std::sort(slope.begin(), slope.end());
+    
+//    cout << "Slopes: ";
+    for (size_t i = 0; i < rows; i++) {
+//        cout << slope[i] << " / ";
+        for (size_t j = 0; j < cols; j++) {
+            double v;
+            v = tan(slope[i])*j + rows -1 -i;
+//            v = (2*i - rows)*j +i;
+            
+            (*m)(i,j) = v;
+        }
+    }
+//    cout << "\n\n";
+    
     return m;
 }
