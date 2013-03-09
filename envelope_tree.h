@@ -467,7 +467,7 @@ public:
                 
                 // for the first breakpoints, just copy the maxima table from the lowIndicesNode
                 for (size_t i = 0; i < this->crossingBreakpointIndex() - 1; i++) {
-                    _maxima[i] = (this->lowIndicesNode()->maxima())[i];
+                    (*_maxima)[i] = (*this->lowIndicesNode()->maxima())[i];
                 }
                 
                 // for the intervals on both sides of the crossing breakpoint, we have to recompute the maximum using the flipped tree
@@ -498,7 +498,7 @@ public:
                 size_t m = this->highIndicesNode()->envelope()->numberOfBreakpoints();
                 
                 for (size_t i = 1; n-i > this->crossingBreakpointIndex(); i++) {
-                    _maxima[n-i] = (this->highIndicesNode()->maxima())[m-i];
+                    (*_maxima)[n-i] = (*this->highIndicesNode()->maxima())[m-i];
                 }
 
                 // and we end by creating the RMQ data structure
