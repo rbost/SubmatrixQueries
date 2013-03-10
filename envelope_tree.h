@@ -663,7 +663,7 @@ public:
             // ... and the last breakpoint before colRanges.max and its index
             endBP = envelope->breakpointBeforePosition(colRanges.max, &endBPIndex);
             
-            // if the range between does not contain any interval, the returned breakpoints will be the sames
+            // if the range does not contain any interval, the returned breakpoints will be the sames
             // as a consequence, we have to check for that case to avoid undefined behavior
             if (endBPIndex == startBPIndex) {
                 size_t row = startBP.row;
@@ -673,10 +673,13 @@ public:
 
             // at this point, we have the prefix: it is the interval [colRanges.min,(*breakpoints)[startBPIndex+1].col-1]
             // we first have to check if it is empty or not ...
-            if ((*breakpoints)[startBPIndex+1].col > colRanges.min) {
+            if ((*breakpoints)[startBPIndex].col < colRanges.min) {
                 // it is not empty, go on ...
                 size_t row = (*breakpoints)[startBPIndex].row;
                 max.updateMax(_columnTree->maxForRowInRange(row,colRanges.min, (*breakpoints)[startBPIndex+1].col-1));
+            }else{
+                // it is empty, we just move  the start index so it is consistent with the call on the RMQ data structure
+                startBPIndex--;
             }
             
             // now, we check for the fully contained intervals
