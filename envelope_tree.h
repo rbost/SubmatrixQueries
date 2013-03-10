@@ -446,17 +446,16 @@ public:
             if (this->crossingBreakpointIndex() == -1) {
                 
                 // only the envelope of the highIndicesNode has been kept when merging
-                // we copy the RMQ DS of this node
-                _rangeMaxima = new BasicRQNode<T>(*this->highIndicesNode()->rangeMaxima());
-                // and the maxima vector
+                // we duplicate the RMQ DS of this node
                 _maxima = new vector<T>(*this->highIndicesNode()->maxima());
-                
+                _rangeMaxima = new BasicRQNode<T>(_maxima,0,_maxima->size()-1,&std::max<T>);
+
             }else if (this->crossingBreakpointIndex() == this->envelope()->numberOfBreakpoints()){
                 // only the envelope of the lowIndicesNode has been kept when merging
-                // we copy the RMQ DS of this node
-                _rangeMaxima = new BasicRQNode<T>(*this->lowIndicesNode()->rangeMaxima());
+                // we duplicate the RMQ DS of this node
                 _maxima = new vector<T>(*this->lowIndicesNode()->maxima());
-                
+                _rangeMaxima = new BasicRQNode<T>(_maxima,0,_maxima->size()-1,&std::max<T>);
+
             }else{
                 
                 const vector< Breakpoint > *breakpoints = this->envelope()->breakpoints();

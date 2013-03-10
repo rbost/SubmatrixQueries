@@ -78,14 +78,15 @@ public:
     
     BasicRQNode(T val,const T& (*compareFunc)(T const&, T const&)) : _minIndex(0), _maxIndex(0), _isLeaf(true), _value(val),_compare(compareFunc)
     {}
-    
-    BasicRQNode(BasicRQNode<T> *nodePtr) : _minIndex(nodePtr->minIndex()), _maxIndex(nodePtr->maxIndex()), _isLeaf(nodePtr->isLeaf()), _value(nodePtr->value()), _compare(nodePtr->compareFunction())
-    {
-        if (!this->isLeaf()) {
-            _lowIndicesNode = new BasicRQNode<T>(nodePtr->lowIndicesNode());
-            _highIndicesNode = new BasicRQNode<T>(nodePtr->highIndicesNode());
-        }
-    }
+
+// Remove that constructor because it creates some seg faults when deallocating
+//    BasicRQNode(BasicRQNode<T> *nodePtr) : _minIndex(nodePtr->minIndex()), _maxIndex(nodePtr->maxIndex()), _isLeaf(nodePtr->isLeaf()), _value(nodePtr->value()), _compare(nodePtr->compareFunction())
+//    {
+//        if (!this->isLeaf()) {
+//            _lowIndicesNode = new BasicRQNode<T>(nodePtr->lowIndicesNode());
+//            _highIndicesNode = new BasicRQNode<T>(nodePtr->highIndicesNode());
+//        }
+//    }
     ~BasicRQNode()
     {
         if (!_isLeaf) {
