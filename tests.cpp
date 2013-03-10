@@ -109,6 +109,43 @@ bool SubmatrixQueriesTest::testColumnQuery(clock_t *naiveTime, clock_t *queryTim
     return testColumnQuery(r, col, naiveTime, queryTime);
 }
 
+bool SubmatrixQueriesTest::testCascadingColQuery(Range rowRange, size_t col, clock_t *queryTime, clock_t *cascadingTime)
+{
+    double cascadingMax, queryMax;
+    clock_t clock1, clock2, clock3;
+    
+    clock1 = clock();
+    cascadingMax = _queryDS->rowsTree()->cascadingMaxInRange(col, rowRange);
+    
+    clock2 = clock();
+    queryMax = _queryDS->rowsTree()->maxForColumnInRange(col, rowRange.min, rowRange.max);
+    
+    clock3 = clock();
+    
+    if (queryTime) {
+        *queryTime += clock3 - clock2;
+    }
+    if (cascadingTime) {
+        *cascadingTime += clock2 - clock1;
+    }
+    
+    return queryMax == cascadingMax;
+}
+
+bool SubmatrixQueriesTest::testCascadingColQuery(clock_t *queryTime, clock_t *cascadingTime)
+{
+    size_t col = rand() % (_testMatrix->cols());
+    
+    size_t r1,r2;
+    r1 = rand() % (_testMatrix->rows());
+    r2 = rand() % (_testMatrix->rows());
+    
+    Range r = Range(min(r1,r2),max(r1,r2));
+    
+    return testCascadingColQuery(r, col,queryTime,cascadingTime);
+}
+
+
 bool SubmatrixQueriesTest::testRowQuery(Range colRange, size_t row, clock_t *naiveTime, clock_t *queryTime)
 {
     double naiveMax, queryMax;
@@ -268,6 +305,24 @@ bool SubmatrixQueriesTest::multipleRowQueryTestVsCascading(size_t n)
     
     for (size_t i = 0; i < n && result; i++) {
         result = result && testCascadingRowQuery(&queryTime, &cascadingTime);
+    }
+    
+#if BENCHMARK
+    cout << "Benchmark for " << n << " row queries:" <<endl;
+    cout << "Submatrix queries: " << 1000*((double)queryTime)/CLOCKS_PER_SEC << " ms" << endl;
+    cout << "Cascading queries: " << 1000*((double)cascadingTime)/CLOCKS_PER_SEC << " ms" << endl;
+#endif
+    return result;
+}
+
+
+bool SubmatrixQueriesTest::multipleColQueryTestVsCascading(size_t n)
+{
+    bool result = true;
+    clock_t queryTime = 0, cascadingTime = 0;
+    
+    for (size_t i = 0; i < n && result; i++) {
+        result = result && testCascadingColQuery(&queryTime, &cascadingTime);
     }
     
 #if BENCHMARK
