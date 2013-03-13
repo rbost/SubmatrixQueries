@@ -544,18 +544,29 @@ Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrixSlope(size_t row
     }
     std::sort(slope.begin(), slope.end());
     
-//    cout << "Slopes: ";
     for (size_t i = 0; i < rows; i++) {
-//        cout << slope[i] << " / ";
         for (size_t j = 0; j < cols; j++) {
             double v;
             v = tan(slope[i])*j + rows -1 -i;
-//            v = (2*i - rows)*j +i;
             
             (*m)(i,j) = v;
         }
     }
-//    cout << "\n\n";
     
+    slope = vector<double>(cols);
+    for (size_t i = 0; i < cols; i++) {
+        slope[i] = distribution(generator);
+    }
+    std::sort(slope.begin(), slope.end());
+
+    for (size_t i = 0; i < cols; i++) {
+        for (size_t j = 0; j < rows; j++) {
+            double v;
+            v = tan(slope[i])*j + rows -1 -i;
+            
+            (*m)(j,i) += v;
+        }
+    }
+
     return m;
 }
