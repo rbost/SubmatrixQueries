@@ -211,24 +211,39 @@ void  testSubmatrixQueries()
 
 void testTest( size_t nRows, size_t nCols)
 {
-    cout << "Test for " << nRows << " rows and " << nCols << " columns" << endl;
+    cout << "Test for " << nRows << " rows and " << nCols << " columns \n\n";
     
     SubmatrixQueriesTest test = SubmatrixQueriesTest(nRows, nCols);
-    
-    cout << endl << "Beginning col queries tests ..." << endl;
-    if (test.multipleColQueryTestVsCascading(100)) {
+    cout << "\n========================================";
+    cout << "\nBeginning col queries tests ..." << endl;
+    if (test.multipleColumnQueryTest(100)) {
         cout << "Col queries tests passed" << endl;
     }else{
         cout << "Tests failed" << endl;
     }
-    cout << endl << "Beginning row queries tests ..." << endl;
-    if (test.multipleRowQueryTestVsCascading(100)) {
-        cout << "Row queries tests passed" << endl;
+    cout << "\n";
+    if (test.multipleColQueryTestVsCascading(100)) {
+        cout << "Cascading col queries tests passed" << endl;
     }else{
         cout << "Tests failed" << endl;
     }
 
-    cout << endl << "Beginning submatrix queries tests ..." << endl;
+    cout << "\n========================================";
+    cout  << "\nBeginning row queries tests ..." << endl;
+    if (test.multipleRowQueryTest(100)) {
+        cout << "Row queries tests passed" << endl;
+    }else{
+        cout << "Tests failed" << endl;
+    }
+    cout << "\n";
+    if (test.multipleRowQueryTestVsCascading(100)) {
+        cout << "Cascading row queries tests passed" << endl;
+    }else{
+        cout << "Tests failed" << endl;
+    }
+
+    cout << "\n========================================";
+    cout << "\n\nBeginning submatrix queries tests ..." << endl;
     if (test.multipleSubmatrixQueryTest(10)) {
         cout << "Submatrix queries tests passed" << endl;
     }else{

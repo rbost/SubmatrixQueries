@@ -48,7 +48,6 @@ SubmatrixQueriesTest::SubmatrixQueriesTest(size_t rows, size_t cols)
     time = clock();
 #endif
     assert(_testMatrix->isInverseMonge());
-//    _testMatrix->print();
     
     _queryDS = new SubmatrixQueriesDataStructure<double>(*_testMatrix);
 #if BENCHMARK
@@ -59,13 +58,10 @@ SubmatrixQueriesTest::SubmatrixQueriesTest(size_t rows, size_t cols)
 #endif
     
 #if PRINT_TEST_MATRIX
-    for (size_t i = 0; i < rows; i++) {
-        for (size_t j = 0; j < cols; j++) {
-            cout << (*_testMatrix)(i,j) << " | \t ";
-        }
-        cout << endl;
-    }
+    cout << "\n";
+    _testMatrix->print();
 #endif
+    cout << "\n";  
 }
 
 SubmatrixQueriesTest::~SubmatrixQueriesTest()
@@ -326,7 +322,7 @@ bool SubmatrixQueriesTest::multipleColQueryTestVsCascading(size_t n)
     }
     
 #if BENCHMARK
-    cout << "Benchmark for " << n << " row queries:" <<endl;
+    cout << "Cascading Benchmark for " << n << " row queries:" <<endl;
     cout << "Submatrix queries: " << 1000*((double)queryTime)/CLOCKS_PER_SEC << " ms" << endl;
     cout << "Cascading queries: " << 1000*((double)cascadingTime)/CLOCKS_PER_SEC << " ms" << endl;
 #endif
@@ -343,7 +339,7 @@ bool SubmatrixQueriesTest::multipleSubmatrixQueryTest(size_t n)
     }
     
 #if BENCHMARK
-    cout << "Benchmark for " << n << " submatrix queries:" <<endl;
+    cout << "Cascading Benchmark for " << n << " submatrix queries:" <<endl;
     cout << "Naive algorithm: " << 1000*((double)naiveTime)/CLOCKS_PER_SEC << " ms" << endl;
     cout << "Submatrix queries: " << 1000*((double)queryTime)/CLOCKS_PER_SEC << " ms" << endl;
 #endif
