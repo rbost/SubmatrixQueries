@@ -39,15 +39,21 @@ public:
     
     bool testColumnQuery(Range rowRange, size_t col, clock_t *naiveTime, clock_t *queryTime);
     bool testColumnQuery(clock_t *naiveTime, clock_t *queryTime);
+    bool testCascadingColQuery(Range colRange, size_t row, clock_t *naiveTime, clock_t *queryTime);
+    bool testCascadingColQuery(clock_t *queryTime, clock_t *cascadingTime);
     bool testRowQuery(Range colRange, size_t row, clock_t *naiveTime, clock_t *queryTime);
     bool testRowQuery(clock_t *naiveTime, clock_t *queryTime);
+    bool testCascadingRowQuery(Range colRange, size_t row, clock_t *naiveTime, clock_t *queryTime);
+    bool testCascadingRowQuery(clock_t *queryTime, clock_t *cascadingTime);
     bool testSubmatrixQuery(Range rowRange, Range colRange, clock_t *naiveTime, clock_t *queryTime);
     bool testSubmatrixQuery(clock_t *naiveTime, clock_t *queryTime);
     
     bool multipleColumnQueryTest(size_t n);
     bool multipleRowQueryTest(size_t n);
     bool multipleSubmatrixQueryTest(size_t n);
-    
+    bool multipleRowQueryTestVsCascading(size_t n);
+    bool multipleColQueryTestVsCascading(size_t n);
+
     static double naiveMaximumInColumn(const Matrix<double> *m, Range rowRange, size_t col);
     static double naiveMaximumInRow(const Matrix<double> *m, Range colRange, size_t row);
     static double naiveMaximumInSubmatrix(const Matrix<double> *m, Range rowRange, Range colRange);

@@ -77,13 +77,16 @@ namespace envelope {
 
         
         // Finds the last breakpoint before col in the breakpoint list using binary search
+        // In the first method, we specify the index in between we have to search
         // COMPLEXITY: O( log(number_of_breakpoints) )
-
-        Breakpoint breakpointBeforePosition(size_t pos, size_t *foundPosition) const
+        
+        Breakpoint breakpointBeforePosition(size_t pos, size_t iMin, size_t iMax, size_t *foundPosition) const
         {
-            size_t iMin, iMax, iMid;
+            assert(iMin >= 0);
+            assert(iMax < this->numberOfBreakpoints());
+            
+            size_t iMid;
             size_t i;
-            iMin = 0; iMax = this->numberOfBreakpoints() - 1;
             i = 0;
             
             while (iMax > iMin) {
@@ -91,8 +94,8 @@ namespace envelope {
                 
                 size_t selectedPosition = this->positionForBreakpointAtIndex(iMid);// (*this->breakpoints())[iMid].col;
                 
-                if (iMid == numberOfBreakpoints()-1) {
-                    // in case we selected the last breakpoint
+                if (iMid == iMax) {
+                    // in case we selected the last available breakpoint
                     if (selectedPosition > pos){ // we have to select a lower breakpoint
                         iMax = iMid - 1;
                     }else{
@@ -120,6 +123,11 @@ namespace envelope {
             return (*this->breakpoints())[i];
         }
         
+        Breakpoint breakpointBeforePosition(size_t pos, size_t *foundPosition) const
+        {
+            return breakpointBeforePosition(pos,0,this->numberOfBreakpoints() - 1,foundPosition);
+        }
+        
         Breakpoint breakpointBeforePosition(size_t pos) const
         {
             return breakpointBeforePosition(pos, NULL);
@@ -131,9 +139,12 @@ namespace envelope {
         // Implementation must return a breakpoint that will be on the envelope at the given position
         virtual Breakpoint newBreakPointAtPosition(size_t index) const = 0;
         
-        // ABSTRACT METHOD
-        // Implementations must return the value of the pseudo line they represent at the givent position
-        virtual T valueForPosition(size_t index) const = 0;
+        // Returns the value of the envelope for the given position
+        virtual T valueForPosition(size_t position) const
+        {
+            Breakpoint bp = this->breakpointBeforePosition(position);
+            return this->valueForPositionAfterBreakpoint(position,bp);
+        }
         
         // ABSTRACT METHOD
         // Implementations must return the maximum position for a breakpoint.
@@ -142,6 +153,11 @@ namespace envelope {
         // ABSTRACT METHOD
         // Implementations must return the position of the breakpoint given as an argument.
         virtual inline size_t positionForBreakpoint(Breakpoint bp) const = 0;
+        virtual inline size_t mappedPositionForBreakpoint(Breakpoint bp) const = 0;
+
+        // ABSTRACT METHOD
+        // Implementations must return the value at position given that bp is the last breakpoint before position 
+        virtual T valueForPositionAfterBreakpoint(size_t position, Breakpoint bp) const = 0;
         
         virtual size_t positionForBreakpointAtIndex(size_t i) const
         {
@@ -211,11 +227,6 @@ namespace envelope {
             return rowForColumn(index);
         }
         
-        T valueForPosition(size_t index) const
-        {
-            return valueForColumn(index);
-        }
-        
         size_t maxPosition() const
         {
             return numberOfColumns()-1;
@@ -229,6 +240,16 @@ namespace envelope {
         inline size_t positionForBreakpoint(Breakpoint bp) const
         {
             return bp.col;
+        }
+        
+        inline size_t mappedPositionForBreakpoint(Breakpoint bp) const
+        {
+            return bp.row;
+        }
+        
+        T valueForPositionAfterBreakpoint(size_t position, Breakpoint bp) const
+        {
+            return (this->values())(bp.row,position);
         }
         
         T firstValue() const
@@ -280,11 +301,6 @@ namespace envelope {
             return columnForRow(index);
         }
         
-        T valueForPosition(size_t index) const
-        {
-            return valueForRow(index);
-        }
-        
         size_t maxPosition() const
         {
             return numberOfRows()-1;
@@ -300,6 +316,16 @@ namespace envelope {
             return bp.row;
         }
         
+        inline size_t mappedPositionForBreakpoint(Breakpoint bp) const
+        {
+            return bp.col;
+        }
+
+        T valueForPositionAfterBreakpoint(size_t position, Breakpoint bp) const
+        {
+            return (this->values())(position,bp.col);
+        }
+
         T firstValue() const
         {
             return (this->values())(0,(this->breakpoints())->front().col);
@@ -342,7 +368,7 @@ namespace envelope {
     // we suppose that the envelope e1 is the envelope for lower indices than e2
     // if a valid pointer crossingBpIndex is provided. In the new enveloppe, every breakpoint whose index is strictly less than crossingBpIndex
     // comes from e1, and if striclty more than crossingBpIndex comes from e2. If the returned envelope is not a "merge" of e1 and e2,
-    // crossingBpIndex is set to -1 if a copy of e2 is returned, and is set to number_of_breakpoints of e1 if a copy of e1 is returned. 
+    // crossingBpIndex is set to 0 if a copy of e2 is returned, and is set to number_of_breakpoints of e1 if a copy of e1 is returned. 
     
     // COMPLEXITY: O( log(number_of_breakpoints) * log(number_of_columns) + number_of_breakpoints)
     
@@ -367,7 +393,7 @@ namespace envelope {
             }else{
                 // e2 is "over" e1
                 if (crossingBpIndex) {
-                    *crossingBpIndex =-1;
+                    *crossingBpIndex = 0;
                 }
                 return new vector<Breakpoint>(*e2->breakpoints());
             }
