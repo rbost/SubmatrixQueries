@@ -16,6 +16,7 @@
 #include <set>
 #include <cfloat>
 #include <random>
+#include <chrono>
 
 #define PRINT_TEST_MATRIX false
 #define BENCHMARK true

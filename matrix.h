@@ -11,6 +11,7 @@
 
 #include <valarray>
 #include <cassert>
+#include <iostream>
 
 namespace matrix {
 
