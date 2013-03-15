@@ -15,8 +15,14 @@
 #include <climits>
 #include <set>
 #include <cfloat>
-#include <random>
-#include <chrono>
+
+
+double fRand(double fMin, double fMax)
+{
+    double f = (double)rand() / RAND_MAX;
+    return fMin + f * (fMax - fMin);
+}
+
 
 #define PRINT_TEST_MATRIX false
 #define BENCHMARK true
@@ -688,13 +694,11 @@ Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrixSlope(size_t row
     cout << "Fill the Inverse Monge Matrix ... " << endl;
     
     vector<double> slope(rows);
-
-    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-    std::default_random_engine generator (seed);
-    uniform_real_distribution<double> distribution(-0.5*M_PI, 0.5*M_PI);
+    
+    srand ( time(NULL) );
 
     for (size_t i = 0; i < rows; i++) {
-        slope[i] = distribution(generator);
+        slope[i] = fRand(-0.5*M_PI, 0.5*M_PI);
     }
     std::sort(slope.begin(), slope.end());
     
@@ -709,7 +713,7 @@ Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrixSlope(size_t row
     
     slope = vector<double>(cols);
     for (size_t i = 0; i < cols; i++) {
-        slope[i] = distribution(generator);
+        slope[i] = fRand(-0.5*M_PI, 0.5*M_PI);
     }
     std::sort(slope.begin(), slope.end());
 
