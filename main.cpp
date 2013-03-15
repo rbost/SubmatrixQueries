@@ -214,6 +214,7 @@ void testTest( size_t nRows, size_t nCols)
     cout << "Test for " << nRows << " rows and " << nCols << " columns \n\n";
     
     SubmatrixQueriesTest test = SubmatrixQueriesTest(nRows, nCols);
+    
     cout << "\n========================================";
     cout << "\nBeginning col queries tests ..." << endl;
     if (test.multipleColumnQueryTest(100)) {
@@ -222,7 +223,7 @@ void testTest( size_t nRows, size_t nCols)
         cout << "Tests failed" << endl;
     }
     cout << "\n";
-    if (test.multipleColQueryTestVsCascading(100)) {
+    if (test.multipleColQueryTestVsCascading(1000)) {
         cout << "Cascading col queries tests passed" << endl;
     }else{
         cout << "Tests failed" << endl;
@@ -236,7 +237,7 @@ void testTest( size_t nRows, size_t nCols)
         cout << "Tests failed" << endl;
     }
     cout << "\n";
-    if (test.multipleRowQueryTestVsCascading(100)) {
+    if (test.multipleRowQueryTestVsCascading(1000)) {
         cout << "Cascading row queries tests passed" << endl;
     }else{
         cout << "Tests failed" << endl;
@@ -244,11 +245,27 @@ void testTest( size_t nRows, size_t nCols)
 
     cout << "\n========================================";
     cout << "\n\nBeginning submatrix queries tests ..." << endl;
-    if (test.multipleSubmatrixQueryTest(10)) {
+    if (test.multipleSubmatrixQueryTest(50)) {
         cout << "Submatrix queries tests passed" << endl;
     }else{
         cout << "Tests failed" << endl;
     }
+}
+
+void benchmarks(size_t nRows, size_t nCols)
+{
+    cout << "Benchmarks for " << nRows << " rows and " << nCols << " columns \n\n";
+    
+    SubmatrixQueriesTest test = SubmatrixQueriesTest(nRows, nCols);
+    
+    cout << "\n========================================";
+    cout << "\nBeginning column queries benchmarks ..." << endl;
+    test.multipleBenchmarksColQueries(1000);
+    
+    cout << "\n========================================";
+    cout << "\nBeginning row queries benchmarks ..." << endl;
+    test.multipleBenchmarksRowQueries(1000);
+
 }
 
 int main(int argc, const char * argv[])
@@ -268,7 +285,8 @@ int main(int argc, const char * argv[])
 //    testColTree();
 //    testSubmatrixQueries();
     
-    testTest(nRows,nCols);
+//    testTest(nRows,nCols);
+    benchmarks(nRows, nCols);
     
     return 0;
 }
