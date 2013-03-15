@@ -70,8 +70,6 @@ public:
     
     static Matrix<double>* generateInverseMongeMatrixStrip1(size_t rows, size_t cols);
     static Matrix<double>* generateInverseMongeMatrixStrip2(size_t rows, size_t cols);
-    static Matrix<double>* generateInverseMongeMatrixStripPerturbated(size_t rows, size_t cols, double pointsRange, double stripDistance);
-    static Matrix<double>* generateInverseMongeMatrixStripPerturbated2(size_t rows, size_t cols);
     static Matrix<double>* generateInverseMongeMatrixSlope(size_t rows, size_t cols);
 };
 
