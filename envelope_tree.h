@@ -199,6 +199,7 @@ public:
         // We will have to make a recursive call on the node's children
         
         if (!this->isLeaf()) {
+            
             size_t crossingIndex = this->crossingBreakpointIndex();
 
             // first of all, we treat some degenerate cases
@@ -213,7 +214,7 @@ public:
                 this->highIndicesNode()->updateRecursiveMaxInRange(position,r,max,0,this->highIndicesNode()->envelope()->numberOfBreakpoints() -1);
                 return;
             }
-            
+
             if (bpIndex < crossingIndex) {
                 // bp belongs to the part of the envelope that comes from the low indices node
                 // That means, we do not have to search for that breakpoint in this child
@@ -238,11 +239,12 @@ public:
                 size_t reverseIndex = this->envelope()->numberOfBreakpoints() -1 - crossingIndex;
                 size_t indexInHIN = this->highIndicesNode()->envelope()->numberOfBreakpoints() -1 - reverseIndex;
                 
-                this->lowIndicesNode()->updateRecursiveMaxInRange(position,r,max,crossingIndex-1,std::min<size_t>(crossingIndex,this->lowIndicesNode()->envelope()->numberOfBreakpoints() -1));
+                this->lowIndicesNode()->updateRecursiveMaxInRange(position,r,max,crossingIndex-1,this->lowIndicesNode()->envelope()->numberOfBreakpoints() -1);
                 this->highIndicesNode()->updateRecursiveMaxInRange(position,r,max,std::max<size_t>(0,indexInHIN-1),indexInHIN);
-                
+
                 return;
             }
+
             this->lowIndicesNode()->updateRecursiveMaxInRange(position,r,max,0,this->lowIndicesNode()->envelope()->numberOfBreakpoints() -1);
             this->highIndicesNode()->updateRecursiveMaxInRange(position,r,max,0,this->highIndicesNode()->envelope()->numberOfBreakpoints() -1);
         }
@@ -251,7 +253,7 @@ public:
     T simpleCascadingMaxInRange(size_t position, Range r) const{
         MaxValue<T> max;
         
-        this->updateRecursiveMaxInRange(position, r, &max, 0, this->envelope()->numberOfBreakpoints()-1);
+        this->updateRecursiveMaxInRange(position, r, &max);
         
         return max.value();
     }

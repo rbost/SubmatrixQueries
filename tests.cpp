@@ -125,6 +125,15 @@ bool SubmatrixQueriesTest::testCascadingColQuery(Range rowRange, size_t col, clo
         *cascadingTime += clock2 - clock1;
     }
     
+    if (queryMax != cascadingMax) {
+        cout << "Test failed: "<<endl;
+        cout << "\tquery ranges : row = (" << rowRange.min <<","<<rowRange.max<<")";
+        cout << " col = " << col <<endl;
+        cout << "\tqueryMax: " << queryMax;
+        cout << " ; cascading: " << cascadingMax << endl;
+        
+    }
+
     return queryMax == cascadingMax;
 }
 
