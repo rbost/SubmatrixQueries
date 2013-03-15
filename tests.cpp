@@ -105,24 +105,30 @@ bool SubmatrixQueriesTest::testColumnQuery(clock_t *naiveTime, clock_t *queryTim
     return testColumnQuery(r, col, naiveTime, queryTime);
 }
 
-bool SubmatrixQueriesTest::testCascadingColQuery(Range rowRange, size_t col, clock_t *queryTime, clock_t *cascadingTime)
+bool SubmatrixQueriesTest::testCascadingColQuery(Range rowRange, size_t col, clock_t *queryTime, clock_t *cascadingTime, clock_t *simpleCascadingTime)
 {
-    double cascadingMax, queryMax;
-    clock_t clock1, clock2, clock3;
+    double cascadingMax, simpleCascadingMax, queryMax;
+    clock_t clock1, clock2, clock3, clock4;
     
     clock1 = clock();
     cascadingMax = _queryDS->rowsTree()->cascadingMaxInRange(col, rowRange);
     
     clock2 = clock();
-    queryMax = _queryDS->rowsTree()->maxForColumnInRange(col, rowRange.min, rowRange.max);
+    simpleCascadingMax = _queryDS->rowsTree()->simpleCascadingMaxInRange(col, rowRange);
     
     clock3 = clock();
+    queryMax = _queryDS->rowsTree()->maxForColumnInRange(col, rowRange.min, rowRange.max);
+    
+    clock4 = clock();
     
     if (queryTime) {
-        *queryTime += clock3 - clock2;
+        *queryTime += clock4 - clock3;
     }
     if (cascadingTime) {
         *cascadingTime += clock2 - clock1;
+    }
+    if (simpleCascadingTime) {
+        *simpleCascadingTime += clock3 - clock2;
     }
     
     if (queryMax != cascadingMax) {
@@ -137,7 +143,7 @@ bool SubmatrixQueriesTest::testCascadingColQuery(Range rowRange, size_t col, clo
     return queryMax == cascadingMax;
 }
 
-bool SubmatrixQueriesTest::testCascadingColQuery(clock_t *queryTime, clock_t *cascadingTime)
+bool SubmatrixQueriesTest::testCascadingColQuery(clock_t *queryTime, clock_t *cascadingTime, clock_t *simpleCascadingTime)
 {
     size_t col = rand() % (_testMatrix->cols());
     
@@ -147,7 +153,7 @@ bool SubmatrixQueriesTest::testCascadingColQuery(clock_t *queryTime, clock_t *ca
     
     Range r = Range(min(r1,r2),max(r1,r2));
     
-    return testCascadingColQuery(r, col,queryTime,cascadingTime);
+    return testCascadingColQuery(r, col,queryTime,cascadingTime,simpleCascadingTime);
 }
 
 
@@ -187,30 +193,36 @@ bool SubmatrixQueriesTest::testRowQuery(clock_t *naiveTime, clock_t *queryTime)
     return testRowQuery(c, row,naiveTime,queryTime);
 }
 
-bool SubmatrixQueriesTest::testCascadingRowQuery(Range colRange, size_t row, clock_t *queryTime, clock_t *cascadingTime)
+bool SubmatrixQueriesTest::testCascadingRowQuery(Range colRange, size_t row, clock_t *queryTime, clock_t *cascadingTime, clock_t *simpleCascadingTime)
 {
-    double cascadingMax, queryMax;
-    clock_t clock1, clock2, clock3;
+    double cascadingMax, queryMax, simpleCascadingMax;
+    clock_t clock1, clock2, clock3, clock4;
     
     clock1 = clock();
     cascadingMax = _queryDS->columnTree()->cascadingMaxInRange(row, colRange);
     
     clock2 = clock();
-    queryMax = _queryDS->columnTree()->maxForRowInRange(row, colRange.min, colRange.max);
+    simpleCascadingMax = _queryDS->columnTree()->simpleCascadingMaxInRange(row, colRange);
 
     clock3 = clock();
+    queryMax = _queryDS->columnTree()->maxForRowInRange(row, colRange.min, colRange.max);
+
+    clock4 = clock();
 
     if (queryTime) {
-        *queryTime += clock3 - clock2;
+        *queryTime += clock4 - clock3;
     }
     if (cascadingTime) {
         *cascadingTime += clock2 - clock1;
+    }
+    if (simpleCascadingTime) {
+        *simpleCascadingTime += clock3 - clock2;
     }
 
     return queryMax == cascadingMax;
 }
 
-bool SubmatrixQueriesTest::testCascadingRowQuery(clock_t *queryTime, clock_t *cascadingTime)
+bool SubmatrixQueriesTest::testCascadingRowQuery(clock_t *queryTime, clock_t *cascadingTime, clock_t *simpleCascadingTime)
 {
     size_t row = rand() % (_testMatrix->rows());
     
@@ -220,7 +232,7 @@ bool SubmatrixQueriesTest::testCascadingRowQuery(clock_t *queryTime, clock_t *ca
     
     Range c = Range(min(c1,c2),max(c1,c2));
     
-    return testCascadingRowQuery(c, row,queryTime,cascadingTime);    
+    return testCascadingRowQuery(c, row,queryTime,cascadingTime,simpleCascadingTime);
 }
 
 bool SubmatrixQueriesTest::testSubmatrixQuery(Range rowRange, Range colRange, clock_t *naiveTime, clock_t *queryTime)
@@ -306,15 +318,16 @@ bool SubmatrixQueriesTest::multipleRowQueryTest(size_t n)
 bool SubmatrixQueriesTest::multipleRowQueryTestVsCascading(size_t n)
 {
     bool result = true;
-    clock_t queryTime = 0, cascadingTime = 0;
+    clock_t queryTime = 0, cascadingTime = 0, simpleCascadingTime = 0;
     
     for (size_t i = 0; i < n && result; i++) {
-        result = result && testCascadingRowQuery(&queryTime, &cascadingTime);
+        result = result && testCascadingRowQuery(&queryTime, &cascadingTime, &simpleCascadingTime);
     }
     
 #if BENCHMARK
     cout << "Benchmark for " << n << " row queries:" <<endl;
     cout << "Submatrix queries: " << 1000*((double)queryTime)/CLOCKS_PER_SEC << " ms" << endl;
+    cout << "Simple Cascading queries: " << 1000*((double)simpleCascadingTime)/CLOCKS_PER_SEC << " ms" << endl;
     cout << "Cascading queries: " << 1000*((double)cascadingTime)/CLOCKS_PER_SEC << " ms" << endl;
 #endif
     return result;
@@ -324,15 +337,16 @@ bool SubmatrixQueriesTest::multipleRowQueryTestVsCascading(size_t n)
 bool SubmatrixQueriesTest::multipleColQueryTestVsCascading(size_t n)
 {
     bool result = true;
-    clock_t queryTime = 0, cascadingTime = 0;
+    clock_t queryTime = 0, cascadingTime = 0, simpleCascadingTime = 0;
     
     for (size_t i = 0; i < n && result; i++) {
-        result = result && testCascadingColQuery(&queryTime, &cascadingTime);
+        result = result && testCascadingColQuery(&queryTime, &cascadingTime,  &simpleCascadingTime);
     }
     
 #if BENCHMARK
     cout << "Cascading Benchmark for " << n << " row queries:" <<endl;
     cout << "Submatrix queries: " << 1000*((double)queryTime)/CLOCKS_PER_SEC << " ms" << endl;
+    cout << "Simple Cascading queries: " << 1000*((double)simpleCascadingTime)/CLOCKS_PER_SEC << " ms" << endl;
     cout << "Cascading queries: " << 1000*((double)cascadingTime)/CLOCKS_PER_SEC << " ms" << endl;
 #endif
     return result;
