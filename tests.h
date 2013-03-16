@@ -53,7 +53,8 @@ public:
     void benchmarkAllColQueries(Range rowRange, size_t col, clock_t *naiveTime, clock_t *queryTime, clock_t *cascadingTime, clock_t *simpleCascadingTime);
     void benchmarkAllColQueries(clock_t *naiveTime, clock_t *queryTime, clock_t *cascadingTime, clock_t *simpleCascadingTime);
     
-    static clock_t** multiBenchmarksPositionQueries(size_t maxNRows, size_t maxNCols, size_t nSamples);
+    static void multiBenchmarksPositionQueries(size_t maxNRows, size_t maxNCols, size_t nSamples, clock_t *naiveTime, clock_t *queryTime, clock_t *cascadingTime, clock_t *simpleCascadingTime);
+    static clock_t** multiSizeBenchmarksPositionQueries(size_t maxNRows, size_t maxNCols, size_t nSampleSize, size_t nSamplePerSize);
 
     bool multipleColumnQueryTest(size_t n);
     bool multipleRowQueryTest(size_t n);

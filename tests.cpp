@@ -25,7 +25,7 @@ double fRand(double fMin, double fMax)
 
 
 #define PRINT_TEST_MATRIX false
-#define BENCHMARK true
+#define BENCHMARK false
 
 SubmatrixQueriesTest::SubmatrixQueriesTest(Matrix<double> *m)
 {
@@ -68,7 +68,9 @@ SubmatrixQueriesTest::SubmatrixQueriesTest(size_t rows, size_t cols)
     cout << "\n";
     _testMatrix->print();
 #endif
-    cout << "\n";  
+#if BENCHMARK
+    cout << "\n";
+#endif
 }
 
 SubmatrixQueriesTest::~SubmatrixQueriesTest()
@@ -610,18 +612,28 @@ Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrixStrip2(size_t ro
 {
     Matrix<double> *m;
     
+#if BENCHMARK
     cout << "Initializing matrix " << rows << "x" << cols << " ... ";
+#endif
     try {
         m = new ComplexMatrix<double>(rows,cols);
+#if BENCHMARK
         cout << "Done" << endl;
+#endif
     } catch (std::bad_alloc& ba) {
+#if BENCHMARK
         cout << "\nbad_alloc caught: " << ba.what() << endl;
         cout << "Try to build an other matrix ... ";
+#endif
         m = new SimpleMatrix<double>(rows,cols);
+#if BENCHMARK
         cout << "Done" << endl;
+#endif
     }
     
+#if BENCHMARK
     cout << "Fill the Inverse Monge Matrix ... " << endl;
+#endif
     
     int *rowsAbscissa, *colsAbscissa;
     
@@ -675,18 +687,28 @@ Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrixSlope(size_t row
 {
     Matrix<double> *m;
     
+#if BENCHMARK
     cout << "Initializing matrix " << rows << "x" << cols << " ... ";
+#endif
     try {
         m = new ComplexMatrix<double>(rows,cols);
+#if BENCHMARK
         cout << "Done" << endl;
+#endif
     } catch (std::bad_alloc& ba) {
+#if BENCHMARK
         cout << "\nbad_alloc caught: " << ba.what() << endl;
         cout << "Try to build an other matrix ... ";
+#endif
         m = new SimpleMatrix<double>(rows,cols);
+#if BENCHMARK
         cout << "Done" << endl;
+#endif
     }
     
+#if BENCHMARK
     cout << "Fill the Inverse Monge Matrix ... " << endl;
+#endif
     
     vector<double> slope(rows);
     
@@ -726,10 +748,24 @@ Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrixSlope(size_t row
 
 typedef clock_t* clock_ptr;
 
-clock_t** SubmatrixQueriesTest::multiBenchmarksPositionQueries(size_t maxNRows, size_t maxNCols, size_t nSamples)
+void SubmatrixQueriesTest::multiBenchmarksPositionQueries(size_t nRows, size_t nCols, size_t nSamples, clock_t *naiveTime, clock_t *queryTime, clock_t *cascadingTime, clock_t *simpleCascadingTime)
 {
-    clock_t **results = new clock_ptr [nSamples];
+    cout << "\n";
     for (size_t i = 0; i < nSamples; i++) {
+        SubmatrixQueriesTest *t = new SubmatrixQueriesTest(nRows,nCols);
+        cout<< "|";
+        cout.flush();
+        t->multipleBenchmarksColQueries(100, naiveTime, queryTime, cascadingTime, simpleCascadingTime);
+        t->multipleBenchmarksRowQueries(100, naiveTime, queryTime, cascadingTime, simpleCascadingTime);
+        
+        delete t;
+    }
+}
+
+clock_t** SubmatrixQueriesTest::multiSizeBenchmarksPositionQueries(size_t maxNRows, size_t maxNCols, size_t nSampleSize, size_t nSamplePerSize)
+{
+    clock_t **results = new clock_ptr [nSampleSize];
+    for (size_t i = 0; i < nSampleSize; i++) {
         results[i] = new clock_t [4];
         results[i][0] = 0;
         results[i][1] = 0;
@@ -737,16 +773,15 @@ clock_t** SubmatrixQueriesTest::multiBenchmarksPositionQueries(size_t maxNRows, 
         results[i][3] = 0;
         
         size_t nRows = maxNRows, nCols = maxNCols;
-        float fraction = ((float)(i+1))/((float)nSamples);
+        float fraction = ((float)(i+1))/((float)nSampleSize);
         nRows *= fraction;
         nCols *= fraction;
         
-        SubmatrixQueriesTest *t = new SubmatrixQueriesTest(nRows,nCols);
+        cout << "Benchmark for size: " << nRows << " x " << nCols << " ... ";
+
+        SubmatrixQueriesTest::multiBenchmarksPositionQueries(nRows,nCols, nSamplePerSize, results[i], results[i]+1, results[i]+2, results[i]+3);
         
-        t->multipleBenchmarksColQueries(100, results[i], results[i]+1, results[i]+2, results[i]+3);
-        t->multipleBenchmarksRowQueries(100, results[i], results[i]+1, results[i]+2, results[i]+3);
-        
-        delete t;
+        cout << " done\n";
     }
     return results;
 }

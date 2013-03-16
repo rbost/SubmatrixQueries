@@ -268,16 +268,17 @@ void benchmarks(size_t nRows, size_t nCols)
 
 }
 
-void multiBenchmarks(size_t maxNRows, size_t maxNCols, size_t nSamples)
+void multiBenchmarks(size_t maxNRows, size_t maxNCols, size_t nSampleSize, size_t nSamplePerSize)
 {
-    cout << "Benchmarks on " << nSamples << " samples up to size " << maxNRows << " x " << maxNCols << "\n";
+    cout << "Benchmarks on " << nSampleSize << " samples up to size " << maxNRows << " x " << maxNCols << ", "<< nSamplePerSize << " samples for eache size\n\n";
     
     clock_t **benchmarks;
     
-    benchmarks = SubmatrixQueriesTest::multiBenchmarksPositionQueries(maxNRows, maxNCols, nSamples);
+    benchmarks = SubmatrixQueriesTest::multiSizeBenchmarksPositionQueries(maxNRows, maxNCols, nSampleSize, nSamplePerSize);
     
-    for (size_t i = 0; i < nSamples; i++) {
-        cout << benchmarks[i][0] << " ; " << benchmarks[i][1] << " ; " << benchmarks[i][2] << " ; " << benchmarks[i][3] << "\n";
+    for (size_t i = 0; i < nSampleSize; i++) {
+        float fraction = ((float)(i+1))/((float)nSampleSize);
+        cout << (size_t)(maxNRows*fraction) << " ; " << benchmarks[i][0] << " ; " << benchmarks[i][1] << " ; " << benchmarks[i][2] << " ; " << benchmarks[i][3] << "\n";
         delete [] benchmarks[i];
     }
     
@@ -303,7 +304,8 @@ int main(int argc, const char * argv[])
     
 //    testTest(nRows,nCols);
 //    benchmarks(nRows, nCols);
-    multiBenchmarks(nRows, nCols, 50);
+
+    multiBenchmarks(nRows, nCols, ((float)nRows)/((float) 20),50);
     
     return 0;
 }
