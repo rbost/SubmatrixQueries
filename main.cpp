@@ -302,8 +302,8 @@ int main(int argc, const char * argv[])
 //    testSubmatrixQueries();
     
 //    testTest(nRows,nCols);
-    benchmarks(nRows, nCols);
-//    multiBenchmarks(nRows, nCols, 50);
+//    benchmarks(nRows, nCols);
+    multiBenchmarks(nRows, nCols, 50);
     
     return 0;
 }
