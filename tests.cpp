@@ -512,11 +512,6 @@ void SubmatrixQueriesTest::multipleBenchmarksColQueries(size_t n, clock_t *naive
     }
 }
 
-void multipleBenchmarksColQueries(size_t n)
-{
-    
-}
-
 double SubmatrixQueriesTest::naiveMaximumInColumn(const Matrix<double> *m, Range rowRange, size_t col)
 {
     MaxValue<double> max = MaxValue<double>();
@@ -727,4 +722,31 @@ Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrixSlope(size_t row
     }
 
     return m;
+}
+
+typedef clock_t* clock_ptr;
+
+clock_t** SubmatrixQueriesTest::multiBenchmarksPositionQueries(size_t maxNRows, size_t maxNCols, size_t nSamples)
+{
+    clock_t **results = new clock_ptr [nSamples];
+    for (size_t i = 0; i < nSamples; i++) {
+        results[i] = new clock_t [4];
+        results[i][0] = 0;
+        results[i][1] = 0;
+        results[i][2] = 0;
+        results[i][3] = 0;
+        
+        size_t nRows = maxNRows, nCols = maxNCols;
+        float fraction = ((float)(i+1))/((float)nSamples);
+        nRows *= fraction;
+        nCols *= fraction;
+        
+        SubmatrixQueriesTest *t = new SubmatrixQueriesTest(nRows,nCols);
+        
+        t->multipleBenchmarksColQueries(100, results[i], results[i]+1, results[i]+2, results[i]+3);
+        t->multipleBenchmarksRowQueries(100, results[i], results[i]+1, results[i]+2, results[i]+3);
+        
+        delete t;
+    }
+    return results;
 }

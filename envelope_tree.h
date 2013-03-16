@@ -484,7 +484,7 @@ public:
     
     ~ExtendedRowNode<T>()
     {
-//        delete _rangeMaxima;
+        delete _rangeMaxima;
         delete _maxima;
     }
     

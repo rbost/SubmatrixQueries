@@ -268,6 +268,22 @@ void benchmarks(size_t nRows, size_t nCols)
 
 }
 
+void multiBenchmarks(size_t maxNRows, size_t maxNCols, size_t nSamples)
+{
+    cout << "Benchmarks on " << nSamples << " samples up to size " << maxNRows << " x " << maxNCols << "\n";
+    
+    clock_t **benchmarks;
+    
+    benchmarks = SubmatrixQueriesTest::multiBenchmarksPositionQueries(maxNRows, maxNCols, nSamples);
+    
+    for (size_t i = 0; i < nSamples; i++) {
+        cout << benchmarks[i][0] << " ; " << benchmarks[i][1] << " ; " << benchmarks[i][2] << " ; " << benchmarks[i][3] << "\n";
+        delete [] benchmarks[i];
+    }
+    
+    delete [] benchmarks;
+}
+
 int main(int argc, const char * argv[])
 {
     size_t nRows = 10000; // default values for the number of columns and rows
@@ -287,6 +303,7 @@ int main(int argc, const char * argv[])
     
 //    testTest(nRows,nCols);
     benchmarks(nRows, nCols);
+//    multiBenchmarks(nRows, nCols, 50);
     
     return 0;
 }
