@@ -23,6 +23,69 @@ double fRand(double fMin, double fMax)
     return fMin + f * (fMax - fMin);
 }
 
+timespec diffTS(timespec start, timespec end)
+{
+	timespec temp;
+	if ((end.tv_nsec-start.tv_nsec)<0) {
+		temp.tv_sec = end.tv_sec-start.tv_sec-1;
+		temp.tv_nsec = 1000000000+end.tv_nsec-start.tv_nsec;
+	} else {
+		temp.tv_sec = end.tv_sec-start.tv_sec;
+		temp.tv_nsec = end.tv_nsec-start.tv_nsec;
+	}
+	return temp;
+}
+
+bench_time_t diff(bench_time_t t1, bench_time_t t2)
+{
+#ifdef __MACH__
+    return t1 - t2;
+#else
+    return diffTS(t2,t1);
+#endif
+}
+
+timespec add(timespec ts1, timespec ts2)
+{
+    timespec temp;
+    temp.tv_sec = ts1.tv_sec + ts2.tv_sec;
+    temp.tv_nsec = ts1.tv_nsec + ts2.tv_nsec;
+    
+    if (temp.tv_nsec >= 1000000000) {
+        temp.tv_nsec -= 1000000000;
+        temp.tv_sec++;
+    }
+    return temp;
+}
+
+bench_time_t now()
+{
+#ifdef __MACH__
+    return clock();
+#else
+    timespec t;
+    clock_gettime(CLOCK_THREAD_CPUTIME_ID,&t);
+#endif
+}
+
+double timespecAsSeconds(timespec ts)
+{
+    return ts.tv_sec + (((double)ts.tv_nsec)/((double)1000000000));
+}
+
+double timespecAsMiliSeconds(timespec ts)
+{
+    return 1000*ts.tv_sec + (((double)ts.tv_nsec)/((double)1000000));
+}
+
+double benchTimeAsMiliSeconds(bench_time_t t)
+{
+#ifdef __MACH__
+    return 1000*((double)t)/CLOCKS_PER_SEC;
+#else
+    return timespecAsMiliSeconds(t);
+#endif
+}
 
 #define PRINT_TEST_MATRIX false
 #define BENCHMARK false
@@ -34,32 +97,32 @@ SubmatrixQueriesTest::SubmatrixQueriesTest(Matrix<double> *m)
     _testMatrix = new ComplexMatrix<double>(m);
     
 #if BENCHMARK
-    clock_t time = clock();
+    bench_time_t time = now();
 #endif
     _queryDS = new SubmatrixQueriesDataStructure<double>(*_testMatrix);
 #if BENCHMARK
-    time = clock() - time;
-    cout << "Building Data Structure: " << 1000*((double)time)/CLOCKS_PER_SEC << " ms" << endl;
+    time = diff(now(),time);
+    cout << "Building Data Structure: " << benchTimeAsMiliSeconds(time) << " ms" << endl;
 #endif
 }
 
 SubmatrixQueriesTest::SubmatrixQueriesTest(size_t rows, size_t cols)
 {
 #if BENCHMARK
-    clock_t time = clock();
+    bench_time_t time = now();
 #endif
     _testMatrix = generateInverseMongeMatrixSlope(rows, cols);
 #if BENCHMARK
-    time = clock() - time;
-    cout << "Building Matrix: " << 1000*((double)time)/CLOCKS_PER_SEC << " ms" << endl;
-    time = clock();
+    time = diff(now(),time);
+    cout << "Building Matrix: " << benchTimeAsMiliSeconds(time) << " ms" << endl;
+    time = now();
 #endif
     assert(_testMatrix->isInverseMonge());
     
     _queryDS = new SubmatrixQueriesDataStructure<double>(*_testMatrix);
 #if BENCHMARK
-    time = clock() - time;
-    cout << "Building Data Structure: " << 1000*((double)time)/CLOCKS_PER_SEC << " ms" << endl;
+    time = diff(now(),time);
+    cout << "Building Data Structure: " << benchTimeAsMiliSeconds(time) << " ms" << endl;
     cout << "Max/min envelope size for rows: " << _queryDS->rowsTree()->maxEnvelopeSize() << " / "<< _queryDS->rowsTree()->minEnvelopeSize() << endl;
     cout << "Max/min envelope size for cols: " << _queryDS->columnTree()->maxEnvelopeSize()  << " / "<< _queryDS->columnTree()->minEnvelopeSize() << endl;
 #endif
@@ -79,29 +142,29 @@ SubmatrixQueriesTest::~SubmatrixQueriesTest()
     delete _queryDS;
 }
 
-bool SubmatrixQueriesTest::testColumnQuery(Range rowRange, size_t col, clock_t *naiveTime, clock_t *queryTime)
+bool SubmatrixQueriesTest::testColumnQuery(Range rowRange, size_t col, bench_time_t *naiveTime, bench_time_t *queryTime)
 {
     double naiveMax, queryMax;
-    clock_t clock1, clock2, clock3;
+    bench_time_t clock1, clock2, clock3;
 
-    clock1 = clock();
+    clock1 = now();
     queryMax = _queryDS->rowsTree()->maxForColumnInRange(col, rowRange.min, rowRange.max);
-    clock2 = clock();
+    clock2 = now();
     naiveMax = SubmatrixQueriesTest::naiveMaximumInColumn(_testMatrix, rowRange, col);
     
-    clock3 = clock();
+    clock3 = now();
     
     if (naiveTime) {
-        *naiveTime += clock3 - clock2;
+        *naiveTime += diff(clock3,clock2);
     }
     if (queryTime) {
-        *queryTime += clock2 - clock1;
+        *queryTime += diff(clock2,clock1);
     }
     
     return queryMax == naiveMax;
 }
 
-bool SubmatrixQueriesTest::testColumnQuery(clock_t *naiveTime, clock_t *queryTime)
+bool SubmatrixQueriesTest::testColumnQuery(bench_time_t *naiveTime, bench_time_t *queryTime)
 {
     size_t col = rand() % (_testMatrix->cols());
     
@@ -114,30 +177,30 @@ bool SubmatrixQueriesTest::testColumnQuery(clock_t *naiveTime, clock_t *queryTim
     return testColumnQuery(r, col, naiveTime, queryTime);
 }
 
-bool SubmatrixQueriesTest::testCascadingColQuery(Range rowRange, size_t col, clock_t *queryTime, clock_t *cascadingTime, clock_t *simpleCascadingTime)
+bool SubmatrixQueriesTest::testCascadingColQuery(Range rowRange, size_t col, bench_time_t *queryTime, bench_time_t *cascadingTime, bench_time_t *simpleCascadingTime)
 {
     double cascadingMax, simpleCascadingMax, queryMax;
-    clock_t clock1, clock2, clock3, clock4;
+    bench_time_t clock1, clock2, clock3, clock4;
     
-    clock1 = clock();
+    clock1 = now();
     cascadingMax = _queryDS->rowsTree()->cascadingMaxInRange(col, rowRange);
     
-    clock2 = clock();
+    clock2 = now();
     simpleCascadingMax = _queryDS->rowsTree()->simpleCascadingMaxInRange(col, rowRange);
     
-    clock3 = clock();
+    clock3 = now();
     queryMax = _queryDS->rowsTree()->maxForColumnInRange(col, rowRange.min, rowRange.max);
     
-    clock4 = clock();
+    clock4 = now();
     
     if (queryTime) {
-        *queryTime += clock4 - clock3;
+        *queryTime += diff(clock4, clock3);
     }
     if (cascadingTime) {
-        *cascadingTime += clock2 - clock1;
+        *cascadingTime += diff(clock2, clock1);
     }
     if (simpleCascadingTime) {
-        *simpleCascadingTime += clock3 - clock2;
+        *simpleCascadingTime += diff(clock3, clock2);
     }
     
     if (queryMax != cascadingMax) {
@@ -152,7 +215,7 @@ bool SubmatrixQueriesTest::testCascadingColQuery(Range rowRange, size_t col, clo
     return queryMax == cascadingMax;
 }
 
-bool SubmatrixQueriesTest::testCascadingColQuery(clock_t *queryTime, clock_t *cascadingTime, clock_t *simpleCascadingTime)
+bool SubmatrixQueriesTest::testCascadingColQuery(bench_time_t *queryTime, bench_time_t *cascadingTime, bench_time_t *simpleCascadingTime)
 {
     size_t col = rand() % (_testMatrix->cols());
     
@@ -166,30 +229,30 @@ bool SubmatrixQueriesTest::testCascadingColQuery(clock_t *queryTime, clock_t *ca
 }
 
 
-bool SubmatrixQueriesTest::testRowQuery(Range colRange, size_t row, clock_t *naiveTime, clock_t *queryTime)
+bool SubmatrixQueriesTest::testRowQuery(Range colRange, size_t row, bench_time_t *naiveTime, bench_time_t *queryTime)
 {
     double naiveMax, queryMax;
-    clock_t clock1, clock2, clock3;
+    bench_time_t clock1, clock2, clock3;
     
-    clock1 = clock();
+    clock1 = now();
     queryMax = _queryDS->columnTree()->maxForRowInRange(row, colRange.min, colRange.max);
     
-    clock2 = clock();
+    clock2 = now();
     naiveMax = SubmatrixQueriesTest::naiveMaximumInRow(_testMatrix, colRange, row);
     
-    clock3 = clock();
+    clock3 = now();
 
     if (naiveTime) {
-        *naiveTime += clock3 - clock2;
+        *naiveTime += diff(clock3, clock2);
     }
     if (queryTime) {
-        *queryTime += clock2 - clock1;
+        *queryTime += diff(clock2, clock1);
     }
 
     return queryMax == naiveMax;
 }
 
-bool SubmatrixQueriesTest::testRowQuery(clock_t *naiveTime, clock_t *queryTime)
+bool SubmatrixQueriesTest::testRowQuery(bench_time_t *naiveTime, bench_time_t *queryTime)
 {
     size_t row = rand() % (_testMatrix->rows());
     
@@ -202,36 +265,36 @@ bool SubmatrixQueriesTest::testRowQuery(clock_t *naiveTime, clock_t *queryTime)
     return testRowQuery(c, row,naiveTime,queryTime);
 }
 
-bool SubmatrixQueriesTest::testCascadingRowQuery(Range colRange, size_t row, clock_t *queryTime, clock_t *cascadingTime, clock_t *simpleCascadingTime)
+bool SubmatrixQueriesTest::testCascadingRowQuery(Range colRange, size_t row, bench_time_t *queryTime, bench_time_t *cascadingTime, bench_time_t *simpleCascadingTime)
 {
     double cascadingMax, queryMax, simpleCascadingMax;
-    clock_t clock1, clock2, clock3, clock4;
+    bench_time_t clock1, clock2, clock3, clock4;
     
-    clock1 = clock();
+    clock1 = now();
     cascadingMax = _queryDS->columnTree()->cascadingMaxInRange(row, colRange);
     
-    clock2 = clock();
+    clock2 = now();
     simpleCascadingMax = _queryDS->columnTree()->simpleCascadingMaxInRange(row, colRange);
 
-    clock3 = clock();
+    clock3 = now();
     queryMax = _queryDS->columnTree()->maxForRowInRange(row, colRange.min, colRange.max);
 
-    clock4 = clock();
+    clock4 = now();
 
     if (queryTime) {
-        *queryTime += clock4 - clock3;
+        *queryTime += diff(clock4, clock3);
     }
     if (cascadingTime) {
-        *cascadingTime += clock2 - clock1;
+        *cascadingTime += diff(clock2, clock1);
     }
     if (simpleCascadingTime) {
-        *simpleCascadingTime += clock3 - clock2;
+        *simpleCascadingTime += diff(clock3, clock2);
     }
 
     return queryMax == cascadingMax;
 }
 
-bool SubmatrixQueriesTest::testCascadingRowQuery(clock_t *queryTime, clock_t *cascadingTime, clock_t *simpleCascadingTime)
+bool SubmatrixQueriesTest::testCascadingRowQuery(bench_time_t *queryTime, bench_time_t *cascadingTime, bench_time_t *simpleCascadingTime)
 {
     size_t row = rand() % (_testMatrix->rows());
     
@@ -244,23 +307,23 @@ bool SubmatrixQueriesTest::testCascadingRowQuery(clock_t *queryTime, clock_t *ca
     return testCascadingRowQuery(c, row,queryTime,cascadingTime,simpleCascadingTime);
 }
 
-bool SubmatrixQueriesTest::testSubmatrixQuery(Range rowRange, Range colRange, clock_t *naiveTime, clock_t *queryTime)
+bool SubmatrixQueriesTest::testSubmatrixQuery(Range rowRange, Range colRange, bench_time_t *naiveTime, bench_time_t *queryTime)
 {
     double naiveMax, queryMax;
     
-    clock_t clock1, clock2, clock3;
+    bench_time_t clock1, clock2, clock3;
     
-    clock1 = clock();
+    clock1 = now();
     queryMax = _queryDS->maxInRange(rowRange,colRange);
-    clock2 = clock();
+    clock2 = now();
     naiveMax = SubmatrixQueriesTest::naiveMaximumInSubmatrix(_testMatrix, rowRange, colRange);
-    clock3 = clock();
+    clock3 = now();
     
     if (naiveTime) {
-        *naiveTime += clock3 - clock2;
+        *naiveTime += diff(clock3, clock2);
     }
     if (queryTime) {
-        *queryTime += clock2 - clock1;
+        *queryTime += diff(clock2, clock1);
     }
     
     if (queryMax != naiveMax) {
@@ -274,7 +337,7 @@ bool SubmatrixQueriesTest::testSubmatrixQuery(Range rowRange, Range colRange, cl
     return queryMax == naiveMax;    
 }
 
-bool SubmatrixQueriesTest::testSubmatrixQuery(clock_t *naiveTime, clock_t *queryTime)
+bool SubmatrixQueriesTest::testSubmatrixQuery(bench_time_t *naiveTime, bench_time_t *queryTime)
 {
     size_t r1, r2;
     r1 = rand() % (_testMatrix->rows());
@@ -291,40 +354,40 @@ bool SubmatrixQueriesTest::testSubmatrixQuery(clock_t *naiveTime, clock_t *query
     return testSubmatrixQuery(r, c, naiveTime, queryTime);
 }
 
-void SubmatrixQueriesTest::benchmarkAllRowQueries(Range colRange, size_t row, clock_t *naiveTime, clock_t *queryTime, clock_t *cascadingTime, clock_t *simpleCascadingTime)
+void SubmatrixQueriesTest::benchmarkAllRowQueries(Range colRange, size_t row, bench_time_t *naiveTime, bench_time_t *queryTime, bench_time_t *cascadingTime, bench_time_t *simpleCascadingTime)
 {
-    clock_t clock1, clock2, clock3, clock4, clock5;
+    bench_time_t clock1, clock2, clock3, clock4, clock5;
     
-    clock1 = clock();
+    clock1 = now();
     _queryDS->columnTree()->cascadingMaxInRange(row, colRange);
     
-    clock2 = clock();
+    clock2 = now();
     _queryDS->columnTree()->simpleCascadingMaxInRange(row, colRange);
 
-    clock3 = clock();
+    clock3 = now();
      _queryDS->columnTree()->maxForRowInRange(row, colRange.min, colRange.max);
     
-    clock4 = clock();
+    clock4 = now();
     SubmatrixQueriesTest::naiveMaximumInRow(_testMatrix, colRange, row);
 
-    clock5 = clock();
+    clock5 = now();
 
     if (queryTime) {
-        *queryTime += clock4 - clock3;
+        *queryTime += diff(clock4, clock3);
     }
     if (cascadingTime) {
-        *cascadingTime += clock2 - clock1;
+        *cascadingTime += diff(clock2, clock1);
     }
     if (simpleCascadingTime) {
-        *simpleCascadingTime += clock3 - clock2;
+        *simpleCascadingTime += diff(clock3, clock2);
     }
     if (naiveTime) {
-        *naiveTime += clock5 - clock4;
+        *naiveTime += diff(clock5, clock4);
     }
 
 }
 
-void SubmatrixQueriesTest::benchmarkAllRowQueries(clock_t *naiveTime, clock_t *queryTime, clock_t *cascadingTime, clock_t *simpleCascadingTime)
+void SubmatrixQueriesTest::benchmarkAllRowQueries(bench_time_t *naiveTime, bench_time_t *queryTime, bench_time_t *cascadingTime, bench_time_t *simpleCascadingTime)
 {
     size_t row = rand() % (_testMatrix->rows());
     
@@ -337,41 +400,41 @@ void SubmatrixQueriesTest::benchmarkAllRowQueries(clock_t *naiveTime, clock_t *q
     benchmarkAllRowQueries(c, row,naiveTime,queryTime,cascadingTime,simpleCascadingTime);
 }
 
-void SubmatrixQueriesTest::benchmarkAllColQueries(Range rowRange, size_t col, clock_t *naiveTime, clock_t *queryTime, clock_t *cascadingTime, clock_t *simpleCascadingTime)
+void SubmatrixQueriesTest::benchmarkAllColQueries(Range rowRange, size_t col, bench_time_t *naiveTime, bench_time_t *queryTime, bench_time_t *cascadingTime, bench_time_t *simpleCascadingTime)
 {
-    clock_t clock1, clock2, clock3, clock4, clock5;
+    bench_time_t clock1, clock2, clock3, clock4, clock5;
     
-    clock1 = clock();
+    clock1 = now();
     _queryDS->rowsTree()->cascadingMaxInRange(col, rowRange);
     
-    clock2 = clock();
+    clock2 = now();
     _queryDS->rowsTree()->simpleCascadingMaxInRange(col, rowRange);
     
-    clock3 = clock();
+    clock3 = now();
     _queryDS->rowsTree()->maxForColumnInRange(col, rowRange.min, rowRange.max);
     
-    clock4 = clock();
+    clock4 = now();
     SubmatrixQueriesTest::naiveMaximumInColumn(_testMatrix, rowRange, col);
     
-    clock5 = clock();
+    clock5 = now();
     
     if (queryTime) {
-        *queryTime += clock4 - clock3;
+        *queryTime += diff(clock4, clock3);
     }
     if (cascadingTime) {
-        *cascadingTime += clock2 - clock1;
+        *cascadingTime += diff(clock2, clock1);
     }
     if (simpleCascadingTime) {
-        *simpleCascadingTime += clock3 - clock2;
+        *simpleCascadingTime += diff(clock3, clock2);
     }
     if (naiveTime) {
-        *naiveTime += clock5 - clock4;
+        *naiveTime += diff(clock5, clock4);
     }
 
 }
 
 
-void SubmatrixQueriesTest::benchmarkAllColQueries(clock_t *naiveTime, clock_t *queryTime, clock_t *cascadingTime, clock_t *simpleCascadingTime)
+void SubmatrixQueriesTest::benchmarkAllColQueries(bench_time_t *naiveTime, bench_time_t *queryTime, bench_time_t *cascadingTime, bench_time_t *simpleCascadingTime)
 {
     size_t col = rand() % (_testMatrix->cols());
     
@@ -388,15 +451,15 @@ void SubmatrixQueriesTest::benchmarkAllColQueries(clock_t *naiveTime, clock_t *q
 bool SubmatrixQueriesTest::multipleColumnQueryTest(size_t n)
 {
     bool result = true;
-    clock_t naiveTime = 0, queryTime = 0;
+    bench_time_t naiveTime = 0, queryTime = 0;
     
     for (size_t i = 0; i < n && result; i++) {
         result = result && testColumnQuery(&naiveTime, &queryTime);
     }
 #if BENCHMARK
     cout << "Benchmark for " << n << " column queries:" <<endl;
-    cout << "Naive algorithm: " << 1000*((double)naiveTime)/CLOCKS_PER_SEC << " ms" << endl;
-    cout << "Submatrix queries: " << 1000*((double)queryTime)/CLOCKS_PER_SEC << " ms" << endl;
+    cout << "Naive algorithm: " << benchTimeAsMiliSeconds(naiveTime) << " ms" << endl;
+    cout << "Submatrix queries: " << benchTimeAsMiliSeconds(queryTime) << " ms" << endl;
 #endif
     return result;
 }
@@ -404,7 +467,7 @@ bool SubmatrixQueriesTest::multipleColumnQueryTest(size_t n)
 bool SubmatrixQueriesTest::multipleRowQueryTest(size_t n)
 {
     bool result = true;
-    clock_t naiveTime = 0, queryTime = 0;
+    bench_time_t naiveTime = 0, queryTime = 0;
     
     for (size_t i = 0; i < n && result; i++) {
         result = result && testRowQuery(&naiveTime, &queryTime);
@@ -412,8 +475,8 @@ bool SubmatrixQueriesTest::multipleRowQueryTest(size_t n)
 
 #if BENCHMARK
     cout << "Benchmark for " << n << " row queries:" <<endl;
-    cout << "Naive algorithm: " << 1000*((double)naiveTime)/CLOCKS_PER_SEC << " ms" << endl;
-    cout << "Submatrix queries: " << 1000*((double)queryTime)/CLOCKS_PER_SEC << " ms" << endl;
+    cout << "Naive algorithm: " << benchTimeAsMiliSeconds(naiveTime) << " ms" << endl;
+    cout << "Submatrix queries: " << benchTimeAsMiliSeconds(queryTime) << " ms" << endl;
 #endif
     return result;
 }
@@ -421,7 +484,7 @@ bool SubmatrixQueriesTest::multipleRowQueryTest(size_t n)
 bool SubmatrixQueriesTest::multipleRowQueryTestVsCascading(size_t n)
 {
     bool result = true;
-    clock_t queryTime = 0, cascadingTime = 0, simpleCascadingTime = 0;
+    bench_time_t queryTime = 0, cascadingTime = 0, simpleCascadingTime = 0;
     
     for (size_t i = 0; i < n && result; i++) {
         result = result && testCascadingRowQuery(&queryTime, &cascadingTime, &simpleCascadingTime);
@@ -429,9 +492,9 @@ bool SubmatrixQueriesTest::multipleRowQueryTestVsCascading(size_t n)
     
 #if BENCHMARK
     cout << "Benchmark for " << n << " row queries:" <<endl;
-    cout << "Submatrix queries: " << 1000*((double)queryTime)/CLOCKS_PER_SEC << " ms" << endl;
-    cout << "Simple Cascading queries: " << 1000*((double)simpleCascadingTime)/CLOCKS_PER_SEC << " ms" << endl;
-    cout << "Cascading queries: " << 1000*((double)cascadingTime)/CLOCKS_PER_SEC << " ms" << endl;
+    cout << "Submatrix queries: " << benchTimeAsMiliSeconds(queryTime) << " ms" << endl;
+    cout << "Simple Cascading queries: " << benchTimeAsMiliSeconds(simpleCascadingTime) << " ms" << endl;
+    cout << "Cascading queries: " << benchTimeAsMiliSeconds(cascadingTime) << " ms" << endl;
 #endif
     return result;
 }
@@ -440,17 +503,17 @@ bool SubmatrixQueriesTest::multipleRowQueryTestVsCascading(size_t n)
 bool SubmatrixQueriesTest::multipleColQueryTestVsCascading(size_t n)
 {
     bool result = true;
-    clock_t queryTime = 0, cascadingTime = 0, simpleCascadingTime = 0;
+    bench_time_t queryTime = 0, cascadingTime = 0, simpleCascadingTime = 0;
     
     for (size_t i = 0; i < n && result; i++) {
         result = result && testCascadingColQuery(&queryTime, &cascadingTime,  &simpleCascadingTime);
     }
     
 #if BENCHMARK
-    cout << "Cascading Benchmark for " << n << " row queries:" <<endl;
-    cout << "Submatrix queries: " << 1000*((double)queryTime)/CLOCKS_PER_SEC << " ms" << endl;
-    cout << "Simple Cascading queries: " << 1000*((double)simpleCascadingTime)/CLOCKS_PER_SEC << " ms" << endl;
-    cout << "Cascading queries: " << 1000*((double)cascadingTime)/CLOCKS_PER_SEC << " ms" << endl;
+    cout << "Cascading Benchmark for " << n << " col queries:" <<endl;
+    cout << "Submatrix queries: " << benchTimeAsMiliSeconds(queryTime) << " ms" << endl;
+    cout << "Simple Cascading queries: " << benchTimeAsMiliSeconds(simpleCascadingTime) << " ms" << endl;
+    cout << "Cascading queries: " << benchTimeAsMiliSeconds(cascadingTime) << " ms" << endl;
 #endif
     return result;
 }
@@ -458,7 +521,7 @@ bool SubmatrixQueriesTest::multipleColQueryTestVsCascading(size_t n)
 bool SubmatrixQueriesTest::multipleSubmatrixQueryTest(size_t n)
 {
     bool result = true;
-    clock_t naiveTime = 0, queryTime = 0;
+    bench_time_t naiveTime = 0, queryTime = 0;
     
     for (size_t i = 0; i < n && result; i++) {
         result = result && testSubmatrixQuery(&naiveTime, &queryTime);
@@ -466,27 +529,26 @@ bool SubmatrixQueriesTest::multipleSubmatrixQueryTest(size_t n)
     
 #if BENCHMARK
     cout << "Cascading Benchmark for " << n << " submatrix queries:" <<endl;
-    cout << "Naive algorithm: " << 1000*((double)naiveTime)/CLOCKS_PER_SEC << " ms" << endl;
-    cout << "Submatrix queries: " << 1000*((double)queryTime)/CLOCKS_PER_SEC << " ms" << endl;
+    cout << "Naive algorithm: " << benchTimeAsMiliSeconds(naiveTime) << " ms" << endl;
+    cout << "Submatrix queries: " << benchTimeAsMiliSeconds(queryTime) << " ms" << endl;
 #endif
     return result;
 }
 
 void SubmatrixQueriesTest::multipleBenchmarksRowQueries(size_t n)
 {
-    clock_t naiveTime = 0, queryTime = 0, cascadingTime = 0, simpleCascadingTime = 0;
+    bench_time_t naiveTime = 0, queryTime = 0, cascadingTime = 0, simpleCascadingTime = 0;
     
     multipleBenchmarksRowQueries(n,&naiveTime, &queryTime, &cascadingTime,  &simpleCascadingTime);
 
     cout << "Benchmark for " << n << " row queries:" <<endl;
-    cout << "Naive algorithm: " << 1000*((double)naiveTime)/CLOCKS_PER_SEC << " ms" << endl;
-    cout << "Canonical nodes: " << 1000*((double)queryTime)/CLOCKS_PER_SEC << " ms" << endl;
-    cout << "Cascading: " << 1000*((double)cascadingTime)/CLOCKS_PER_SEC << " ms" << endl;
-    cout << "Simple cascading: " << 1000*((double)simpleCascadingTime)/CLOCKS_PER_SEC << " ms" << endl;
-    
+    cout << "Naive algorithm: " << benchTimeAsMiliSeconds(naiveTime) << " ms" << endl;
+    cout << "Canonical nodes: " << benchTimeAsMiliSeconds(queryTime) << " ms" << endl;
+    cout << "Cascading: " << benchTimeAsMiliSeconds(cascadingTime) << " ms" << endl;
+    cout << "Simple Cascading queries: " << benchTimeAsMiliSeconds(simpleCascadingTime) << " ms" << endl;
 }
 
-void SubmatrixQueriesTest::multipleBenchmarksRowQueries(size_t n, clock_t *naiveTime, clock_t *queryTime, clock_t *cascadingTime, clock_t *simpleCascadingTime)
+void SubmatrixQueriesTest::multipleBenchmarksRowQueries(size_t n, bench_time_t *naiveTime, bench_time_t *queryTime, bench_time_t *cascadingTime, bench_time_t *simpleCascadingTime)
 {
     for (size_t i = 0; i < n; i++) {
         benchmarkAllRowQueries(naiveTime, queryTime, cascadingTime,  simpleCascadingTime);
@@ -495,19 +557,19 @@ void SubmatrixQueriesTest::multipleBenchmarksRowQueries(size_t n, clock_t *naive
 
 void SubmatrixQueriesTest::multipleBenchmarksColQueries(size_t n)
 {
-    clock_t naiveTime = 0, queryTime = 0, cascadingTime = 0, simpleCascadingTime = 0;
+    bench_time_t naiveTime = 0, queryTime = 0, cascadingTime = 0, simpleCascadingTime = 0;
     
     multipleBenchmarksColQueries(n,&naiveTime, &queryTime, &cascadingTime,  &simpleCascadingTime);
 
     cout << "Benchmark for " << n << " row queries:" <<endl;
-    cout << "Naive algorithm: " << 1000*((double)naiveTime)/CLOCKS_PER_SEC << " ms" << endl;
-    cout << "Canonical nodes: " << 1000*((double)queryTime)/CLOCKS_PER_SEC << " ms" << endl;
-    cout << "Cascading: " << 1000*((double)cascadingTime)/CLOCKS_PER_SEC << " ms" << endl;
-    cout << "Simple cascading: " << 1000*((double)simpleCascadingTime)/CLOCKS_PER_SEC << " ms" << endl;
+    cout << "Naive algorithm: " << benchTimeAsMiliSeconds(naiveTime) << " ms" << endl;
+    cout << "Canonical nodes: " << benchTimeAsMiliSeconds(queryTime) << " ms" << endl;
+    cout << "Cascading: " << benchTimeAsMiliSeconds(cascadingTime) << " ms" << endl;
+    cout << "Simple Cascading queries: " << benchTimeAsMiliSeconds(simpleCascadingTime) << " ms" << endl;
     
 }
 
-void SubmatrixQueriesTest::multipleBenchmarksColQueries(size_t n, clock_t *naiveTime, clock_t *queryTime, clock_t *cascadingTime, clock_t *simpleCascadingTime)
+void SubmatrixQueriesTest::multipleBenchmarksColQueries(size_t n, bench_time_t *naiveTime, bench_time_t *queryTime, bench_time_t *cascadingTime, bench_time_t *simpleCascadingTime)
 {
     for (size_t i = 0; i < n; i++) {
         benchmarkAllColQueries(naiveTime, queryTime, cascadingTime,  simpleCascadingTime);
@@ -746,9 +808,9 @@ Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrixSlope(size_t row
     return m;
 }
 
-typedef clock_t* clock_ptr;
+typedef bench_time_t* clock_ptr;
 
-void SubmatrixQueriesTest::multiBenchmarksPositionQueries(size_t nRows, size_t nCols, size_t nSamples, clock_t *naiveTime, clock_t *queryTime, clock_t *cascadingTime, clock_t *simpleCascadingTime)
+void SubmatrixQueriesTest::multiBenchmarksPositionQueries(size_t nRows, size_t nCols, size_t nSamples, bench_time_t *naiveTime, bench_time_t *queryTime, bench_time_t *cascadingTime, bench_time_t *simpleCascadingTime)
 {
     cout << "\n";
     for (size_t i = 0; i < nSamples; i++) {
@@ -762,11 +824,11 @@ void SubmatrixQueriesTest::multiBenchmarksPositionQueries(size_t nRows, size_t n
     }
 }
 
-clock_t** SubmatrixQueriesTest::multiSizeBenchmarksPositionQueries(size_t maxNRows, size_t maxNCols, size_t nSampleSize, size_t nSamplePerSize)
+bench_time_t** SubmatrixQueriesTest::multiSizeBenchmarksPositionQueries(size_t maxNRows, size_t maxNCols, size_t nSampleSize, size_t nSamplePerSize)
 {
-    clock_t **results = new clock_ptr [nSampleSize];
+    bench_time_t **results = new clock_ptr [nSampleSize];
     for (size_t i = 0; i < nSampleSize; i++) {
-        results[i] = new clock_t [4];
+        results[i] = new bench_time_t [4];
         results[i][0] = 0;
         results[i][1] = 0;
         results[i][2] = 0;
