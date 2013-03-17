@@ -846,7 +846,7 @@ bench_time_t** SubmatrixQueriesTest::multiSizeBenchmarksPositionQueries(size_t m
     for (size_t i = 0; i < nSampleSize; i++) {
         results[i] = new bench_time_t [4];
         
-#ifdef __MACH __
+#ifdef __MACH__
 	results[i][0] = 0;
         results[i][1] = 0;
         results[i][2] = 0;
