@@ -1,7 +1,7 @@
 CC = gcc
 CXX = g++  
 LD = g++
-CFLAGS = -Wall
+CFLAGS = -Wall -O3
 EXEC_NAME = test_queries
 INCLUDES =
 LIBS = -lrt
