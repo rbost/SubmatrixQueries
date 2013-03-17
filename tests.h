@@ -21,7 +21,7 @@ using namespace matrix;
 #else
     typedef timespec bench_time_t;
 #endif
-
+double benchTimeAsMiliSeconds(bench_time_t t);
 /*
  * class SubmatrixQueriesTest
  *

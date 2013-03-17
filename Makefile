@@ -4,7 +4,7 @@ LD = g++
 CFLAGS = -Wall
 EXEC_NAME = test_queries
 INCLUDES =
-LIBS =
+LIBS = -lrt
 OBJ_FILES = matrix.o max_value.o range.o range_query.o envelope.o envelope_tree.o tests.o main.o
 
 all : $(EXEC_NAME)

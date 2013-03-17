@@ -272,13 +272,13 @@ void multiBenchmarks(size_t maxNRows, size_t maxNCols, size_t nSampleSize, size_
 {
     cout << "Benchmarks on " << nSampleSize << " samples up to size " << maxNRows << " x " << maxNCols << ", "<< nSamplePerSize << " samples for eache size\n\n";
     
-    clock_t **benchmarks;
+    bench_time_t **benchmarks;
     
     benchmarks = SubmatrixQueriesTest::multiSizeBenchmarksPositionQueries(maxNRows, maxNCols, nSampleSize, nSamplePerSize);
     
     for (size_t i = 0; i < nSampleSize; i++) {
         float fraction = ((float)(i+1))/((float)nSampleSize);
-        cout << (size_t)(maxNRows*fraction) << " ; " << benchmarks[i][0] << " ; " << benchmarks[i][1] << " ; " << benchmarks[i][2] << " ; " << benchmarks[i][3] << "\n";
+        cout << (size_t)(maxNRows*fraction) << " ; " << benchTimeAsMiliSeconds(benchmarks[i][0]) << " ; " << benchTimeAsMiliSeconds(benchmarks[i][1]) << " ; " << benchTimeAsMiliSeconds(benchmarks[i][2]) << " ; " << benchTimeAsMiliSeconds(benchmarks[i][3]) << "\n";
         delete [] benchmarks[i];
     }
     
