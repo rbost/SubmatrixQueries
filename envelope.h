@@ -29,6 +29,8 @@ namespace envelope {
 
         inline Breakpoint() : row(0), col(0) {}
         inline Breakpoint(size_t r, size_t c) : row(r), col(c) {}
+        inline bool operator==(Breakpoint bp) const{ return (row == bp.row) && (col == bp.col);}
+        inline bool operator!=(Breakpoint bp) const{ return (row != bp.row) || (col != bp.col);}
     };
     
     /*
@@ -334,7 +336,7 @@ namespace envelope {
     // we suppose that the envelope e1 is the envelope for lower indices than e2
     // this function assumes that there is a breakpoint.
     // COMPLEXITY: O( log(number_of_breakpoints) * log(number_of_columns) )
-    template <typename T> Breakpoint mergeBreakPoint(Envelope<T> * e1, Envelope<T> * e2) {
+    template <typename T> Breakpoint mergeBreakPoint(Envelope<T> * e1, Envelope<T> * e2, size_t *indexInE1, size_t *indexInE2) {
         size_t minPos, maxPos, pos;
         size_t minIndex1, maxIndex1, index1;
         size_t minIndex2, maxIndex2, index2;
@@ -365,7 +367,12 @@ namespace envelope {
                 maxIndex2 = index2;
             }
         }
-        
+        if (indexInE1) {
+            *indexInE1 = index1+1;
+        }
+        if (indexInE2) {
+            *indexInE2 = index2+1;
+        }
         return e2->newBreakPointAtPosition(maxPos);
     }
 
@@ -404,39 +411,52 @@ namespace envelope {
         }
 
         // first, we find the new breakpoint ...
-        Breakpoint newBreakpoint = mergeBreakPoint(e1, e2);
-        
+        size_t indexInE1, indexInE2;
+        Breakpoint newBreakpoint = mergeBreakPoint(e1, e2, &indexInE1, &indexInE2);
+        size_t newBpPosition = e1->positionForBreakpoint(newBreakpoint);
+
         // ... and then we concatenate the two envelopes and the new breakpoint:
         
-        // first, insert the breakpoints of the first envelope
-        vector<Breakpoint> *newBpList = new vector<Breakpoint>();
-        size_t i = 0;
-        size_t newBpPosition = e1->positionForBreakpoint(newBreakpoint);
+        // first of all, compute the size of the envelope and create the breakpoint vector
+        size_t eLength;
+        eLength = indexInE1 + (e2->numberOfBreakpoints() - indexInE2 + 1);
+        size_t e1MaxIndex = indexInE1;
+
+        if (newBpPosition == e2->positionForBreakpointAtIndex(indexInE2)) {
+            eLength--;
+        }
+        if (newBpPosition == e1->positionForBreakpointAtIndex(indexInE1-1)) {
+            eLength--;
+            e1MaxIndex--;
+        }
         
-        while (i < e1->breakpoints()->size() && e1->positionForBreakpointAtIndex(i) < newBpPosition) {
-            newBpList->push_back((*(e1->breakpoints()))[i]);
+        vector<Breakpoint> *newBpList = new vector<Breakpoint>(eLength);
+        
+        // then, insert the breakpoints of the first envelope
+        size_t i = 0;
+        
+        while (i < e1->breakpoints()->size() && i < e1MaxIndex) {
+            (*newBpList)[i] = (*(e1->breakpoints()))[i];
             i++;
         }
-
         
         // add the new breakpoint
-        newBpList->push_back(newBreakpoint);
-        
+        (*newBpList)[i] = newBreakpoint;
+
         // save the position of the crossing breakpoint in the new enveloppe
         if (crossingBpIndex) {
             *crossingBpIndex = i;
         }
+        i++;
         
         // and copy the breakpoint of the second envelope
         // To improve performances, here, we just just jump to the first breakpoint to insert using a
         // logarithmic complexity method instead of just going through all the useless breakpoints.
         size_t beginningIndex;
         e2->breakpointBeforePosition(newBpPosition,&beginningIndex);
-        i = beginningIndex+1;
         
-        while (i < e2->breakpoints()->size()){
-            newBpList->push_back((*(e2->breakpoints()))[i]);
-            i++;
+        for(size_t j = beginningIndex+1; j < e2->breakpoints()->size(); j++, i++){
+            (*newBpList)[i] = (*(e2->breakpoints()))[j];
         }
         
         return newBpList;
