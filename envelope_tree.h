@@ -240,8 +240,11 @@ public:
                 size_t indexInHIN = this->highIndicesNode()->envelope()->numberOfBreakpoints() -1 - reverseIndex;
                 
                 this->lowIndicesNode()->updateRecursiveMaxInRange(position,r,max,crossingIndex-1,this->lowIndicesNode()->envelope()->numberOfBreakpoints() -1);
-                this->highIndicesNode()->updateRecursiveMaxInRange(position,r,max,std::max<size_t>(0,indexInHIN-1),indexInHIN);
-
+                if (indexInHIN == 0) {
+                    this->highIndicesNode()->updateRecursiveMaxInRange(position,r,max,0,indexInHIN);
+                }else{
+                    this->highIndicesNode()->updateRecursiveMaxInRange(position,r,max,indexInHIN-1,indexInHIN);
+                }
                 return;
             }
 
