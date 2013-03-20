@@ -558,7 +558,7 @@ public:
             size_t row;
             
             row = (*this->envelope()->breakpoints())[0].row;
-            T max = flippedTree->maxForRowInRange(row,minCol, maxCol);
+            T max = flippedTree->simpleCascadingMaxInRange(row,Range(minCol, maxCol));
             _rangeMaxima = new BasicRQNode<T>(max,&std::max<T>);
             _maxima = new vector<T>(1,max);
         }else{
@@ -599,7 +599,7 @@ public:
                 maxCol = (*breakpoints)[this->crossingBreakpointIndex()].col-1; // ... its last index ...
                 row = (*breakpoints)[this->crossingBreakpointIndex() - 1].row; // ... and the corresponding row ...
 
-                (*_maxima)[this->crossingBreakpointIndex() - 1] = flippedTree->maxForRowInRange(row,minCol,maxCol);
+                (*_maxima)[this->crossingBreakpointIndex() - 1] = flippedTree->simpleCascadingMaxInRange(row,Range(minCol,maxCol));
 
                 // and on the right side 
                 minCol = (*breakpoints)[this->crossingBreakpointIndex()].col; // ... get the interval first index ...
@@ -611,7 +611,7 @@ public:
                 }
                 row = (*breakpoints)[this->crossingBreakpointIndex()].row; // ... and the corresponding row ...
                 
-                (*_maxima)[this->crossingBreakpointIndex()] = flippedTree->maxForRowInRange(row,minCol,maxCol);
+               (*_maxima)[this->crossingBreakpointIndex()] = flippedTree->simpleCascadingMaxInRange(row,Range(minCol,maxCol));
                 
                 // for the last part of the breakpoints, we again have to copy the maxima table for the highIndicesNode
                 // to avoid computing the beginning index of the copy in the child max table, we do the copy backward
