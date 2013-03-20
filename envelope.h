@@ -84,39 +84,30 @@ namespace envelope {
         {
             assert(iMin >= 0);
             assert(iMax < this->numberOfBreakpoints());
+            assert(iMin <= iMax);
             
             size_t iMid;
             size_t i;
-            i = 0;
+            i = iMin;
             
             while (iMax > iMin) {
                 iMid = iMin + ((iMax - iMin)/2); // to avoid overflows
                 
                 size_t selectedPosition = this->positionForBreakpointAtIndex(iMid);// (*this->breakpoints())[iMid].col;
                 
-                if (iMid == iMax) {
-                    // in case we selected the last available breakpoint
-                    if (selectedPosition > pos){ // we have to select a lower breakpoint
-                        iMax = iMid - 1;
-                    }else{
-                        i = iMid;
-                        break;
-                    }
+                size_t nextPosition = this->positionForBreakpointAtIndex(iMid+1);
+                
+                if (selectedPosition <= pos && pos < nextPosition) {
+                    i = iMid;
+                    break; // we are in the interval between two breakpoints!
+                }else if (selectedPosition > pos){
+                    iMax = iMid - 1;
                 }else{
-                    size_t nextPosition = this->positionForBreakpointAtIndex(iMid+1);
-                    
-                    if (selectedPosition <= pos && pos < nextPosition) {
-                        i = iMid;
-                        break; // we are in the interval between two breakpoints!
-                    }else if (selectedPosition > pos){
-                        iMax = iMid - 1;
-                    }else{
-                        iMin = iMid + 1;
-                    }
+                    iMin = iMid + 1;
                 }
                 i = iMin;
             }
-            
+
             if (foundPosition) {
                 *foundPosition = i;
             }
