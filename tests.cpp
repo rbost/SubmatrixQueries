@@ -133,7 +133,7 @@ SubmatrixQueriesTest::SubmatrixQueriesTest(size_t rows, size_t cols)
     cout << "Building Matrix: " << benchTimeAsMiliSeconds(time) << " ms" << endl;
     time = now();
 #endif
-    assert(_testMatrix->isInverseMonge());
+//    assert(_testMatrix->isInverseMonge());
     
     _queryDS = new SubmatrixQueriesDataStructure<double>(*_testMatrix);
 #if BENCHMARK
