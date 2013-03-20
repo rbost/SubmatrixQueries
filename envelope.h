@@ -335,25 +335,38 @@ namespace envelope {
     // this function assumes that there is a breakpoint.
     // COMPLEXITY: O( log(number_of_breakpoints) * log(number_of_columns) )
     template <typename T> Breakpoint mergeBreakPoint(Envelope<T> * e1, Envelope<T> * e2) {
-        size_t iMin, iMax, index;
-        iMin = 0; iMax = e1->maxPosition();
+        size_t minPos, maxPos, pos;
+        size_t minIndex1, maxIndex1, index1;
+        size_t minIndex2, maxIndex2, index2;
+        Breakpoint bp1, bp2;
         
-        while (iMax > iMin) {
-            index = iMin + ((iMax - iMin)/2); // to avoid overflows
+        minPos = 0; maxPos = e1->maxPosition();
+        minIndex1 = 0; maxIndex1 = e1->numberOfBreakpoints()-1;
+        minIndex2 = 0; maxIndex2 = e2->numberOfBreakpoints()-1;
+        
+        while (maxPos > minPos) {
+            pos = minPos + ((maxPos - minPos)/2); // to avoid overflows
 
-            T val1 = e1->valueForPosition(index);
-            T val2 = e2->valueForPosition(index);
+            bp1 = e1->breakpointBeforePosition(pos,minIndex1,maxIndex1,&index1);
+            bp2 = e2->breakpointBeforePosition(pos,minIndex2,maxIndex2,&index2);
+
+            T val1 = e1->valueForPositionAfterBreakpoint(pos,bp1);
+            T val2 = e2->valueForPositionAfterBreakpoint(pos,bp2);
             
-
             if (val1 > val2) {
                 // the envelope e1 is this over e2 for this column, so search on the right part of the the envelopes
-                iMin = index + 1;
+                minPos = pos + 1;
+                
+                minIndex1 = index1;
+                minIndex2 = index2;
             }else{
-                iMax = index;
+                maxPos = pos;
+                maxIndex1 = index1;
+                maxIndex2 = index2;
             }
         }
         
-        return e2->newBreakPointAtPosition(iMax);
+        return e2->newBreakPointAtPosition(maxPos);
     }
 
     // we suppose that the envelope e1 is the envelope for lower indices than e2
