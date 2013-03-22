@@ -11,6 +11,7 @@
 
 #include <vector>
 #include "matrix.h"
+#include "debug_assert.h"
 
 using namespace std;
 using namespace matrix;
@@ -84,9 +85,9 @@ namespace envelope {
         
         Breakpoint breakpointBeforePosition(size_t pos, size_t iMin, size_t iMax, size_t *foundPosition) const
         {
-            assert(iMin >= 0);
-            assert(iMax < this->numberOfBreakpoints());
-            assert(iMin <= iMax);
+            DEBUG_ASSERT(iMin >= 0);
+            DEBUG_ASSERT(iMax < this->numberOfBreakpoints());
+            DEBUG_ASSERT(iMin <= iMax);
             
             size_t iMid;
             size_t i;

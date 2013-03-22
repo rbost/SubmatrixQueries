@@ -10,7 +10,6 @@
 #define __SubmatrixQueries__envelope_tree__
 
 #include <vector>
-#include <cassert>
 #include <iostream>
 
 #include "envelope.h"
@@ -18,6 +17,7 @@
 #include "matrix.h"
 #include "max_value.h"
 #include "range_query.h"
+#include "debug_assert.h"
 
 using namespace envelope;
 using namespace matrix;
@@ -103,7 +103,7 @@ public:
     // Otherwise, it recursively calls its children.
     void getCanonicalNodes(std::vector<const EnvTreeNode<T> *> & buffer, size_t minIndex, size_t maxIndex) const
     {
-        assert(minIndex <= maxIndex);
+        DEBUG_ASSERT(minIndex <= maxIndex);
         Range r = this->range();
         
         if (minIndex > r.max || maxIndex < r.min) { // check if the interval intersects the node's rows
@@ -127,7 +127,7 @@ public:
         std::vector<const EnvTreeNode<T> *> cNodes = this->canonicalNodes(r.min,r.max);
         
         // If the set of canonical nodes is empty, it means that the query range is empty
-        assert(cNodes.size() > 0);
+        DEBUG_ASSERT(cNodes.size() > 0);
         
         // Compute the maximum over the canonical nodes
         T max = cNodes[0]->envelope()->valueForPosition(position);
@@ -309,7 +309,6 @@ public:
     
     RowNode(size_t minRow, size_t maxRow,RowNode<T> *lowIndices, RowNode<T> *highIndices ,Matrix<T> const& matrix):EnvTreeNode<T>(minRow,maxRow)
     {
-        assert(minRow <= maxRow);
         if (minRow == maxRow) { // it is a leaf
             this->setEnvelope(new RowEnvelope<T>(matrix, minRow));
         }else{            
@@ -327,7 +326,6 @@ public:
 
     RowNode(size_t minRow, size_t maxRow, Matrix<T> const& matrix): EnvTreeNode<T>(minRow,maxRow)
     {
-        assert(minRow <= maxRow);
         if (minRow == maxRow) { // it is a leaf
             this->setEnvelope(new RowEnvelope<T>(matrix, minRow));
         }else{
@@ -396,7 +394,6 @@ public:
     
     ColNode(size_t minCol, size_t maxCol, Matrix<T> const& matrix): EnvTreeNode<T>(minCol,maxCol)
     {
-        assert(minCol <= maxCol);
         if (minCol == maxCol) { // it is a leaf
             ColumnEnvelope<T>* envelope = new ColumnEnvelope<T>(matrix, minCol);
             this->setEnvelope(envelope);

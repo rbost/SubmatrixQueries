@@ -10,8 +10,9 @@
 #define __SubmatrixQueries__matrix__
 
 #include <valarray>
-#include <cassert>
 #include <iostream>
+
+#include "debug_assert.h"
 
 namespace matrix {
 
@@ -217,15 +218,15 @@ namespace matrix {
     _cols(cols),
     _data(rows * cols)
     {
-        assert(cols > 0);
+        DEBUG_ASSERT(cols > 0);
     }
 
     template <typename T> ComplexMatrix<T>::ComplexMatrix(size_t rows, size_t cols, std::valarray<T> data) : _rows(rows),
     _cols(cols),
     _data(data)
     {
-        assert(rows > 0);
-        assert(cols > 0);
+        DEBUG_ASSERT(rows > 0);
+        DEBUG_ASSERT(cols > 0);
     }
 
     template <typename T> ComplexMatrix<T>::ComplexMatrix(ComplexMatrix<T> *m) : _rows(m->rows()), _cols(m->cols()), _data(m->_data)
@@ -253,62 +254,62 @@ namespace matrix {
     
     template<typename T>
     std::valarray<T> ComplexMatrix<T>::row(size_t r) const {
-        assert(r >= 0 && r < rows());
+        DEBUG_ASSERT(r >= 0 && r < rows());
         return _data[std::slice(r * cols(), cols(), 1)];
     }
 
     template<typename T>
     std::slice_array<T> ComplexMatrix<T>::row(size_t r) {
-        assert(r >= 0 && r < rows());
+        DEBUG_ASSERT(r >= 0 && r < rows());
         return _data[std::slice(r * cols(), cols(), 1)];
     }
     
     template<typename T>
     std::valarray<T> ComplexMatrix<T>::row(size_t r, size_t start, size_t end) const{
-        assert(r >= 0 && r < rows());
+        DEBUG_ASSERT(r >= 0 && r < rows());
         return _data[std::slice(r*cols()+start,end-start+1,1)];
     }
 
     template<typename T>
     std::slice_array<T> ComplexMatrix<T>::row(size_t r, size_t start, size_t end){
-        assert(r >= 0 && r < rows());
+        DEBUG_ASSERT(r >= 0 && r < rows());
         return _data[std::slice(r*cols()+start,end-start+1,1)];
     }
     
     template<typename T>
     std::valarray<T> ComplexMatrix<T>::col(size_t c) const {
-        assert(c >= 0 && c < cols());
+        DEBUG_ASSERT(c >= 0 && c < cols());
         return _data[std::slice(c, rows(), cols())];
     }
     
     template<typename T>
     std::slice_array<T> ComplexMatrix<T>::col(size_t c) {
-        assert(c >= 0 && c < cols());
+        DEBUG_ASSERT(c >= 0 && c < cols());
         return _data[std::slice(c, rows(), cols())];
     }
     
     template<typename T>
     std::valarray<T> ComplexMatrix<T>::col(size_t c, size_t start, size_t end) const{
-        assert(c >= 0 && c < cols());
+        DEBUG_ASSERT(c >= 0 && c < cols());
         return _data[std::slice(c+start*cols(),end-start+1,cols())];
     }
     
     template<typename T>
     std::slice_array<T> ComplexMatrix<T>::col(size_t c, size_t start, size_t end){
-        assert(c >= 0 && c < cols());
+        DEBUG_ASSERT(c >= 0 && c < cols());
         return _data[std::slice(c+start*cols(),end-start+1,cols())];
     }
     
     
     template<typename T>
     std::valarray<T> ComplexMatrix<T>::submatrix(size_t minRow, size_t maxRow, size_t minCol, size_t maxCol) const{
-        assert(minRow <= maxRow);
-        assert(minRow >= 0);
-        assert(maxRow < rows());
+        DEBUG_ASSERT(minRow <= maxRow);
+        DEBUG_ASSERT(minRow >= 0);
+        DEBUG_ASSERT(maxRow < rows());
         
-        assert(minCol <= maxCol);
-        assert(minCol >= 0);
-        assert(maxCol < cols());
+        DEBUG_ASSERT(minCol <= maxCol);
+        DEBUG_ASSERT(minCol >= 0);
+        DEBUG_ASSERT(maxCol < cols());
         
         size_t start = minRow*cols() + minCol;
         size_t lengths[]= {maxCol-minCol+1,maxRow-minRow+1};
@@ -320,13 +321,13 @@ namespace matrix {
     
     template<typename T>
     std::gslice_array<T> ComplexMatrix<T>::submatrix(size_t minRow, size_t maxRow, size_t minCol, size_t maxCol){
-        assert(minRow <= maxRow);
-        assert(minRow >= 0);
-        assert(maxRow < rows());
+        DEBUG_ASSERT(minRow <= maxRow);
+        DEBUG_ASSERT(minRow >= 0);
+        DEBUG_ASSERT(maxRow < rows());
         
-        assert(minCol <= maxCol);
-        assert(minCol >= 0);
-        assert(maxCol < cols());
+        DEBUG_ASSERT(minCol <= maxCol);
+        DEBUG_ASSERT(minCol >= 0);
+        DEBUG_ASSERT(maxCol < cols());
 
         size_t start = minRow*cols() + minCol;
         size_t lengths[]= {maxCol-minCol+1,maxRow-minRow+1};
@@ -340,15 +341,16 @@ namespace matrix {
     
     template <typename T> T& ComplexMatrix<T>::operator()(size_t i, size_t j)
     {
-        assert(i >= 0 && j >= 0);
-        assert(i<rows() && j < cols());
+        DEBUG_ASSERT(i >= 0 && j >= 0);
+        DEBUG_ASSERT(i<rows() && j < cols());
         return _data[i * _cols + j];
     }
 
     template <typename T> T ComplexMatrix<T>::operator()(size_t i, size_t j) const
     {
-        assert(i >= 0 && j >= 0);
-        assert(i<rows() && j < cols());
+        DEBUG_ASSERT(i >= 0 && j >= 0);
+        DEBUG_ASSERT(i<rows() && j < cols());
+
         return _data[i * _cols + j];
     }
     

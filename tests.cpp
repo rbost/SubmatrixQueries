@@ -9,13 +9,14 @@
 #include "tests.h"
 
 #include <cstdlib>
-#include <cassert>
 #include <ctime>
 #include <algorithm>
 #include <climits>
 #include <set>
 #include <cfloat>
 #include <time.h>
+
+#include "debug_assert.h"
 
 double fRand(double fMin, double fMax)
 {
@@ -108,7 +109,7 @@ double benchTimeAsMiliSeconds(bench_time_t t)
 
 SubmatrixQueriesTest::SubmatrixQueriesTest(Matrix<double> *m)
 {
-    assert(m->isInverseMonge());
+    DEBUG_ASSERT(m->isInverseMonge());
     // copy the matrix
     _testMatrix = new ComplexMatrix<double>(m);
     
@@ -133,7 +134,7 @@ SubmatrixQueriesTest::SubmatrixQueriesTest(size_t rows, size_t cols)
     cout << "Building Matrix: " << benchTimeAsMiliSeconds(time) << " ms" << endl;
     time = now();
 #endif
-//    assert(_testMatrix->isInverseMonge());
+//    DEBUG_ASSERT(_testMatrix->isInverseMonge());
     
     _queryDS = new SubmatrixQueriesDataStructure<double>(*_testMatrix);
 #if BENCHMARK
@@ -656,8 +657,8 @@ Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrixStrip1(size_t ro
     int rowInterval = max<int>(max_abscissa/rows,1);
     int colInterval = max<int>(max_abscissa/cols,1);
     
-    assert(rowInterval > 0);
-    assert(colInterval > 0);
+    DEBUG_ASSERT(rowInterval > 0);
+    DEBUG_ASSERT(colInterval > 0);
     
     int accumulator =0;
     
@@ -729,8 +730,8 @@ Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrixStrip2(size_t ro
     int rowInterval = max<int>(2*max_abscissa/rows,1);
     int colInterval = max<int>(2*max_abscissa/cols,1);
     
-    assert(rowInterval > 0);
-    assert(colInterval > 0);
+    DEBUG_ASSERT(rowInterval > 0);
+    DEBUG_ASSERT(colInterval > 0);
     
     int accumulator = -max_abscissa;
     
