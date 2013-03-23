@@ -105,7 +105,7 @@ double benchTimeAsMiliSeconds(bench_time_t t)
 }
 
 #define PRINT_TEST_MATRIX false
-#define BENCHMARK true
+#define BENCHMARK false
 
 SubmatrixQueriesTest::SubmatrixQueriesTest(Matrix<double> *m)
 {

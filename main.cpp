@@ -272,7 +272,7 @@ void benchmarks(size_t nRows, size_t nCols)
     
 }
 
-void multiBenchmarks(size_t maxNRows, size_t maxNCols, size_t nSampleSize, size_t nSamplePerSize)
+void multiSizePositionQueriesBenchmarks(size_t maxNRows, size_t maxNCols, size_t nSampleSize, size_t nSamplePerSize)
 {
     cout << "Benchmarks on " << nSampleSize << " samples up to size " << maxNRows << " x " << maxNCols << ", "<< nSamplePerSize << " samples for eache size\n\n";
     
@@ -283,6 +283,23 @@ void multiBenchmarks(size_t maxNRows, size_t maxNCols, size_t nSampleSize, size_
     for (size_t i = 0; i < nSampleSize; i++) {
         float fraction = ((float)(i+1))/((float)nSampleSize);
         cout << (size_t)(maxNRows*fraction) << " ; " << benchTimeAsMiliSeconds(benchmarks[i][0]) << " ; " << benchTimeAsMiliSeconds(benchmarks[i][1]) << " ; " << benchTimeAsMiliSeconds(benchmarks[i][2]) << " ; " << benchTimeAsMiliSeconds(benchmarks[i][3]) << "\n";
+        delete [] benchmarks[i];
+    }
+    
+    delete [] benchmarks;
+}
+
+void multiSizeSubmatrixQueriesBenchmarks(size_t maxNRows, size_t maxNCols, size_t nSampleSize, size_t nSamplePerSize)
+{
+    cout << "Benchmarks on " << nSampleSize << " samples up to size " << maxNRows << " x " << maxNCols << ", "<< nSamplePerSize << " samples for eache size\n\n";
+    
+    bench_time_t **benchmarks;
+    
+    benchmarks = SubmatrixQueriesTest::multiSizeBenchmarksSubmatrixQueries(maxNRows, maxNCols, nSampleSize, nSamplePerSize);
+    
+    for (size_t i = 0; i < nSampleSize; i++) {
+        float fraction = ((float)(i+1))/((float)nSampleSize);
+        cout << (size_t)(maxNRows*fraction) << " ; " << benchTimeAsMiliSeconds(benchmarks[i][0]) << " ; " << benchTimeAsMiliSeconds(benchmarks[i][1]) << " ; " << benchTimeAsMiliSeconds(benchmarks[i][2]) << "\n";
         delete [] benchmarks[i];
     }
     
@@ -307,9 +324,10 @@ int main(int argc, const char * argv[])
 //    testSubmatrixQueries();
     
 //    testTest(nRows,nCols);
-    benchmarks(nRows, nCols);
+//    benchmarks(nRows, nCols);
 
-//    multiBenchmarks(nRows, nCols, ((float)nRows)/((float) 20),50);
+//    multiSizePositionQueriesBenchmarks(nRows, nCols, ((float)nRows)/((float) 20),50);
+    multiSizeSubmatrixQueriesBenchmarks(nRows, nCols, ((float)nRows)/((float) 20),50);
     
     return 0;
 }
