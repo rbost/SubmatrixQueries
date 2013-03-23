@@ -464,6 +464,53 @@ void SubmatrixQueriesTest::benchmarkAllColQueries(bench_time_t *naiveTime, bench
     
 }
 
+void SubmatrixQueriesTest::benchmarkAllSubmatrixQueries(Range rowRange, Range colRange, bench_time_t *naiveTime, bench_time_t *explicitNodesTime, bench_time_t *implicitNodesTime)
+{
+    bench_time_t clock1, clock2, clock3, clock4;
+    
+    
+    clock1 = now();
+    _queryDS->maxInRange(rowRange,colRange);
+    
+    clock2 = now();
+    _queryDS->maxInSubmatrix(rowRange,colRange);
+    
+    clock3 = now();
+    SubmatrixQueriesTest::naiveMaximumInSubmatrix(_testMatrix, rowRange, colRange);
+    
+    clock4 = now();
+    
+    if (naiveTime) {
+        *naiveTime = add(*naiveTime,diff(clock4, clock3));
+    }
+    if (explicitNodesTime) {
+        *explicitNodesTime = add(*explicitNodesTime,diff(clock2, clock1));
+    }
+    if (implicitNodesTime) {
+        *implicitNodesTime = add(*implicitNodesTime,diff(clock3, clock2));
+    }
+    
+}
+
+
+void SubmatrixQueriesTest::benchmarkAllSubmatrixQueries(bench_time_t *naiveTime, bench_time_t *explicitNodesTime, bench_time_t *implicitNodesTime)
+{
+    size_t r1, r2;
+    r1 = rand() % (_testMatrix->rows());
+    r2 = rand() % (_testMatrix->rows());
+    
+    size_t c1,c2;
+    c1 = rand() % (_testMatrix->cols());
+    c2 = rand() % (_testMatrix->cols());
+    
+    
+    Range r = Range(min(r1,r2),max(r1,r2));
+    Range c = Range(min(c1,c2),max(c1,c2));
+    
+    benchmarkAllSubmatrixQueries(r, c,naiveTime,explicitNodesTime,implicitNodesTime);
+    
+}
+
 bool SubmatrixQueriesTest::multipleColumnQueryTest(size_t n)
 {
     bool result = true;
@@ -590,6 +637,27 @@ void SubmatrixQueriesTest::multipleBenchmarksColQueries(size_t n, bench_time_t *
 {
     for (size_t i = 0; i < n; i++) {
         benchmarkAllColQueries(naiveTime, queryTime, cascadingTime,  simpleCascadingTime);
+    }
+}
+
+
+void SubmatrixQueriesTest::multipleBenchmarksSubmatrixQueries(size_t n)
+{
+    bench_time_t naiveTime = ZeroTime, explicitNodesTime = ZeroTime, implicitNodesTime = ZeroTime;
+    
+    multipleBenchmarksSubmatrixQueries(n,&naiveTime, &explicitNodesTime, &implicitNodesTime);
+    
+    cout << "Benchmark for " << n << " submatrix queries:" <<endl;
+    cout << "Naive algorithm: " << benchTimeAsMiliSeconds(naiveTime) << " ms" << endl;
+    cout << "Explicit canonical nodes: " << benchTimeAsMiliSeconds(explicitNodesTime) << " ms" << endl;
+    cout << "Implicit  canonical nodes: " << benchTimeAsMiliSeconds(implicitNodesTime) << " ms" << endl;
+    
+}
+
+void SubmatrixQueriesTest::multipleBenchmarksSubmatrixQueries(size_t n,bench_time_t *naiveTime, bench_time_t *explicitNodesTime, bench_time_t *implicitNodesTime)
+{
+    for (size_t i = 0; i < n; i++) {
+        benchmarkAllSubmatrixQueries(naiveTime, explicitNodesTime, implicitNodesTime);
     }
 }
 
@@ -866,6 +934,49 @@ bench_time_t** SubmatrixQueriesTest::multiSizeBenchmarksPositionQueries(size_t m
         cout << "Benchmark for size: " << nRows << " x " << nCols << " ... ";
 
         SubmatrixQueriesTest::multiBenchmarksPositionQueries(nRows,nCols, nSamplePerSize, results[i], results[i]+1, results[i]+2, results[i]+3);
+        
+        cout << " done\n";
+    }
+    return results;
+}
+
+void SubmatrixQueriesTest::multiBenchmarksSubmatrixQueries(size_t nRows, size_t nCols, size_t nSamples, bench_time_t *naiveTime, bench_time_t *explicitNodesTime, bench_time_t *implicitNodesTime)
+{
+    cout << "\n";
+    for (size_t i = 0; i < nSamples; i++) {
+        SubmatrixQueriesTest *t = new SubmatrixQueriesTest(nRows,nCols);
+        cout<< "|";
+        cout.flush();
+        t->multipleBenchmarksSubmatrixQueries(100, naiveTime, explicitNodesTime, implicitNodesTime);
+        t->multipleBenchmarksSubmatrixQueries(100, naiveTime, explicitNodesTime, implicitNodesTime);
+        
+        delete t;
+    }
+}
+
+bench_time_t** SubmatrixQueriesTest::multiSizeBenchmarksSubmatrixQueries(size_t maxNRows, size_t maxNCols, size_t nSampleSize, size_t nSamplePerSize)
+{
+    bench_time_t **results = new clock_ptr [nSampleSize];
+    for (size_t i = 0; i < nSampleSize; i++) {
+        results[i] = new bench_time_t [3];
+        
+#ifdef __MACH__
+        results[i][0] = 0;
+        results[i][1] = 0;
+        results[i][2] = 0;
+#else
+        results[i][0].tv_sec = 0; results[i][0].tv_nsec = 0;
+        results[i][1].tv_sec = 0; results[i][1].tv_nsec = 0;
+        results[i][2].tv_sec = 0; results[i][2].tv_nsec = 0;
+#endif
+        size_t nRows = maxNRows, nCols = maxNCols;
+        float fraction = ((float)(i+1))/((float)nSampleSize);
+        nRows *= fraction;
+        nCols *= fraction;
+        
+        cout << "Benchmark for size: " << nRows << " x " << nCols << " ... ";
+        
+        SubmatrixQueriesTest::multiBenchmarksSubmatrixQueries(nRows,nCols, nSamplePerSize, results[i], results[i]+1, results[i]+2);
         
         cout << " done\n";
     }

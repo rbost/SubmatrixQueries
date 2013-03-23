@@ -265,7 +265,11 @@ void benchmarks(size_t nRows, size_t nCols)
     cout << "\n========================================";
     cout << "\nBeginning row queries benchmarks ..." << endl;
     test.multipleBenchmarksRowQueries(1000);
-
+    
+    cout << "\n========================================";
+    cout << "\nBeginning submatrix queries benchmarks ..." << endl;
+    test.multipleBenchmarksSubmatrixQueries(1000);
+    
 }
 
 void multiBenchmarks(size_t maxNRows, size_t maxNCols, size_t nSampleSize, size_t nSamplePerSize)
@@ -303,9 +307,9 @@ int main(int argc, const char * argv[])
 //    testSubmatrixQueries();
     
 //    testTest(nRows,nCols);
-//    benchmarks(nRows, nCols);
+    benchmarks(nRows, nCols);
 
-    multiBenchmarks(nRows, nCols, ((float)nRows)/((float) 20),50);
+//    multiBenchmarks(nRows, nCols, ((float)nRows)/((float) 20),50);
     
     return 0;
 }
