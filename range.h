@@ -50,6 +50,11 @@ struct Range {
         
         return Range(std::min<size_t>(min,r.min),std::max<size_t>(max,r.max));
     }
+    
+    inline bool contains(Range r)
+    {
+        return min <= r.min && max >= r.max;
+    }
 };
 
 

@@ -680,6 +680,57 @@ public:
         return _columnTree;
     }
     
+    
+    void updateMaxForRowNodeOverColumnRange(ExtendedRowNode<T> const *rowNode, Range colRange, MaxValue<T> *max) const
+    {
+        RowEnvelope<T> *envelope = rowNode->envelope();
+        const vector< Breakpoint > *breakpoints = envelope->breakpoints();
+        
+        Breakpoint startBP, endBP;
+        size_t startBPIndex, endBPIndex;
+        
+        // we get the last breakpoint before colRanges.min and its index ...
+        startBP = envelope->breakpointBeforePosition(colRange.min, &startBPIndex);
+        // ... and the last breakpoint before colRanges.max and its index
+        endBP = envelope->breakpointBeforePosition(colRange.max, &endBPIndex);
+        
+        // if the range does not contain any interval, the returned breakpoints will be the sames
+        // as a consequence, we have to check for that case to avoid undefined behavior
+        if (endBPIndex == startBPIndex) {
+            size_t row = startBP.row;
+            max->updateMax( _columnTree->simpleCascadingMaxInRange(row,colRange));
+            return;
+        }
+        
+        // at this point, we have the prefix: it is the interval [colRanges.min,(*breakpoints)[startBPIndex+1].col-1]
+        // we first have to check if it is empty or not ...
+        if ((*breakpoints)[startBPIndex].col < colRange.min) {
+            // it is not empty, go on ...
+            size_t row = (*breakpoints)[startBPIndex].row;
+            max->updateMax(_columnTree->simpleCascadingMaxInRange(row,Range(colRange.min, (*breakpoints)[startBPIndex+1].col-1)));
+        }else{
+            // it is empty, we just move  the start index so it is consistent with the call on the RMQ data structure
+            startBPIndex--;
+        }
+        
+        // now, we check for the fully contained intervals
+        // in the case we still have some breakpoints to explore ...
+        
+        if (endBPIndex - startBPIndex > 1) { // to have at least one interval, we need at least two breakpoints ...
+            // the range of the set of intervals is then [(*breakpoints)[startBPIndex+1].col,(*breakpoints)[endBPIndex].col-1]
+            const BasicRQNode<T> *rangeMaxima = rowNode->rangeMaxima();
+            max->updateMax(rangeMaxima->query(startBPIndex+1,endBPIndex-1));
+        }
+        
+        // check for the rest of the range
+        // the remaining of the interval is between the last breakpoint column and the column range maximum :
+        // the suffix is of range [(*breakpoints)[i-1].col,colRanges.max]
+        // ( even if there are two ways to exit the loop, in the end we have to do the same processing for the remaining )
+        
+        size_t row = endBP.row;
+        max->updateMax(_columnTree->simpleCascadingMaxInRange(row,Range(endBP.col,colRange.max)));
+    }
+    
     T maxInRange(size_t minRow, size_t maxRow, size_t minCol, size_t maxCol) const
     {
         return maxInRange(Range(minRow,maxRow), Range(minCol,maxCol));
@@ -768,57 +819,35 @@ public:
         
         MaxValue<T> max;
         for (typename vector<const ExtendedRowNode<T> *>::iterator nodesIterator = rowNodes.begin(); nodesIterator != rowNodes.end(); ++nodesIterator) {
-            
-            
-            RowEnvelope<T> *envelope = (*nodesIterator)->envelope();
-            const vector< Breakpoint > *breakpoints = envelope->breakpoints();
-            
-            Breakpoint startBP, endBP;
-            size_t startBPIndex, endBPIndex;
-                        
-            // we get the last breakpoint before colRanges.min and its index ...
-            startBP = envelope->breakpointBeforePosition(colRanges.min, &startBPIndex);
-            // ... and the last breakpoint before colRanges.max and its index
-            endBP = envelope->breakpointBeforePosition(colRanges.max, &endBPIndex);
-            
-            // if the range does not contain any interval, the returned breakpoints will be the sames
-            // as a consequence, we have to check for that case to avoid undefined behavior
-            if (endBPIndex == startBPIndex) {
-                size_t row = startBP.row;
-                max.updateMax( _columnTree->simpleCascadingMaxInRange(row,colRanges));
-                continue;
-            }
-
-            // at this point, we have the prefix: it is the interval [colRanges.min,(*breakpoints)[startBPIndex+1].col-1]
-            // we first have to check if it is empty or not ...
-            if ((*breakpoints)[startBPIndex].col < colRanges.min) {
-                // it is not empty, go on ...
-                size_t row = (*breakpoints)[startBPIndex].row;
-                max.updateMax(_columnTree->simpleCascadingMaxInRange(row,Range(colRanges.min, (*breakpoints)[startBPIndex+1].col-1)));
-            }else{
-                // it is empty, we just move  the start index so it is consistent with the call on the RMQ data structure
-                startBPIndex--;
-            }
-            
-            // now, we check for the fully contained intervals
-            // in the case we still have some breakpoints to explore ...
-            
-            if (endBPIndex - startBPIndex > 1) { // to have at least one interval, we need at least two breakpoints ...
-                // the range of the set of intervals is then [(*breakpoints)[startBPIndex+1].col,(*breakpoints)[endBPIndex].col-1]
-                const BasicRQNode<T> *rangeMaxima = (*nodesIterator)->rangeMaxima();
-                max.updateMax(rangeMaxima->query(startBPIndex+1,endBPIndex-1));
-            }
-            
-            // check for the rest of the range
-            // the remaining of the interval is between the last breakpoint column and the column range maximum :
-            // the suffix is of range [(*breakpoints)[i-1].col,colRanges.max]
-            // ( even if there are two ways to exit the loop, in the end we have to do the same processing for the remaining )
-            
-            size_t row = endBP.row;
-            max.updateMax(_columnTree->simpleCascadingMaxInRange(row,Range(endBP.col,colRanges.max)));
+            updateMaxForRowNodeOverColumnRange((*nodesIterator), colRanges, &max);
         }
         
         return max.value();
+    }
+    
+    T maxInSubmatrix(Range rowRange, Range colRange) const
+    {
+        MaxValue<T> max;
+        
+        updateRecursivelyMaxInRange(rowRange,colRange,rowsTree(),&max);
+        
+        return max.value();
+    }
+    
+    void updateRecursivelyMaxInRange(Range rowRange, Range colRange, ExtendedRowNode<T> const *rowNode, MaxValue<T> *max) const
+    {
+        if (!rowRange.intersects(rowNode->range())) {
+            return;
+        }
+        
+        if (!rowRange.contains(rowNode->range())) {
+            // make a recursive call
+            updateRecursivelyMaxInRange(rowRange, colRange, rowNode->lowIndicesNode(), max);
+            updateRecursivelyMaxInRange(rowRange, colRange, rowNode->highIndicesNode(), max);
+            return;
+        }
+        
+        updateMaxForRowNodeOverColumnRange(rowNode, colRange, max);
     }
 
 };
