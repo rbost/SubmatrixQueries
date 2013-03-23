@@ -785,7 +785,7 @@ public:
             // as a consequence, we have to check for that case to avoid undefined behavior
             if (endBPIndex == startBPIndex) {
                 size_t row = startBP.row;
-                max.updateMax( _columnTree->maxForRowInRange(row,colRanges.min,colRanges.max));
+                max.updateMax( _columnTree->simpleCascadingMaxInRange(row,colRanges));
                 continue;
             }
 
@@ -794,7 +794,7 @@ public:
             if ((*breakpoints)[startBPIndex].col < colRanges.min) {
                 // it is not empty, go on ...
                 size_t row = (*breakpoints)[startBPIndex].row;
-                max.updateMax(_columnTree->maxForRowInRange(row,colRanges.min, (*breakpoints)[startBPIndex+1].col-1));
+                max.updateMax(_columnTree->simpleCascadingMaxInRange(row,Range(colRanges.min, (*breakpoints)[startBPIndex+1].col-1)));
             }else{
                 // it is empty, we just move  the start index so it is consistent with the call on the RMQ data structure
                 startBPIndex--;
@@ -815,7 +815,7 @@ public:
             // ( even if there are two ways to exit the loop, in the end we have to do the same processing for the remaining )
             
             size_t row = endBP.row;
-            max.updateMax(_columnTree->maxForRowInRange(row,endBP.col,colRanges.max));
+            max.updateMax(_columnTree->simpleCascadingMaxInRange(row,Range(endBP.col,colRanges.max)));
         }
         
         return max.value();
