@@ -74,19 +74,19 @@ public:
         delete _envelope;
     }
     
-    Envelope<T>* envelope() const
+    inline Envelope<T>* envelope() const
     {
         return _envelope;
     }
     
-    bool isLeaf() const {
+    inline bool isLeaf() const {
         Range r = this->range();
         return (r.max - r.min) <= 0;
     }
-    virtual EnvTreeNode<T>* lowIndicesNode() const { return _lowIndicesNode; }
-    virtual EnvTreeNode<T>* highIndicesNode() const { return _highIndicesNode; }
-    Range range() const { return _range; }
-    size_t crossingBreakpointIndex() const { return _crossingBpIndex; }
+    inline virtual EnvTreeNode<T>* lowIndicesNode() const { return _lowIndicesNode; }
+    inline virtual EnvTreeNode<T>* highIndicesNode() const { return _highIndicesNode; }
+    inline Range range() const { return _range; }
+    inline size_t crossingBreakpointIndex() const { return _crossingBpIndex; }
     
     // Returns the canonical nodes (cf. the article) for the specified indices
     // COMPLEXITY : O(log(number of rows)
@@ -491,12 +491,12 @@ public:
     virtual ExtendedRowNode<T>* lowIndicesNode() const { return (ExtendedRowNode<T>*) RowNode<T>::lowIndicesNode(); }
     virtual ExtendedRowNode<T>* highIndicesNode() const { return (ExtendedRowNode<T>*) RowNode<T>::highIndicesNode(); }
     
-    const vector< T > *maxima() const
+    inline const vector< T > *maxima() const
     {
         return _maxima;
     }
     
-    const BasicRQNode<T> *rangeMaxima() const
+    inline const BasicRQNode<T> *rangeMaxima() const
     {
         return _rangeMaxima;
     }
@@ -670,12 +670,12 @@ public:
         delete _columnTree;
     }
     
-    const ExtendedRowNode<T>* rowsTree() const
+    inline const ExtendedRowNode<T>* rowsTree() const
     {
         return _rowsTree;
     }
     
-    const ColNode<T>* columnTree() const
+    inline const ColNode<T>* columnTree() const
     {
         return _columnTree;
     }

@@ -42,7 +42,7 @@ public:
         return _value;
     }
     
-    bool hasBeenSet() const { return _hasBeenSet;}
-    T  value() const { assert(_hasBeenSet); return _value; }
+    inline bool hasBeenSet() const { return _hasBeenSet;}
+    inline T  value() const { assert(_hasBeenSet); return _value; }
 };
 #endif /* defined(__SubmatrixQueries__max_value__) */

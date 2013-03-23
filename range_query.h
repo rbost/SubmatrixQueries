@@ -30,13 +30,13 @@ class BasicRQNode {
     
 public:
     
-    T value() const { return _value; }
-    size_t minIndex() const { return _minIndex; }
-    size_t maxIndex() const { return _maxIndex; }
-    bool isLeaf() const { return _isLeaf; }
-    const BasicRQNode<T> *highIndicesNode() const { return _highIndicesNode; }
-    const BasicRQNode<T> *lowIndicesNode() const { return _lowIndicesNode; }
-    compareFunctionPtr compareFunction() const { return _compare; }
+    inline T value() const { return _value; }
+    inline size_t minIndex() const { return _minIndex; }
+    inline size_t maxIndex() const { return _maxIndex; }
+    inline bool isLeaf() const { return _isLeaf; }
+    inline const BasicRQNode<T> *highIndicesNode() const { return _highIndicesNode; }
+    inline const BasicRQNode<T> *lowIndicesNode() const { return _lowIndicesNode; }
+    inline compareFunctionPtr compareFunction() const { return _compare; }
     
     BasicRQNode(const std::vector<T> *values, size_t minIndex, size_t maxIndex, const T& (*compareFunc)(T const&, T const&) ) :
         _minIndex(minIndex),_maxIndex(maxIndex),_compare(compareFunc)

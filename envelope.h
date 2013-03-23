@@ -64,16 +64,16 @@ namespace envelope {
             delete _breakpoints;
         }
         
-        const vector< Breakpoint >* breakpoints() const
+        inline const vector< Breakpoint >* breakpoints() const
         {
             return this->_breakpoints;
         }
         
-        size_t numberOfBreakpoints() const {
+        inline size_t numberOfBreakpoints() const {
             return this->breakpoints()->size();
         }
         
-        Matrix<T> const& values() const
+        inline Matrix<T> const& values() const
         {
             return this->_values;
         }
@@ -117,12 +117,12 @@ namespace envelope {
             return (*this->breakpoints())[i];
         }
         
-        Breakpoint breakpointBeforePosition(size_t pos, size_t *foundPosition) const
+        inline Breakpoint breakpointBeforePosition(size_t pos, size_t *foundPosition) const
         {
             return breakpointBeforePosition(pos,0,this->numberOfBreakpoints() - 1,foundPosition);
         }
         
-        Breakpoint breakpointBeforePosition(size_t pos) const
+        inline Breakpoint breakpointBeforePosition(size_t pos) const
         {
             return breakpointBeforePosition(pos, NULL);
         }
@@ -142,7 +142,7 @@ namespace envelope {
         
         // ABSTRACT METHOD
         // Implementations must return the maximum position for a breakpoint.
-        virtual size_t maxPosition() const = 0;
+        virtual inline size_t maxPosition() const = 0;
         
         // ABSTRACT METHOD
         // Implementations must return the position of the breakpoint given as an argument.
@@ -153,7 +153,7 @@ namespace envelope {
         // Implementations must return the value at position given that bp is the last breakpoint before position 
         virtual T valueForPositionAfterBreakpoint(size_t position, Breakpoint bp) const = 0;
         
-        virtual size_t positionForBreakpointAtIndex(size_t i) const
+        virtual inline size_t positionForBreakpointAtIndex(size_t i) const
         {
             Breakpoint bp = (*this->breakpoints())[i];
             return this->positionForBreakpoint(bp);
@@ -174,7 +174,7 @@ namespace envelope {
         }
         
 
-        T valueForBreakpoint(Breakpoint bp) const
+        inline T valueForBreakpoint(Breakpoint bp) const
         {
             return this->_values(bp.row,bp.col);
         }
