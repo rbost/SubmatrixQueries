@@ -423,7 +423,7 @@ namespace envelope {
         eLength = indexInE1 + (e2->numberOfBreakpoints() - indexInE2 + 1);
         size_t e1MaxIndex = indexInE1;
 
-        if (newBpPosition == e2->positionForBreakpointAtIndex(indexInE2)) {
+        if (indexInE2 < e2->numberOfBreakpoints() && newBpPosition == e2->positionForBreakpointAtIndex(indexInE2)) {
             eLength--;
         }
         if (newBpPosition == e1->positionForBreakpointAtIndex(indexInE1-1)) {
@@ -459,7 +459,9 @@ namespace envelope {
         for(size_t j = beginningIndex+1; j < e2->breakpoints()->size(); j++, i++){
             (*newBpList)[i] = (*(e2->breakpoints()))[j];
         }
-        
+       
+       assert(i == newBpList->size());
+
         return newBpList;
     }
     
