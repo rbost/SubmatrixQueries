@@ -875,11 +875,11 @@ void* _fillCols(void *args)
     size_t rows = input_args.matrix->rows();
     
     for (size_t i = input_args.min; i < input_args.max; i++) {
-        for (size_t j = 0; j < cols; j++) {
+        for (size_t j = 0; j < rows; j++) {
             double v;
-            v = tan((*input_args.slopes)[j])*i + rows -1 -j;
+            v = tan((*input_args.slopes)[i])*j + rows -1 -i;
             
-            (*input_args.matrix)(i,j) += v;
+            (*input_args.matrix)(j,i) += v;
         }
     }
 
@@ -949,9 +949,10 @@ Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrixSlopeMultithread
     
     threads = (pthread_t*)malloc(threadCount*sizeof(pthread_t));
     args = (_thread_arg_t*)malloc(threadCount*sizeof(_thread_arg_t));
+    size_t colRange = cols/threadCount;
 
     for (size_t k = 0; k  < threadCount; k++) {
-        args[k] = _thread_arg_t(m,&slope,k*rowRange,min((k+1)*rowRange,rows));
+        args[k] = _thread_arg_t(m,&slope,k*colRange,min((k+1)*colRange,cols));
         rc = pthread_create(&threads[k], NULL, _fillCols, &args[k]);
         assert(0 == rc);
     }
