@@ -112,6 +112,9 @@ double benchTimeAsMiliSeconds(bench_time_t t)
 #define PRINT_TEST_MATRIX false
 #define BENCHMARK true
 
+#define MULTITHREAD_GENERATION true
+#define GENERATION_THREAD_COUNT 15
+
 SubmatrixQueriesTest::SubmatrixQueriesTest(Matrix<double> *m)
 {
     DEBUG_ASSERT(m->isInverseMonge());
@@ -133,8 +136,13 @@ SubmatrixQueriesTest::SubmatrixQueriesTest(size_t rows, size_t cols)
 #if BENCHMARK
     bench_time_t time = now();
 #endif
-//    _testMatrix = generateInverseMongeMatrixSlope(rows, cols);
-    _testMatrix = generateInverseMongeMatrixSlopeMultithread(rows, cols,5);
+
+#if MULTITHREAD_GENERATION
+    _testMatrix = generateInverseMongeMatrixSlopeMultithread(rows, cols,GENERATION_THREAD_COUNT);
+#else
+    _testMatrix = generateInverseMongeMatrixSlope(rows, cols);
+#endif
+
 #if BENCHMARK
     time = diff(now(),time);
     cout << "Building Matrix: " << benchTimeAsMiliSeconds(time) << " ms" << endl;
