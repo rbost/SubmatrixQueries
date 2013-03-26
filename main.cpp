@@ -285,6 +285,13 @@ void multiBenchmarks(size_t maxNRows, size_t maxNCols, size_t nSampleSize, size_
     delete [] benchmarks;
 }
 
+void testInitalization(size_t nRows, size_t nCols)
+{
+    cout << "Initialization test for " << nRows << " rows and " << nCols << " columns \n\n";
+    
+    SubmatrixQueriesTest test = SubmatrixQueriesTest(nRows, nCols);
+}
+
 int main(int argc, const char * argv[])
 {
     size_t nRows = 10000; // default values for the number of columns and rows
@@ -303,9 +310,10 @@ int main(int argc, const char * argv[])
 //    testSubmatrixQueries();
     
 //    testTest(nRows,nCols);
+    testInitalization(nRows,nCols);
 //    benchmarks(nRows, nCols);
 
-    multiBenchmarks(nRows, nCols, ((float)nRows)/((float) 20),50);
+//    multiBenchmarks(nRows, nCols, ((float)nRows)/((float) 20),50);
     
     return 0;
 }
