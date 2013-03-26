@@ -18,6 +18,11 @@
 
 #include "debug_assert.h"
 
+extern "C"
+{
+#include <pthread.h>
+}
+
 double fRand(double fMin, double fMax)
 {
     double f = (double)rand() / RAND_MAX;
@@ -107,6 +112,9 @@ double benchTimeAsMiliSeconds(bench_time_t t)
 #define PRINT_TEST_MATRIX false
 #define BENCHMARK false
 
+#define MULTITHREAD_GENERATION true
+#define GENERATION_THREAD_COUNT 15
+
 SubmatrixQueriesTest::SubmatrixQueriesTest(Matrix<double> *m)
 {
     DEBUG_ASSERT(m->isInverseMonge());
@@ -128,7 +136,13 @@ SubmatrixQueriesTest::SubmatrixQueriesTest(size_t rows, size_t cols)
 #if BENCHMARK
     bench_time_t time = now();
 #endif
+
+#if MULTITHREAD_GENERATION
+    _testMatrix = generateInverseMongeMatrixSlopeMultithread(rows, cols,GENERATION_THREAD_COUNT);
+#else
     _testMatrix = generateInverseMongeMatrixSlope(rows, cols);
+#endif
+
 #if BENCHMARK
     time = diff(now(),time);
     cout << "Building Matrix: " << benchTimeAsMiliSeconds(time) << " ms" << endl;
@@ -854,7 +868,8 @@ Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrixSlope(size_t row
     }
     
 #if BENCHMARK
-    cout << "Fill the Inverse Monge Matrix ... " << endl;
+    cout << "Fill the Inverse Monge Matrix ... ";
+    bench_time_t t = now();
 #endif
     
     vector<double> slope(rows);
@@ -890,6 +905,146 @@ Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrixSlope(size_t row
         }
     }
 
+#if BENCHMARK
+    t = diff(now(),t);
+    cout << " done in " << benchTimeAsMiliSeconds(t) << " ms" << endl;
+#endif
+    
+    return m;
+}
+
+struct _thread_arg_t
+{
+    Matrix<double> *matrix;
+    vector<double> *slopes;
+    size_t min;
+    size_t max;
+    
+    _thread_arg_t(Matrix<double> *m, vector<double> *s, size_t min, size_t max) : matrix(m), slopes(s), min(min), max(max){}
+};
+
+void* _fillRows(void *args)
+{
+    _thread_arg_t input_args = *((_thread_arg_t *)args);
+    
+    size_t cols = input_args.matrix->cols();
+    size_t rows = input_args.matrix->rows();
+
+    for (size_t i = input_args.min; i < input_args.max; i++) {
+        for (size_t j = 0; j < cols; j++) {
+            double v;
+            v = tan((*input_args.slopes)[i])*j + rows -1 -i;
+            
+            (*input_args.matrix)(i,j) = v;
+        }
+    }
+
+    
+    return NULL;
+}
+
+void* _fillCols(void *args)
+{
+    _thread_arg_t input_args = *((_thread_arg_t *)args);
+    
+    size_t cols = input_args.matrix->cols();
+    size_t rows = input_args.matrix->rows();
+    
+    for (size_t i = input_args.min; i < input_args.max; i++) {
+        for (size_t j = 0; j < rows; j++) {
+            double v;
+            v = tan((*input_args.slopes)[i])*j + rows -1 -i;
+            
+            (*input_args.matrix)(j,i) += v;
+        }
+    }
+
+    return NULL;
+}
+
+Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrixSlopeMultithread(size_t rows, size_t cols,size_t threadCount)
+{
+    Matrix<double> *m;
+    
+#if BENCHMARK
+    cout << "Initializing matrix " << rows << "x" << cols << " ... ";
+#endif
+    try {
+        m = new ComplexMatrix<double>(rows,cols);
+#if BENCHMARK
+        cout << "Done" << endl;
+#endif
+    } catch (std::bad_alloc& ba) {
+#if BENCHMARK
+        cout << "\nbad_alloc caught: " << ba.what() << endl;
+        cout << "Try to build an other matrix ... ";
+#endif
+        m = new SimpleMatrix<double>(rows,cols);
+#if BENCHMARK
+        cout << "Done" << endl;
+#endif
+    }
+    
+#if BENCHMARK
+    cout << "Fill the Inverse Monge Matrix ... ";
+    bench_time_t t = now();
+#endif
+    
+    vector<double> slope(rows);
+    
+    srand ( time(NULL) );
+    
+    for (size_t i = 0; i < rows; i++) {
+        slope[i] = fRand(-0.5*M_PI, 0.5*M_PI);
+    }
+    std::sort(slope.begin(), slope.end());
+    
+    pthread_t *threads = (pthread_t*)malloc(threadCount*sizeof(pthread_t));
+    _thread_arg_t *args = (_thread_arg_t*)malloc(threadCount*sizeof(_thread_arg_t));
+    size_t rowRange = rows/threadCount;
+    int rc;
+    
+    for (size_t k = 0; k  < threadCount; k++) {
+        args[k] = _thread_arg_t(m,&slope,k*rowRange,min((k+1)*rowRange,rows));
+        rc = pthread_create(&threads[k], NULL, _fillRows, &args[k]);
+        assert(0 == rc);
+    }
+
+    for (size_t k=0; k < threadCount; k++) {
+        rc = pthread_join(threads[k], NULL);
+        assert(0 == rc);
+    }
+
+    free(threads); free(args);
+
+    slope = vector<double>(cols);
+    for (size_t i = 0; i < cols; i++) {
+        slope[i] = fRand(-0.5*M_PI, 0.5*M_PI);
+    }
+    std::sort(slope.begin(), slope.end());
+    
+    threads = (pthread_t*)malloc(threadCount*sizeof(pthread_t));
+    args = (_thread_arg_t*)malloc(threadCount*sizeof(_thread_arg_t));
+    size_t colRange = cols/threadCount;
+
+    for (size_t k = 0; k  < threadCount; k++) {
+        args[k] = _thread_arg_t(m,&slope,k*colRange,min((k+1)*colRange,cols));
+        rc = pthread_create(&threads[k], NULL, _fillCols, &args[k]);
+        assert(0 == rc);
+    }
+    
+    for (size_t k=0; k < threadCount; k++) {
+        rc = pthread_join(threads[k], NULL);
+        assert(0 == rc);
+    }
+
+    free(threads); free(args);
+
+#if BENCHMARK
+    t = diff(now(),t);
+    cout << " done in " << benchTimeAsMiliSeconds(t) << " ms" << endl;
+#endif
+    
     return m;
 }
 
