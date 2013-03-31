@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <cstdio>
+#include <fstream>
 
 #include "matrix.h"
 #include "range.h"
@@ -274,7 +275,7 @@ void benchmarks(size_t nRows, size_t nCols)
 
 void multiSizePositionQueriesBenchmarks(size_t maxNRows, size_t maxNCols, size_t nSampleSize, size_t nSamplePerSize)
 {
-    cout << "Benchmarks on " << nSampleSize << " samples up to size " << maxNRows << " x " << maxNCols << ", "<< nSamplePerSize << " samples for eache size\n\n";
+    cout << "Benchmarks on " << nSampleSize << " samples up to size " << maxNRows << " x " << maxNCols << ", "<< nSamplePerSize << " samples for each size\n\n";
     
     bench_time_t **benchmarks;
     
@@ -291,19 +292,32 @@ void multiSizePositionQueriesBenchmarks(size_t maxNRows, size_t maxNCols, size_t
 
 void multiSizeSubmatrixQueriesBenchmarks(size_t maxNRows, size_t maxNCols, size_t nSampleSize, size_t nSamplePerSize)
 {
-    cout << "Benchmarks on " << nSampleSize << " samples up to size " << maxNRows << " x " << maxNCols << ", "<< nSamplePerSize << " samples for eache size\n\n";
-    
+    cout << "Benchmarks on " << nSampleSize << " samples up to size " << maxNRows << " x " << maxNCols << ", "<< nSamplePerSize << " samples for each size\n\n";
     bench_time_t **benchmarks;
     
     benchmarks = SubmatrixQueriesTest::multiSizeBenchmarksSubmatrixQueries(maxNRows, maxNCols, nSampleSize, nSamplePerSize);
     
     for (size_t i = 0; i < nSampleSize; i++) {
         float fraction = ((float)(i+1))/((float)nSampleSize);
-        cout << (size_t)(maxNRows*fraction) << " ; " << benchTimeAsMiliSeconds(benchmarks[i][0]) << " ; " << benchTimeAsMiliSeconds(benchmarks[i][1]) << " ; " << benchTimeAsMiliSeconds(benchmarks[i][2]) << "\n";
+        cout << (size_t)(maxNRows*fraction) << " ; " << benchTimeAsMiliSeconds(benchmarks[i][0]) << " ; " << benchTimeAsMiliSeconds(benchmarks[i][1]) << " ; " << benchTimeAsMiliSeconds(benchmarks[i][2]) << " ; " << benchTimeAsMiliSeconds(benchmarks[i][3]) << "\n";
         delete [] benchmarks[i];
     }
     
     delete [] benchmarks;
+
+}
+
+void multiSizeSubmatrixQueriesBenchmarks(size_t maxNRows, size_t maxNCols, size_t nSampleSize, size_t nSamplePerSize, const char* outputFilename)
+{
+    cout << "Benchmarks on " << nSampleSize << " samples up to size " << maxNRows << " x " << maxNCols << ", "<< nSamplePerSize << " samples for each size\n\n";
+    ofstream output (outputFilename,ios::out | ios::trunc);
+    
+    if (output.is_open()) {
+        SubmatrixQueriesTest::multiSizeBenchmarksSubmatrixQueries(maxNRows, maxNCols, nSampleSize, nSamplePerSize,output);
+    }else{
+        cout << "Fail to open the benchmarking output file.\n";
+    }
+    output.close();
 }
 
 void testInitalization(size_t nRows, size_t nCols)
@@ -317,12 +331,20 @@ int main(int argc, const char * argv[])
 {
     size_t nRows = 10000; // default values for the number of columns and rows
     size_t nCols = 10000;
-    
+    const char* filename = "bench.out";
+    bool externalOutput = false;
+
     if (argc >= 3) {
         sscanf(argv[1], "%lu", &nRows);
         sscanf(argv[2], "%lu", &nCols);
     }
-    
+    if (argc >= 5) {
+        if (strcmp("-o", argv[3]) == 0) {
+            filename = argv[4];
+            externalOutput = true;
+        }
+    }
+
 //    testMatrix();
 //    testMonge();
 //    testEnvelope();
@@ -335,7 +357,12 @@ int main(int argc, const char * argv[])
 //    benchmarks(nRows, nCols);
 
 //    multiSizePositionQueriesBenchmarks(nRows, nCols, ((float)nRows)/((float) 20),50);
-    multiSizeSubmatrixQueriesBenchmarks(nRows, nCols, ((float)nRows)/((float) 20),50);
+    
+    if (externalOutput) {
+        multiSizeSubmatrixQueriesBenchmarks(nRows, nCols, ((float)nRows)/((float) 20),50,filename);
+    }else{
+        multiSizeSubmatrixQueriesBenchmarks(nRows, nCols, ((float)nRows)/((float) 20),50);
+    }
     
     return 0;
 }

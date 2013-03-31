@@ -15,6 +15,7 @@
 #include <set>
 #include <cfloat>
 #include <time.h>
+#include <fstream>
 
 #include "debug_assert.h"
 
@@ -1136,4 +1137,36 @@ bench_time_t** SubmatrixQueriesTest::multiSizeBenchmarksSubmatrixQueries(size_t 
         cout << " done\n";
     }
     return results;
+}
+
+void SubmatrixQueriesTest::multiSizeBenchmarksSubmatrixQueries(size_t maxNRows, size_t maxNCols, size_t nSampleSize, size_t nSamplePerSize, ofstream &outputStream)
+{
+    for (size_t i = 0; i < nSampleSize; i++) {
+        bench_time_t *benchmarks = new bench_time_t [3];
+        
+#ifdef __MACH__
+        benchmarks[0] = 0;
+        benchmarks[1] = 0;
+        benchmarks[2] = 0;
+#else
+        benchmarks[0].tv_sec = 0; benchmarks[0].tv_nsec = 0;
+        benchmarks[1].tv_sec = 0; benchmarks[1].tv_nsec = 0;
+        benchmarks[2].tv_sec = 0; benchmarks[2].tv_nsec = 0;
+#endif
+        size_t nRows = maxNRows, nCols = maxNCols;
+        float fraction = ((float)(i+1))/((float)nSampleSize);
+        nRows *= fraction;
+        nCols *= fraction;
+        
+        cout << "Benchmark for size: " << nRows << " x " << nCols << " ... ";
+        
+        SubmatrixQueriesTest::multiBenchmarksSubmatrixQueries(nRows,nCols, nSamplePerSize, benchmarks, benchmarks+1, benchmarks+2);
+        
+        cout << " done\n";
+        
+        outputStream << ((int)nRows) << " ; " << benchTimeAsMiliSeconds(benchmarks[0]) << " ; " << benchTimeAsMiliSeconds(benchmarks[1]) << " ; " << benchTimeAsMiliSeconds(benchmarks[2]) << "\n";
+        outputStream.flush();
+        
+        delete benchmarks;
+    }    
 }
