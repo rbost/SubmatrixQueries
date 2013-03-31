@@ -9,6 +9,7 @@
 #include <iostream>
 #include <cstdio>
 #include <fstream>
+#include <cstring>
 
 #include "matrix.h"
 #include "range.h"
