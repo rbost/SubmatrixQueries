@@ -1167,6 +1167,6 @@ void SubmatrixQueriesTest::multiSizeBenchmarksSubmatrixQueries(size_t maxNRows, 
         outputStream << ((int)nRows) << " ; " << benchTimeAsMiliSeconds(benchmarks[0]) << " ; " << benchTimeAsMiliSeconds(benchmarks[1]) << " ; " << benchTimeAsMiliSeconds(benchmarks[2]) << "\n";
         outputStream.flush();
         
-        delete benchmarks;
+        delete [] benchmarks;
     }    
 }

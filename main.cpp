@@ -299,7 +299,7 @@ void multiSizeSubmatrixQueriesBenchmarks(size_t maxNRows, size_t maxNCols, size_
     
     for (size_t i = 0; i < nSampleSize; i++) {
         float fraction = ((float)(i+1))/((float)nSampleSize);
-        cout << (size_t)(maxNRows*fraction) << " ; " << benchTimeAsMiliSeconds(benchmarks[i][0]) << " ; " << benchTimeAsMiliSeconds(benchmarks[i][1]) << " ; " << benchTimeAsMiliSeconds(benchmarks[i][2]) << " ; " << benchTimeAsMiliSeconds(benchmarks[i][3]) << "\n";
+        cout << (size_t)(maxNRows*fraction) << " ; " << benchTimeAsMiliSeconds(benchmarks[i][0]) << " ; " << benchTimeAsMiliSeconds(benchmarks[i][1]) << " ; " << benchTimeAsMiliSeconds(benchmarks[i][2]) << "\n";
         delete [] benchmarks[i];
     }
     
