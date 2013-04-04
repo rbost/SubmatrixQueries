@@ -18,6 +18,7 @@
 #include <fstream>
 
 #include "debug_assert.h"
+#include "oracle_monge_matrix.h"
 
 extern "C"
 {
@@ -113,6 +114,7 @@ double benchTimeAsMiliSeconds(bench_time_t t)
 #define PRINT_TEST_MATRIX false
 #define BENCHMARK false
 
+#define USE_ORACLE_MATRIX true
 #define MULTITHREAD_GENERATION true
 #define GENERATION_THREAD_COUNT 15
 
@@ -138,7 +140,9 @@ SubmatrixQueriesTest::SubmatrixQueriesTest(size_t rows, size_t cols)
     bench_time_t time = now();
 #endif
 
-#if MULTITHREAD_GENERATION
+#if USE_ORACLE_MATRIX
+    _testMatrix = new OracleMongeMatrix<double>(rows,cols);
+#elif MULTITHREAD_GENERATION
     _testMatrix = generateInverseMongeMatrixSlopeMultithread(rows, cols,GENERATION_THREAD_COUNT);
 #else
     _testMatrix = generateInverseMongeMatrixSlope(rows, cols);
