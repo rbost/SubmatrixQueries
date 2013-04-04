@@ -346,6 +346,8 @@ int main(int argc, const char * argv[])
         }
     }
 
+    SubmatrixQueriesTest::benchmarkNaiveQueries = false;
+    
 //    testMatrix();
 //    testMonge();
 //    testEnvelope();

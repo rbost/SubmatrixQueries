@@ -41,7 +41,8 @@ public:
     SubmatrixQueriesTest(Matrix<double> *m);
     SubmatrixQueriesTest(size_t rows, size_t cols);
     ~SubmatrixQueriesTest();
-
+    
+    static bool benchmarkNaiveQueries;
     
     bool testColumnQuery(Range rowRange, size_t col, bench_time_t *naiveTime, bench_time_t *queryTime);
     bool testColumnQuery(bench_time_t *naiveTime, bench_time_t *queryTime);

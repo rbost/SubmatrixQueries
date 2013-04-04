@@ -118,6 +118,8 @@ double benchTimeAsMiliSeconds(bench_time_t t)
 #define MULTITHREAD_GENERATION true
 #define GENERATION_THREAD_COUNT 15
 
+bool SubmatrixQueriesTest::benchmarkNaiveQueries = true;
+
 SubmatrixQueriesTest::SubmatrixQueriesTest(Matrix<double> *m)
 {
     DEBUG_ASSERT(m->isInverseMonge());
@@ -186,6 +188,7 @@ bool SubmatrixQueriesTest::testColumnQuery(Range rowRange, size_t col, bench_tim
     clock1 = now();
     queryMax = _queryDS->rowsTree()->maxForColumnInRange(col, rowRange.min, rowRange.max);
     clock2 = now();
+    
     naiveMax = SubmatrixQueriesTest::naiveMaximumInColumn(_testMatrix, rowRange, col);
     
     clock3 = now();
@@ -404,10 +407,13 @@ void SubmatrixQueriesTest::benchmarkAllRowQueries(Range colRange, size_t row, be
      _queryDS->columnTree()->maxForRowInRange(row, colRange.min, colRange.max);
     
     clock4 = now();
-    SubmatrixQueriesTest::naiveMaximumInRow(_testMatrix, colRange, row);
-
-    clock5 = now();
-
+    if(SubmatrixQueriesTest::benchmarkNaiveQueries){
+        SubmatrixQueriesTest::naiveMaximumInRow(_testMatrix, colRange, row);
+        clock5 = now();
+    }else{
+        clock5 = clock4;
+    }
+    
     if (queryTime) {
         *queryTime = add(*queryTime,diff(clock4, clock3));
     }
@@ -449,9 +455,12 @@ void SubmatrixQueriesTest::benchmarkAllColQueries(Range rowRange, size_t col, be
     _queryDS->rowsTree()->maxForColumnInRange(col, rowRange.min, rowRange.max);
     
     clock4 = now();
-    SubmatrixQueriesTest::naiveMaximumInColumn(_testMatrix, rowRange, col);
-    
-    clock5 = now();
+    if(SubmatrixQueriesTest::benchmarkNaiveQueries){
+        SubmatrixQueriesTest::naiveMaximumInColumn(_testMatrix, rowRange, col);
+        clock5 = now();
+    }else{
+        clock5 = clock4;
+    }
     
     if (queryTime) {
         *queryTime = add(*queryTime,diff(clock4, clock3));
@@ -495,9 +504,13 @@ void SubmatrixQueriesTest::benchmarkAllSubmatrixQueries(Range rowRange, Range co
     _queryDS->maxInSubmatrix(rowRange,colRange);
     
     clock3 = now();
-    SubmatrixQueriesTest::naiveMaximumInSubmatrix(_testMatrix, rowRange, colRange);
     
-    clock4 = now();
+    if(SubmatrixQueriesTest::benchmarkNaiveQueries){
+        SubmatrixQueriesTest::naiveMaximumInSubmatrix(_testMatrix, rowRange, colRange);
+        clock4 = now();
+    }else{
+        clock4 = clock3;
+    }
     
     if (naiveTime) {
         *naiveTime = add(*naiveTime,diff(clock4, clock3));
