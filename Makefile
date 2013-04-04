@@ -5,7 +5,7 @@ CFLAGS = -Wall -O3
 EXEC_NAME = test_queries
 INCLUDES =
 LIBS = -lrt
-OBJ_FILES = matrix.o max_value.o range.o range_query.o envelope.o envelope_tree.o tests.o main.o
+OBJ_FILES = matrix.o oracle_monge_matrix.o max_value.o range.o range_query.o envelope.o envelope_tree.o tests.o main.o
 
 all : $(EXEC_NAME)
 
