@@ -621,7 +621,15 @@ public:
                 // and we end by creating the RMQ data structure
                 _rangeMaxima = new BasicRQNode<T>(_maxima,0,_maxima->size()-1,&std::max<T>);
             }
+            this->lowIndicesNode()->deleteMaximaVector();
+            this->highIndicesNode()->deleteMaximaVector();
         } //endif (this->isLeaf())
+        
+        Range range = this->range();
+        if(range.min == 0 && range.max == this->envelope()->values().rows()-1) // this is the root
+        {
+            this->deleteMaximaVector();
+        }
     }
     
     // We override this to avoid compile-time errors (thank you C++) 
@@ -636,6 +644,13 @@ public:
             castedBuffer[i] = (const ExtendedRowNode<T> *)buffer[i];
         }
         return castedBuffer;
+    }
+    
+protected:
+    void deleteMaximaVector()
+    {
+        delete _maxima;
+        _maxima = NULL;
     }
 };
 
