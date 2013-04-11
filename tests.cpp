@@ -1127,10 +1127,14 @@ void SubmatrixQueriesTest::multiBenchmarksSubmatrixQueries(size_t nRows, size_t 
     }
 }
 
-bench_time_t** SubmatrixQueriesTest::multiSizeBenchmarksSubmatrixQueries(size_t maxNRows, size_t maxNCols, size_t nSampleSize, size_t nSamplePerSize)
+bench_time_t** SubmatrixQueriesTest::multiSizeBenchmarksSubmatrixQueries(size_t maxNRows, size_t maxNCols, size_t minNRows, size_t minNCols, size_t stepSize, size_t nSamplePerSize, size_t *sampleSize)
 {
-    bench_time_t **results = new clock_ptr [nSampleSize];
-    for (size_t i = 0; i < nSampleSize; i++) {
+    size_t size = min((maxNRows - minNRows)/((float)stepSize),(maxNCols - minNCols)/((float)stepSize));
+    *sampleSize = size;
+    
+    bench_time_t **results = new clock_ptr [size];
+    size_t nRows = minNRows, nCols = minNCols;
+    for (size_t i = 0; nRows <= maxNRows && nCols <= maxNCols; nRows += stepSize, nCols += stepSize, i++) {
         results[i] = new bench_time_t [3];
         
 #ifdef __MACH__
@@ -1142,11 +1146,7 @@ bench_time_t** SubmatrixQueriesTest::multiSizeBenchmarksSubmatrixQueries(size_t 
         results[i][1].tv_sec = 0; results[i][1].tv_nsec = 0;
         results[i][2].tv_sec = 0; results[i][2].tv_nsec = 0;
 #endif
-        size_t nRows = maxNRows, nCols = maxNCols;
-        float fraction = ((float)(i+1))/((float)nSampleSize);
-        nRows *= fraction;
-        nCols *= fraction;
-        
+
         cout << "Benchmark for size: " << nRows << " x " << nCols << " ... ";
         
         SubmatrixQueriesTest::multiBenchmarksSubmatrixQueries(nRows,nCols, nSamplePerSize, results[i], results[i]+1, results[i]+2);
@@ -1156,9 +1156,10 @@ bench_time_t** SubmatrixQueriesTest::multiSizeBenchmarksSubmatrixQueries(size_t 
     return results;
 }
 
-void SubmatrixQueriesTest::multiSizeBenchmarksSubmatrixQueries(size_t maxNRows, size_t maxNCols, size_t minNRows, size_t minNCols, size_t nSampleSize, size_t nSamplePerSize, ofstream &outputStream)
+void SubmatrixQueriesTest::multiSizeBenchmarksSubmatrixQueries(size_t maxNRows, size_t maxNCols, size_t minNRows, size_t minNCols, size_t stepSize, size_t nSamplePerSize, ostream &outputStream)
 {
-    for (size_t i = 0; i < nSampleSize; i++) {
+    size_t nRows = minNRows, nCols = minNCols;
+    for (; nRows <= maxNRows && nCols <= maxNCols; nRows += stepSize, nCols += stepSize) {
         bench_time_t *benchmarks = new bench_time_t [3];
         
 #ifdef __MACH__
@@ -1170,12 +1171,7 @@ void SubmatrixQueriesTest::multiSizeBenchmarksSubmatrixQueries(size_t maxNRows, 
         benchmarks[1].tv_sec = 0; benchmarks[1].tv_nsec = 0;
         benchmarks[2].tv_sec = 0; benchmarks[2].tv_nsec = 0;
 #endif
-        size_t nRows = maxNRows, nCols = maxNCols;
-        float fraction = ((float)(i+1))/((float)nSampleSize);
-        
-        nRows = fraction*(maxNRows - minNRows) + minNRows;
-        nCols = fraction*(maxNCols - minNCols) + minNCols;
-        
+
         cout << "Benchmark for size: " << nRows << " x " << nCols << " ... ";
         
         SubmatrixQueriesTest::multiBenchmarksSubmatrixQueries(nRows,nCols, nSamplePerSize, benchmarks, benchmarks+1, benchmarks+2);
@@ -1189,7 +1185,7 @@ void SubmatrixQueriesTest::multiSizeBenchmarksSubmatrixQueries(size_t maxNRows, 
     }
 }
 
-void SubmatrixQueriesTest::multiSizeBenchmarksSubmatrixQueries(size_t maxNRows, size_t maxNCols, size_t nSampleSize, size_t nSamplePerSize, ofstream &outputStream)
+void SubmatrixQueriesTest::multiSizeBenchmarksSubmatrixQueries(size_t maxNRows, size_t maxNCols, size_t nSampleSize, size_t nSamplePerSize, ostream &outputStream)
 {
     multiSizeBenchmarksSubmatrixQueries(maxNRows, maxNCols, 0, 0, nSampleSize, nSamplePerSize, outputStream);
 }
