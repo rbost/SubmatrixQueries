@@ -308,13 +308,13 @@ void multiSizeSubmatrixQueriesBenchmarks(size_t maxNRows, size_t maxNCols, size_
 
 }
 
-void multiSizeSubmatrixQueriesBenchmarks(size_t maxNRows, size_t maxNCols, size_t nSampleSize, size_t nSamplePerSize, const char* outputFilename)
+void multiSizeSubmatrixQueriesBenchmarks(size_t maxNRows, size_t maxNCols, size_t minNRows, size_t minNCols, size_t nSampleSize, size_t nSamplePerSize, const char* outputFilename)
 {
-    cout << "Benchmarks on " << nSampleSize << " samples up to size " << maxNRows << " x " << maxNCols << ", "<< nSamplePerSize << " samples for each size\n\n";
+    cout << "Benchmarks on " << nSampleSize << " samples from size " << minNRows << " x " << minNCols << " up to size " << maxNRows << " x " << maxNCols << ", "<< nSamplePerSize << " samples for each size\n\n";
     ofstream output (outputFilename,ios::out | ios::trunc);
     
     if (output.is_open()) {
-        SubmatrixQueriesTest::multiSizeBenchmarksSubmatrixQueries(maxNRows, maxNCols, nSampleSize, nSamplePerSize,output);
+        SubmatrixQueriesTest::multiSizeBenchmarksSubmatrixQueries(maxNRows, maxNCols, minNRows, minNCols, nSampleSize, nSamplePerSize,output);
     }else{
         cout << "Fail to open the benchmarking output file.\n";
     }
@@ -332,6 +332,8 @@ int main(int argc, const char * argv[])
 {
     size_t nRows = 10000; // default values for the number of columns and rows
     size_t nCols = 10000;
+    size_t minRows = 0, minCols = 0;
+    
     const char* filename = "bench.out";
     bool externalOutput = false;
 
@@ -339,13 +341,24 @@ int main(int argc, const char * argv[])
         sscanf(argv[1], "%lu", &nRows);
         sscanf(argv[2], "%lu", &nCols);
     }
-    if (argc >= 5) {
-        if (strcmp("-o", argv[3]) == 0) {
-            filename = argv[4];
+
+    int i = 3;
+
+    while (i < argc) {
+        if (strcmp("-o", argv[i]) == 0) {
+            assert(i+1 < argc);
+            filename = argv[i+1];
             externalOutput = true;
+            i = i+2;
+        }else if (strcmp("-s", argv[i]) == 0){
+            assert(i+2 < argc);
+            sscanf(argv[i+1], "%lu", &minRows);
+            sscanf(argv[i+2], "%lu", &minCols);
+            i = i+3;
         }
     }
 
+    
     SubmatrixQueriesTest::benchmarkNaiveQueries = false;
     
 //    testMatrix();
@@ -362,7 +375,7 @@ int main(int argc, const char * argv[])
 //    multiSizePositionQueriesBenchmarks(nRows, nCols, ((float)nRows)/((float) 20),50);
     
     if (externalOutput) {
-        multiSizeSubmatrixQueriesBenchmarks(nRows, nCols, ((float)nRows)/((float) 20),50,filename);
+        multiSizeSubmatrixQueriesBenchmarks(nRows, nCols, minRows, minCols,((float)nRows)/((float) 20),50,filename);
     }else{
         multiSizeSubmatrixQueriesBenchmarks(nRows, nCols, ((float)nRows)/((float) 20),50);
     }
