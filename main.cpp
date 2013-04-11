@@ -340,6 +340,8 @@ int main(int argc, const char * argv[])
     size_t nRows = 10000; // default values for the number of columns and rows
     size_t nCols = 10000;
     size_t minRows = 0, minCols = 0;
+    size_t stepSize = 50;
+    size_t samplesPerSize = 50;
     
     const char* filename = "bench.out";
     bool externalOutput = false;
@@ -357,11 +359,19 @@ int main(int argc, const char * argv[])
             filename = argv[i+1];
             externalOutput = true;
             i = i+2;
-        }else if (strcmp("-s", argv[i]) == 0){
+        }else if (strcmp("--minSize", argv[i]) == 0){
             assert(i+2 < argc);
             sscanf(argv[i+1], "%lu", &minRows);
             sscanf(argv[i+2], "%lu", &minCols);
             i = i+3;
+        }else if (strcmp("--step", argv[i]) == 0){
+            assert(i+1 < argc);
+            sscanf(argv[i+1], "%lu", &stepSize);
+            i = i+2;
+        }else if (strcmp("--samples-per-size", argv[i]) == 0){
+            assert(i+1 < argc);
+            sscanf(argv[i+1], "%lu", &samplesPerSize);
+            i = i+2;
         }
     }
 
@@ -382,9 +392,9 @@ int main(int argc, const char * argv[])
 //    multiSizePositionQueriesBenchmarks(nRows, nCols, ((float)nRows)/((float) 20),50);
     
     if (externalOutput) {
-        multiSizeSubmatrixQueriesBenchmarks(nRows, nCols, minRows, minCols,20,50,filename);
+        multiSizeSubmatrixQueriesBenchmarks(nRows, nCols, minRows, minCols,stepSize,samplesPerSize,filename);
     }else{
-        multiSizeSubmatrixQueriesBenchmarks(nRows, nCols, minRows, minCols,20,50);
+        multiSizeSubmatrixQueriesBenchmarks(nRows, nCols, minRows, minCols,stepSize,samplesPerSize);
     }
     
     return 0;
