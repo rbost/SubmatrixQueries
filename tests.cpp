@@ -112,35 +112,34 @@ double benchTimeAsMiliSeconds(bench_time_t t)
 }
 
 #define PRINT_TEST_MATRIX false
-#define BENCHMARK false
 
 #define USE_ORACLE_MATRIX true
 #define MULTITHREAD_GENERATION true
 #define GENERATION_THREAD_COUNT 15
 
 bool SubmatrixQueriesTest::benchmarkNaiveQueries = true;
+bool SubmatrixQueriesTest::showProgressBar = true;
+bool SubmatrixQueriesTest::verboseBenchmarks = true;
+bool SubmatrixQueriesTest::verboseMatrixGeneration = true;
 
 SubmatrixQueriesTest::SubmatrixQueriesTest(Matrix<double> *m)
 {
     DEBUG_ASSERT(m->isInverseMonge());
     // copy the matrix
     _testMatrix = new ComplexMatrix<double>(m);
-    
-#if BENCHMARK
     bench_time_t time = now();
-#endif
+ 
     _queryDS = new SubmatrixQueriesDataStructure<double>(*_testMatrix);
-#if BENCHMARK
-    time = diff(now(),time);
-    cout << "Building Data Structure: " << benchTimeAsMiliSeconds(time) << " ms" << endl;
-#endif
+
+    if (SubmatrixQueriesTest::verboseBenchmarks) {
+        time = diff(now(),time);
+        cout << "Building Data Structure: " << benchTimeAsMiliSeconds(time) << " ms" << endl;
+    }
 }
 
 SubmatrixQueriesTest::SubmatrixQueriesTest(size_t rows, size_t cols)
 {
-#if BENCHMARK
     bench_time_t time = now();
-#endif
 
 #if USE_ORACLE_MATRIX
     _testMatrix = new OracleMongeMatrix<double>(rows,cols);
@@ -150,28 +149,29 @@ SubmatrixQueriesTest::SubmatrixQueriesTest(size_t rows, size_t cols)
     _testMatrix = generateInverseMongeMatrixSlope(rows, cols);
 #endif
 
-#if BENCHMARK
-    time = diff(now(),time);
-    cout << "Building Matrix: " << benchTimeAsMiliSeconds(time) << " ms" << endl;
-    time = now();
-#endif
+    if (SubmatrixQueriesTest::verboseBenchmarks) {
+        time = diff(now(),time);
+        cout << "Building Matrix: " << benchTimeAsMiliSeconds(time) << " ms" << endl;
+        time = now();
+    }
 //    DEBUG_ASSERT(_testMatrix->isInverseMonge());
     
     _queryDS = new SubmatrixQueriesDataStructure<double>(*_testMatrix);
-#if BENCHMARK
-    time = diff(now(),time);
-    cout << "Building Data Structure: " << benchTimeAsMiliSeconds(time) << " ms" << endl;
-    cout << "Max/min envelope size for rows: " << _queryDS->rowsTree()->maxEnvelopeSize() << " / "<< _queryDS->rowsTree()->minEnvelopeSize() << endl;
-    cout << "Max/min envelope size for cols: " << _queryDS->columnTree()->maxEnvelopeSize()  << " / "<< _queryDS->columnTree()->minEnvelopeSize() << endl;
-#endif
+    if (SubmatrixQueriesTest::verboseBenchmarks) {
+        time = diff(now(),time);
+        cout << "Building Data Structure: " << benchTimeAsMiliSeconds(time) << " ms" << endl;
+        cout << "Max/min envelope size for rows: " << _queryDS->rowsTree()->maxEnvelopeSize() << " / "<< _queryDS->rowsTree()->minEnvelopeSize() << endl;
+        cout << "Max/min envelope size for cols: " << _queryDS->columnTree()->maxEnvelopeSize()  << " / "<< _queryDS->columnTree()->minEnvelopeSize() << endl;
+    }
     
 #if PRINT_TEST_MATRIX
     cout << "\n";
     _testMatrix->print();
 #endif
-#if BENCHMARK
-    cout << "\n";
-#endif
+    
+    if (SubmatrixQueriesTest::verboseBenchmarks) {
+         cout << "\n";
+    }
 }
 
 SubmatrixQueriesTest::~SubmatrixQueriesTest()
@@ -551,11 +551,11 @@ bool SubmatrixQueriesTest::multipleColumnQueryTest(size_t n)
     for (size_t i = 0; i < n && result; i++) {
         result = result && testColumnQuery(&naiveTime, &queryTime);
     }
-#if BENCHMARK
-    cout << "Benchmark for " << n << " column queries:" <<endl;
-    cout << "Naive algorithm: " << benchTimeAsMiliSeconds(naiveTime) << " ms" << endl;
-    cout << "Submatrix queries: " << benchTimeAsMiliSeconds(queryTime) << " ms" << endl;
-#endif
+    if (SubmatrixQueriesTest::verboseBenchmarks) {
+        cout << "Benchmark for " << n << " column queries:" <<endl;
+        cout << "Naive algorithm: " << benchTimeAsMiliSeconds(naiveTime) << " ms" << endl;
+        cout << "Submatrix queries: " << benchTimeAsMiliSeconds(queryTime) << " ms" << endl;
+    }
     return result;
 }
 
@@ -568,11 +568,11 @@ bool SubmatrixQueriesTest::multipleRowQueryTest(size_t n)
         result = result && testRowQuery(&naiveTime, &queryTime);
     }
 
-#if BENCHMARK
-    cout << "Benchmark for " << n << " row queries:" <<endl;
-    cout << "Naive algorithm: " << benchTimeAsMiliSeconds(naiveTime) << " ms" << endl;
-    cout << "Submatrix queries: " << benchTimeAsMiliSeconds(queryTime) << " ms" << endl;
-#endif
+    if (SubmatrixQueriesTest::verboseBenchmarks) {
+        cout << "Benchmark for " << n << " row queries:" <<endl;
+        cout << "Naive algorithm: " << benchTimeAsMiliSeconds(naiveTime) << " ms" << endl;
+        cout << "Submatrix queries: " << benchTimeAsMiliSeconds(queryTime) << " ms" << endl;
+    }
     return result;
 }
 
@@ -585,12 +585,12 @@ bool SubmatrixQueriesTest::multipleRowQueryTestVsCascading(size_t n)
         result = result && testCascadingRowQuery(&queryTime, &cascadingTime, &simpleCascadingTime);
     }
     
-#if BENCHMARK
-    cout << "Benchmark for " << n << " row queries:" <<endl;
-    cout << "Submatrix queries: " << benchTimeAsMiliSeconds(queryTime) << " ms" << endl;
-    cout << "Simple Cascading queries: " << benchTimeAsMiliSeconds(simpleCascadingTime) << " ms" << endl;
-    cout << "Cascading queries: " << benchTimeAsMiliSeconds(cascadingTime) << " ms" << endl;
-#endif
+    if (SubmatrixQueriesTest::verboseBenchmarks) {
+        cout << "Benchmark for " << n << " row queries:" <<endl;
+        cout << "Submatrix queries: " << benchTimeAsMiliSeconds(queryTime) << " ms" << endl;
+        cout << "Simple Cascading queries: " << benchTimeAsMiliSeconds(simpleCascadingTime) << " ms" << endl;
+        cout << "Cascading queries: " << benchTimeAsMiliSeconds(cascadingTime) << " ms" << endl;
+    }
     return result;
 }
 
@@ -605,12 +605,12 @@ bool SubmatrixQueriesTest::multipleColQueryTestVsCascading(size_t n)
         result = result && testCascadingColQuery(&queryTime, &cascadingTime,  &simpleCascadingTime);
     }
     
-#if BENCHMARK
-    cout << "Cascading Benchmark for " << n << " col queries:" <<endl;
-    cout << "Submatrix queries: " << benchTimeAsMiliSeconds(queryTime) << " ms" << endl;
-    cout << "Simple Cascading queries: " << benchTimeAsMiliSeconds(simpleCascadingTime) << " ms" << endl;
-    cout << "Cascading queries: " << benchTimeAsMiliSeconds(cascadingTime) << " ms" << endl;
-#endif
+    if (SubmatrixQueriesTest::verboseBenchmarks) {
+        cout << "Cascading Benchmark for " << n << " col queries:" <<endl;
+        cout << "Submatrix queries: " << benchTimeAsMiliSeconds(queryTime) << " ms" << endl;
+        cout << "Simple Cascading queries: " << benchTimeAsMiliSeconds(simpleCascadingTime) << " ms" << endl;
+        cout << "Cascading queries: " << benchTimeAsMiliSeconds(cascadingTime) << " ms" << endl;
+    }
     return result;
 }
 
@@ -623,11 +623,11 @@ bool SubmatrixQueriesTest::multipleSubmatrixQueryTest(size_t n)
         result = result && testSubmatrixQuery(&naiveTime, &queryTime);
     }
     
-#if BENCHMARK
-    cout << "Cascading Benchmark for " << n << " submatrix queries:" <<endl;
-    cout << "Naive algorithm: " << benchTimeAsMiliSeconds(naiveTime) << " ms" << endl;
-    cout << "Submatrix queries: " << benchTimeAsMiliSeconds(queryTime) << " ms" << endl;
-#endif
+    if (SubmatrixQueriesTest::verboseBenchmarks) {
+        cout << "Cascading Benchmark for " << n << " submatrix queries:" <<endl;
+        cout << "Naive algorithm: " << benchTimeAsMiliSeconds(naiveTime) << " ms" << endl;
+        cout << "Submatrix queries: " << benchTimeAsMiliSeconds(queryTime) << " ms" << endl;
+    }
     return result;
 }
 
@@ -791,28 +791,28 @@ Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrixStrip2(size_t ro
 {
     Matrix<double> *m;
     
-#if BENCHMARK
-    cout << "Initializing matrix " << rows << "x" << cols << " ... ";
-#endif
+    if (SubmatrixQueriesTest::verboseBenchmarks) {
+        cout << "Initializing matrix " << rows << "x" << cols << " ... ";
+    }
     try {
         m = new ComplexMatrix<double>(rows,cols);
-#if BENCHMARK
-        cout << "Done" << endl;
-#endif
+        if (SubmatrixQueriesTest::verboseBenchmarks) {
+            cout << "Done" << endl;
+        }
     } catch (std::bad_alloc& ba) {
-#if BENCHMARK
-        cout << "\nbad_alloc caught: " << ba.what() << endl;
-        cout << "Try to build an other matrix ... ";
-#endif
+        if (SubmatrixQueriesTest::verboseBenchmarks) {
+            cout << "\nbad_alloc caught: " << ba.what() << endl;
+            cout << "Try to build an other matrix ... ";
+        }
         m = new SimpleMatrix<double>(rows,cols);
-#if BENCHMARK
-        cout << "Done" << endl;
-#endif
+        if (SubmatrixQueriesTest::verboseBenchmarks) {
+            cout << "Done" << endl;
+        }
     }
     
-#if BENCHMARK
-    cout << "Fill the Inverse Monge Matrix ... " << endl;
-#endif
+    if (SubmatrixQueriesTest::verboseBenchmarks) {
+        cout << "Fill the Inverse Monge Matrix ... " << endl;
+    }
     
     int *rowsAbscissa, *colsAbscissa;
     
@@ -866,30 +866,30 @@ Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrixSlope(size_t row
 {
     Matrix<double> *m;
     
-#if BENCHMARK
-    cout << "Initializing matrix " << rows << "x" << cols << " ... ";
-#endif
+    if (SubmatrixQueriesTest::verboseMatrixGeneration) {
+        cout << "Initializing matrix " << rows << "x" << cols << " ... ";
+    }
     try {
         m = new ComplexMatrix<double>(rows,cols);
-#if BENCHMARK
-        cout << "Done" << endl;
-#endif
+        if (SubmatrixQueriesTest::verboseBenchmarks) {
+            cout << "Done" << endl;
+        }
     } catch (std::bad_alloc& ba) {
-#if BENCHMARK
-        cout << "\nbad_alloc caught: " << ba.what() << endl;
-        cout << "Try to build an other matrix ... ";
-#endif
+        if (SubmatrixQueriesTest::verboseBenchmarks) {
+            cout << "\nbad_alloc caught: " << ba.what() << endl;
+            cout << "Try to build an other matrix ... ";
+        }
         m = new SimpleMatrix<double>(rows,cols);
-#if BENCHMARK
-        cout << "Done" << endl;
-#endif
+        if (SubmatrixQueriesTest::verboseBenchmarks) {
+            cout << "Done" << endl;
+        }
     }
     
-#if BENCHMARK
-    cout << "Fill the Inverse Monge Matrix ... ";
+    if (SubmatrixQueriesTest::verboseBenchmarks) {
+        cout << "Fill the Inverse Monge Matrix ... ";
+    }
     bench_time_t t = now();
-#endif
-    
+
     vector<double> slope(rows);
     
     srand ( time(NULL) );
@@ -923,10 +923,10 @@ Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrixSlope(size_t row
         }
     }
 
-#if BENCHMARK
-    t = diff(now(),t);
-    cout << " done in " << benchTimeAsMiliSeconds(t) << " ms" << endl;
-#endif
+    if (SubmatrixQueriesTest::verboseBenchmarks) {
+        t = diff(now(),t);
+        cout << " done in " << benchTimeAsMiliSeconds(t) << " ms" << endl;
+    }
     
     return m;
 }
@@ -984,29 +984,30 @@ Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrixSlopeMultithread
 {
     Matrix<double> *m;
     
-#if BENCHMARK
-    cout << "Initializing matrix " << rows << "x" << cols << " ... ";
-#endif
+    if (SubmatrixQueriesTest::verboseBenchmarks) {
+        cout << "Initializing matrix " << rows << "x" << cols << " ... ";
+    }
     try {
         m = new ComplexMatrix<double>(rows,cols);
-#if BENCHMARK
-        cout << "Done" << endl;
-#endif
+        if (SubmatrixQueriesTest::verboseBenchmarks) {
+            cout << "Done" << endl;
+        }
     } catch (std::bad_alloc& ba) {
-#if BENCHMARK
-        cout << "\nbad_alloc caught: " << ba.what() << endl;
-        cout << "Try to build an other matrix ... ";
-#endif
+        if (SubmatrixQueriesTest::verboseBenchmarks) {
+            cout << "\nbad_alloc caught: " << ba.what() << endl;
+            cout << "Try to build an other matrix ... ";
+        }
         m = new SimpleMatrix<double>(rows,cols);
-#if BENCHMARK
+            if (SubmatrixQueriesTest::verboseBenchmarks) {
         cout << "Done" << endl;
-#endif
+
+        }
     }
     
-#if BENCHMARK
-    cout << "Fill the Inverse Monge Matrix ... ";
+    if (SubmatrixQueriesTest::verboseBenchmarks) {
+        cout << "Fill the Inverse Monge Matrix ... ";
+    }
     bench_time_t t = now();
-#endif
     
     vector<double> slope(rows);
     
@@ -1058,10 +1059,10 @@ Matrix<double>* SubmatrixQueriesTest::generateInverseMongeMatrixSlopeMultithread
 
     free(threads); free(args);
 
-#if BENCHMARK
-    t = diff(now(),t);
-    cout << " done in " << benchTimeAsMiliSeconds(t) << " ms" << endl;
-#endif
+    if (SubmatrixQueriesTest::verboseBenchmarks) {
+        t = diff(now(),t);
+        cout << " done in " << benchTimeAsMiliSeconds(t) << " ms" << endl;
+    }
     
     return m;
 }
@@ -1070,11 +1071,11 @@ typedef bench_time_t* clock_ptr;
 
 void SubmatrixQueriesTest::multiBenchmarksPositionQueries(size_t nRows, size_t nCols, size_t nSamples, bench_time_t *naiveTime, bench_time_t *queryTime, bench_time_t *cascadingTime, bench_time_t *simpleCascadingTime)
 {
-    cout << "\n";
+    if (SubmatrixQueriesTest::showProgressBar) cout << "\n";
     for (size_t i = 0; i < nSamples; i++) {
         SubmatrixQueriesTest *t = new SubmatrixQueriesTest(nRows,nCols);
-        cout<< "|";
-        cout.flush();
+        if (SubmatrixQueriesTest::showProgressBar) cout<< "|" << flush;
+
         t->multipleBenchmarksColQueries(100, naiveTime, queryTime, cascadingTime, simpleCascadingTime);
         t->multipleBenchmarksRowQueries(100, naiveTime, queryTime, cascadingTime, simpleCascadingTime);
         
@@ -1115,11 +1116,12 @@ bench_time_t** SubmatrixQueriesTest::multiSizeBenchmarksPositionQueries(size_t m
 
 void SubmatrixQueriesTest::multiBenchmarksSubmatrixQueries(size_t nRows, size_t nCols, size_t nSamples, bench_time_t *naiveTime, bench_time_t *explicitNodesTime, bench_time_t *implicitNodesTime)
 {
-    cout << "\n";
+    if (SubmatrixQueriesTest::showProgressBar) cout << "\n";
+    
     for (size_t i = 0; i < nSamples; i++) {
         SubmatrixQueriesTest *t = new SubmatrixQueriesTest(nRows,nCols);
-        cout<< "|";
-        cout.flush();
+        if (SubmatrixQueriesTest::showProgressBar) cout<< "|" << flush;
+
         t->multipleBenchmarksSubmatrixQueries(100, naiveTime, explicitNodesTime, implicitNodesTime);
         t->multipleBenchmarksSubmatrixQueries(100, naiveTime, explicitNodesTime, implicitNodesTime);
         

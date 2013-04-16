@@ -43,7 +43,10 @@ public:
     ~SubmatrixQueriesTest();
     
     static bool benchmarkNaiveQueries;
-    
+    static bool showProgressBar;
+    static bool verboseBenchmarks;
+    static bool verboseMatrixGeneration;
+
     bool testColumnQuery(Range rowRange, size_t col, bench_time_t *naiveTime, bench_time_t *queryTime);
     bool testColumnQuery(bench_time_t *naiveTime, bench_time_t *queryTime);
     bool testCascadingColQuery(Range rowRange, size_t col, bench_time_t *queryTime, bench_time_t *cascadingTime, bench_time_t *simpleCascadingTime);
