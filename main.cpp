@@ -343,6 +343,8 @@ int main(int argc, const char * argv[])
     size_t stepSize = 50;
     size_t samplesPerSize = 50;
     
+    int mode = -1; // for default behavior
+    
     const char* filename = "bench.out";
     bool externalOutput = false;
 
@@ -372,30 +374,45 @@ int main(int argc, const char * argv[])
             assert(i+1 < argc);
             sscanf(argv[i+1], "%lu", &samplesPerSize);
             i = i+2;
+        }else if (strcmp("--mode", argv[i]) == 0){
+            assert(i+1 < argc);
+            sscanf(argv[i+1], "%d", &mode);
+            i = i+2;
         }
     }
 
     
     SubmatrixQueriesTest::benchmarkNaiveQueries = false;
+    SubmatrixQueriesTest::verboseBenchmarks = false;
+    SubmatrixQueriesTest::verboseMatrixGeneration = false;
     
-//    testMatrix();
-//    testMonge();
-//    testEnvelope();
-//    testRowTree();
-//    testColTree();
-//    testSubmatrixQueries();
-    
-//    testTest(nRows,nCols);
-//    testInitalization(nRows,nCols);
-//    benchmarks(nRows, nCols);
+    switch (mode) {
+        case 0:
+            SubmatrixQueriesTest::verboseMatrixGeneration = true;
+            testInitalization(nRows,nCols);
+            break;
+            
+        case 1:
+            SubmatrixQueriesTest::verboseBenchmarks = true;
+            SubmatrixQueriesTest::verboseMatrixGeneration = true;
+            testTest(nRows,nCols);
+            break;
 
-//    multiSizePositionQueriesBenchmarks(nRows, nCols, ((float)nRows)/((float) 20),50);
-    
-    if (externalOutput) {
-        multiSizeSubmatrixQueriesBenchmarks(nRows, nCols, minRows, minCols,stepSize,samplesPerSize,filename);
-    }else{
-        multiSizeSubmatrixQueriesBenchmarks(nRows, nCols, minRows, minCols,stepSize,samplesPerSize);
+        case 2:
+            multiSizePositionQueriesBenchmarks(nRows, nCols, ((float)nRows)/((float) stepSize),samplesPerSize);
+            break;
+
+        case 3:
+        default:
+            if (externalOutput) {
+                multiSizeSubmatrixQueriesBenchmarks(nRows, nCols, minRows, minCols,stepSize,samplesPerSize,filename);
+            }else{
+                multiSizeSubmatrixQueriesBenchmarks(nRows, nCols, minRows, minCols,stepSize,samplesPerSize);
+            }
+            
+            break;
     }
     
+
     return 0;
 }

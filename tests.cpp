@@ -117,7 +117,7 @@ double benchTimeAsMiliSeconds(bench_time_t t)
 #define MULTITHREAD_GENERATION true
 #define GENERATION_THREAD_COUNT 15
 
-bool SubmatrixQueriesTest::benchmarkNaiveQueries = true;
+bool SubmatrixQueriesTest::benchmarkNaiveQueries = false;
 bool SubmatrixQueriesTest::showProgressBar = true;
 bool SubmatrixQueriesTest::verboseBenchmarks = true;
 bool SubmatrixQueriesTest::verboseMatrixGeneration = true;
