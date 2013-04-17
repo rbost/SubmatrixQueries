@@ -355,6 +355,23 @@ void multiSizeFastestQueriesBenchmarks(size_t maxNRows, size_t maxNCols, size_t 
     }
 }
 
+void envelopeSizeStatistics(size_t maxN, size_t minN, size_t stepSize, size_t nSamplePerSize, const char* outputFilename)
+{
+    if(minN == 0) minN += stepSize;
+ 
+    ofstream output (outputFilename,ios::out | ios::trunc);
+    
+    if (outputFilename == NULL) {
+        SubmatrixQueriesTest::envelopeSizesStats(maxN, minN, stepSize, nSamplePerSize, cout);
+    }else if (output.is_open()) {
+        SubmatrixQueriesTest::envelopeSizesStats(maxN, minN, stepSize, nSamplePerSize,output);
+        output.close();
+    }else{
+        cout << "Fail to open the benchmarking output file.\n";
+    }
+
+}
+
 int main(int argc, const char * argv[])
 {
     size_t nRows = 10000; // default values for the number of columns and rows
@@ -409,6 +426,7 @@ int main(int argc, const char * argv[])
     switch (mode) {
         case 0:
             SubmatrixQueriesTest::verboseMatrixGeneration = true;
+            SubmatrixQueriesTest::verboseBenchmarks = true;
             testInitalization(nRows,nCols);
             break;
             
@@ -424,6 +442,10 @@ int main(int argc, const char * argv[])
 
         case 4:
             multiSizeFastestQueriesBenchmarks(nRows, nCols, minRows, minCols,stepSize,samplesPerSize, 1000,100, filename);
+            break;
+            
+        case 5:
+            envelopeSizeStatistics(max(nRows,nCols),min(minRows,minCols),stepSize,samplesPerSize,filename);
             break;
             
         case 3:
