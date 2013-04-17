@@ -1290,9 +1290,9 @@ void SubmatrixQueriesTest::averageEnvelopeSizesForMongeMatrices(size_t nRows, si
     *colEnvelopes = totalColSize/((float) nSamples);
 }
 
-void SubmatrixQueriesTest::envelopeSizesStats(size_t maxN, size_t minN, size_t stepSize, size_t nSamplePerSize, ostream &outputStream)
+void SubmatrixQueriesTest::envelopeSizesStats(size_t maxN, size_t minN, size_t stepSize, bool logSteps, size_t nSamplePerSize, ostream &outputStream)
 {
-    for (size_t n = minN; n <= maxN; n+=stepSize) {
+    for (size_t n = minN; n <= maxN;) {
         float rowAvg, colAvg;
         
         cout << "Envelopes average size for matrices of size: " << n << " x " << n << " ...";
@@ -1300,6 +1300,12 @@ void SubmatrixQueriesTest::envelopeSizesStats(size_t maxN, size_t minN, size_t s
         cout << " done\n";
         
         outputStream << n << " ; " << 0.5*(rowAvg+colAvg) << endl;
+        
+        if (logSteps) {
+            n*=stepSize;
+        }else{
+            n+=stepSize;
+        }
     }
 }
 

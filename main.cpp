@@ -355,16 +355,19 @@ void multiSizeFastestQueriesBenchmarks(size_t maxNRows, size_t maxNCols, size_t 
     }
 }
 
-void envelopeSizeStatistics(size_t maxN, size_t minN, size_t stepSize, size_t nSamplePerSize, const char* outputFilename)
+void envelopeSizeStatistics(size_t maxN, size_t minN, size_t stepSize, bool logSteps, size_t nSamplePerSize, const char* outputFilename)
 {
-    if(minN == 0) minN += stepSize;
- 
+    if(minN == 0){
+        if(logSteps) minN = 2;
+        else minN += stepSize;
+    }
+    
     ofstream output (outputFilename,ios::out | ios::trunc);
     
     if (outputFilename == NULL) {
-        SubmatrixQueriesTest::envelopeSizesStats(maxN, minN, stepSize, nSamplePerSize, cout);
+        SubmatrixQueriesTest::envelopeSizesStats(maxN, minN, stepSize, logSteps, nSamplePerSize, cout);
     }else if (output.is_open()) {
-        SubmatrixQueriesTest::envelopeSizesStats(maxN, minN, stepSize, nSamplePerSize,output);
+        SubmatrixQueriesTest::envelopeSizesStats(maxN, minN, stepSize, logSteps, nSamplePerSize,output);
         output.close();
     }else{
         cout << "Fail to open the benchmarking output file.\n";
@@ -445,7 +448,7 @@ int main(int argc, const char * argv[])
             break;
             
         case 5:
-            envelopeSizeStatistics(max(nRows,nCols),min(minRows,minCols),stepSize,samplesPerSize,filename);
+            envelopeSizeStatistics(max(nRows,nCols),min(minRows,minCols),stepSize,true,samplesPerSize,filename);
             break;
             
         case 3:
