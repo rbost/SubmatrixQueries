@@ -1191,3 +1191,82 @@ void SubmatrixQueriesTest::multiSizeBenchmarksSubmatrixQueries(size_t maxNRows, 
 {
     multiSizeBenchmarksSubmatrixQueries(maxNRows, maxNCols, 0, 0, nSampleSize, nSamplePerSize, outputStream);
 }
+
+void SubmatrixQueriesTest::multipleBestPositionAndSubmatrixQueries(size_t nPosQueries, size_t nSMQueries, bench_time_t *positionQueryTime, bench_time_t *submatrixQueryTime)
+{    
+    bench_time_t clock1, clock2;
+    
+    for (size_t i = 0; i < nPosQueries; i++) {
+        size_t col = rand() % (_testMatrix->cols());
+        
+        size_t r1, r2;
+        r1 = rand() % (_testMatrix->rows());
+        r2 = rand() % (_testMatrix->rows());
+        
+        clock1 = now();
+        _queryDS->rowsTree()->simpleCascadingMaxInRange(col, Range(min(r1,r2),max(r1,r2)));
+        clock2 = now();
+        *positionQueryTime = add(*positionQueryTime,diff(clock2, clock1));
+    }
+    
+    for (size_t i = 0; i < nSMQueries; i++) {
+        size_t r1, r2;
+        r1 = rand() % (_testMatrix->rows());
+        r2 = rand() % (_testMatrix->rows());
+        
+        size_t c1,c2;
+        c1 = rand() % (_testMatrix->cols());
+        c2 = rand() % (_testMatrix->cols());
+        
+        clock1 = now();
+        _queryDS->maxInSubmatrix(Range(min(r1,r2),max(r1,r2)),Range(min(c1,c2),max(c1,c2)));
+        clock2 = now();
+        *submatrixQueryTime = add(*submatrixQueryTime,diff(clock2, clock1));
+    }
+
+}
+
+void SubmatrixQueriesTest::multipleBenchmarkBestPositionAndSubmatrixQueries(size_t nRows, size_t nCols, size_t nSamples, size_t nPosQueries, size_t nSMQueries,bench_time_t *positionQueryTime, bench_time_t *submatrixQueryTime)
+{
+    if (SubmatrixQueriesTest::showProgressBar) cout << "\n";
+    
+    for (size_t i = 0; i < nSamples; i++) {
+        SubmatrixQueriesTest *t = new SubmatrixQueriesTest(nRows,nCols);
+        if (SubmatrixQueriesTest::showProgressBar) cout<< "|" << flush;
+        
+        t->multipleBestPositionAndSubmatrixQueries(nPosQueries, nSMQueries , positionQueryTime, submatrixQueryTime);
+        
+        delete t;
+    }
+    
+}
+
+
+void SubmatrixQueriesTest::multiSizeBenchmarkBestPositionAndSubmatrixQueries(size_t maxNRows, size_t maxNCols, size_t minNRows, size_t minNCols, size_t stepSize, size_t nSamplePerSize, size_t nPosQueries, size_t nSMQueries, ostream &outputStream)
+{
+    size_t nRows = minNRows, nCols = minNCols;
+    for (; nRows <= maxNRows && nCols <= maxNCols; nRows += stepSize, nCols += stepSize) {
+        bench_time_t *benchmarks = new bench_time_t [2];
+        
+#ifdef __MACH__
+        benchmarks[0] = 0;
+        benchmarks[1] = 0;
+#else
+        benchmarks[0].tv_sec = 0; benchmarks[0].tv_nsec = 0;
+        benchmarks[1].tv_sec = 0; benchmarks[1].tv_nsec = 0;
+#endif
+        
+        cout << "Fastest queries benchmarks for size: " << nRows << " x " << nCols << " ...";
+        
+        SubmatrixQueriesTest::multipleBenchmarkBestPositionAndSubmatrixQueries(nRows,nCols, nSamplePerSize, nPosQueries, nSMQueries, benchmarks, benchmarks+1);
+        
+        cout << " done\n";
+        
+        outputStream << ((int)nRows) << " ; " << benchTimeAsMiliSeconds(benchmarks[0]) << " ; " << benchTimeAsMiliSeconds(benchmarks[1]) << "\n";
+        outputStream.flush();
+        
+        delete [] benchmarks;
+    }
+    
+}
+

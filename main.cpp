@@ -335,6 +335,26 @@ void testInitalization(size_t nRows, size_t nCols)
     SubmatrixQueriesTest test = SubmatrixQueriesTest(nRows, nCols);
 }
 
+void multiSizeFastestQueriesBenchmarks(size_t maxNRows, size_t maxNCols, size_t minNRows, size_t minNCols, size_t stepSize, size_t nSamplePerSize, size_t nPosQueries, size_t nSMQueries, const char* outputFilename)
+{
+    if(minNRows == 0) minNRows += stepSize;
+    if(minNCols == 0) minNCols += stepSize;
+    
+    cout << "Benchmarks on samples from size " << minNRows << " x " << minNCols << " up to size " << maxNRows << " x " << maxNCols << ", "<< nSamplePerSize << " samples for each size\n";
+    cout << nSMQueries << "submatrix queries, " << nPosQueries << "position queries for each sample\n\n" << flush;
+    
+    ofstream output (outputFilename,ios::out | ios::trunc);
+    
+    if (outputFilename == NULL) {
+        SubmatrixQueriesTest::multiSizeBenchmarkBestPositionAndSubmatrixQueries(maxNRows, maxNCols, minNRows, minNCols, stepSize, nSamplePerSize, nPosQueries, nSMQueries,cout);
+    }else if (output.is_open()) {
+        SubmatrixQueriesTest::multiSizeBenchmarkBestPositionAndSubmatrixQueries(maxNRows, maxNCols, minNRows, minNCols, stepSize, nSamplePerSize, nPosQueries, nSMQueries,output);
+        output.close();
+    }else{
+        cout << "Fail to open the benchmarking output file.\n";
+    }
+}
+
 int main(int argc, const char * argv[])
 {
     size_t nRows = 10000; // default values for the number of columns and rows
@@ -345,7 +365,7 @@ int main(int argc, const char * argv[])
     
     int mode = -1; // for default behavior
     
-    const char* filename = "bench.out";
+    const char* filename = NULL;
     bool externalOutput = false;
 
     if (argc >= 3) {
@@ -402,6 +422,10 @@ int main(int argc, const char * argv[])
             multiSizePositionQueriesBenchmarks(nRows, nCols, ((float)nRows)/((float) stepSize),samplesPerSize);
             break;
 
+        case 4:
+            multiSizeFastestQueriesBenchmarks(nRows, nCols, minRows, minCols,stepSize,samplesPerSize, 1000,100, filename);
+            break;
+            
         case 3:
         default:
             if (externalOutput) {
