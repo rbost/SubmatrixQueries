@@ -78,7 +78,7 @@ public:
     static void multipleBenchmarkBestPositionAndSubmatrixQueries(size_t nRows, size_t nCols, size_t nSamples, size_t nSMQueries, size_t nPosQueries,bench_time_t *positionQueryTime, bench_time_t *submatrixQueryTime);
     static void multiSizeBenchmarkBestPositionAndSubmatrixQueries(size_t maxNRows, size_t maxNCols, size_t minNRows, size_t minNCols, size_t stepSize, size_t nSamplePerSize, size_t nSMQueries, size_t nPosQueries, ostream &outputStream);
     
-    static void averageEnvelopeSizesForMongeMatrices(size_t nRows, size_t nCols, size_t nSamples, float *rowEnvelopes, float *colEnvelopes);
+    static void envelopeSizesForMongeMatrices(size_t nRows, size_t nCols, size_t nSamples, float *rowEnvelopes, float *colEnvelopes, size_t *maxRowSize,size_t *maxColSize);
     static void envelopeSizesStats(size_t maxN, size_t minN, size_t stepSize, bool logSteps, size_t nSamplePerSize, ostream &outputStream);
     
     bool multipleColumnQueryTest(size_t n);

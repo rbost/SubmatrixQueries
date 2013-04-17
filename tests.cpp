@@ -1270,9 +1270,10 @@ void SubmatrixQueriesTest::multiSizeBenchmarkBestPositionAndSubmatrixQueries(siz
     
 }
 
-void SubmatrixQueriesTest::averageEnvelopeSizesForMongeMatrices(size_t nRows, size_t nCols, size_t nSamples, float *rowEnvelopes, float *colEnvelopes)
+void SubmatrixQueriesTest::envelopeSizesForMongeMatrices(size_t nRows, size_t nCols, size_t nSamples, float *rowEnvelopes, float *colEnvelopes, size_t *maxRowSize,size_t *maxColSize)
 {
     float totalRowSize = 0., totalColSize = 0.;
+    size_t rMax = 0, cMax = 0;
     
     if (SubmatrixQueriesTest::showProgressBar) cout << "\n";
     
@@ -1280,26 +1281,36 @@ void SubmatrixQueriesTest::averageEnvelopeSizesForMongeMatrices(size_t nRows, si
         SubmatrixQueriesTest *t = new SubmatrixQueriesTest(nRows,nCols);
         
         if (SubmatrixQueriesTest::showProgressBar) cout<< "|" << flush;
-        totalRowSize += t->_queryDS->rowsTree()->maxEnvelopeSize();
-        totalColSize += t->_queryDS->columnTree()->maxEnvelopeSize();
+        size_t s;
         
+        s = t->_queryDS->rowsTree()->maxEnvelopeSize();
+        totalRowSize += s;
+        rMax = max(rMax,s);
+        
+        s = t->_queryDS->columnTree()->maxEnvelopeSize();
+        totalColSize += s;
+        cMax = max(cMax,s);
+
         delete t;
     }
     
     *rowEnvelopes = totalRowSize/((float) nSamples);
     *colEnvelopes = totalColSize/((float) nSamples);
+    *maxRowSize = rMax;
+    *maxColSize = cMax;
 }
 
 void SubmatrixQueriesTest::envelopeSizesStats(size_t maxN, size_t minN, size_t stepSize, bool logSteps, size_t nSamplePerSize, ostream &outputStream)
 {
     for (size_t n = minN; n <= maxN;) {
         float rowAvg, colAvg;
+        size_t rowMax, colMax;
         
         cout << "Envelopes average size for matrices of size: " << n << " x " << n << " ...";
-        SubmatrixQueriesTest::averageEnvelopeSizesForMongeMatrices(n, n, nSamplePerSize, &rowAvg, &colAvg);
+        SubmatrixQueriesTest::envelopeSizesForMongeMatrices(n, n, nSamplePerSize, &rowAvg, &colAvg, &rowMax, &colMax);
         cout << " done\n";
         
-        outputStream << n << " ; " << 0.5*(rowAvg+colAvg) << endl;
+        outputStream << n << " ; " << 0.5*(rowAvg+colAvg) << " ; "<< max(rowMax, colMax)<< endl;
         
         if (logSteps) {
             n*=stepSize;
