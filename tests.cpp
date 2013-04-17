@@ -1272,7 +1272,7 @@ void SubmatrixQueriesTest::multiSizeBenchmarkBestPositionAndSubmatrixQueries(siz
 
 void SubmatrixQueriesTest::averageEnvelopeSizesForMongeMatrices(size_t nRows, size_t nCols, size_t nSamples, float *rowEnvelopes, float *colEnvelopes)
 {
-    size_t totalRowSize = 0, totalColSize = 0;
+    float totalRowSize = 0., totalColSize = 0.;
     
     if (SubmatrixQueriesTest::showProgressBar) cout << "\n";
     
@@ -1299,7 +1299,7 @@ void SubmatrixQueriesTest::envelopeSizesStats(size_t maxN, size_t minN, size_t s
         SubmatrixQueriesTest::averageEnvelopeSizesForMongeMatrices(n, n, nSamplePerSize, &rowAvg, &colAvg);
         cout << " done\n";
         
-        outputStream << n << " ; " << rowAvg << " ; " << colAvg << endl;
+        outputStream << n << " ; " << 0.5*(rowAvg+colAvg) << endl;
     }
 }
 
