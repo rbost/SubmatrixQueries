@@ -1278,20 +1278,32 @@ void SubmatrixQueriesTest::envelopeSizesForMongeMatrices(size_t nRows, size_t nC
     if (SubmatrixQueriesTest::showProgressBar) cout << "\n";
     
     for (size_t i = 0; i < nSamples; i++) {
-        SubmatrixQueriesTest *t = new SubmatrixQueriesTest(nRows,nCols);
+        
+        Matrix<double> *testMatrix;
+#if USE_ORACLE_MATRIX
+        testMatrix = new OracleMongeMatrix<double>(nRows,nCols);
+#elif MULTITHREAD_GENERATION
+        testMatrix = generateInverseMongeMatrixSlopeMultithread(nRows, nCols,GENERATION_THREAD_COUNT);
+#else
+        testMatrix = generateInverseMongeMatrixSlope(nRows, nCols);
+#endif
+        RowNode<double> *rowTree = new RowNode<double>(*testMatrix);
+        ColNode<double> *colTree = new ColNode<double>(*testMatrix);
         
         if (SubmatrixQueriesTest::showProgressBar) cout<< "|" << flush;
         size_t s;
         
-        s = t->_queryDS->rowsTree()->maxEnvelopeSize();
+        s = rowTree->maxEnvelopeSize();
         totalRowSize += s;
         rMax = max(rMax,s);
         
-        s = t->_queryDS->columnTree()->maxEnvelopeSize();
+        s = colTree->maxEnvelopeSize();
         totalColSize += s;
         cMax = max(cMax,s);
 
-        delete t;
+        delete testMatrix;
+        delete rowTree;
+        delete colTree;
     }
     
     *rowEnvelopes = totalRowSize/((float) nSamples);

@@ -336,8 +336,8 @@ public:
             RowNode<T> *highIndices;
             lowIndices = new RowNode<T>(minRow,midRow,matrix);
             highIndices= new RowNode<T>(midRow+1,maxRow,matrix);
-            setLowIndicesNode(lowIndices);
-            setHighIndicesNode(highIndices);
+            this->setLowIndicesNode(lowIndices);
+            this->setHighIndicesNode(highIndices);
 
             this->setEnvelope(mergeRowEnvelopes(this->lowIndicesNode()->envelope(), this->highIndicesNode()->envelope(), &(this->crossingBreakpointIndex()) ));
         }
@@ -356,8 +356,8 @@ public:
         RowNode<T> *highIndices;
         lowIndices = new RowNode<T>(minRow,midRow,matrix);
         highIndices= new RowNode<T>(midRow+1,maxRow,matrix);
-        setLowIndicesNode(lowIndices);
-        setHighIndicesNode(highIndices);
+        this->setLowIndicesNode(lowIndices);
+        this->setHighIndicesNode(highIndices);
 
         this->setEnvelope(mergeRowEnvelopes(this->lowIndicesNode()->envelope(), this->highIndicesNode()->envelope()));
     }
