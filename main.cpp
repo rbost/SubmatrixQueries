@@ -262,11 +262,11 @@ void benchmarks(size_t nRows, size_t nCols)
     
     cout << "\n========================================";
     cout << "\nBeginning column queries benchmarks ..." << endl;
-    test.multipleBenchmarksColQueries(1000);
+    test.multipleBenchmarksColQueries(10000);
     
     cout << "\n========================================";
     cout << "\nBeginning row queries benchmarks ..." << endl;
-    test.multipleBenchmarksRowQueries(1000);
+    test.multipleBenchmarksRowQueries(10000);
     
     cout << "\n========================================";
     cout << "\nBeginning submatrix queries benchmarks ..." << endl;
@@ -446,8 +446,13 @@ int main(int argc, const char * argv[])
         case 4:
             multiSizeFastestQueriesBenchmarks(nRows, nCols, minRows, minCols,stepSize,samplesPerSize, 1000,100, filename);
             break;
-            
+        
         case 5:
+            SubmatrixQueriesTest::verboseBenchmarks = true;
+            SubmatrixQueriesTest::verboseMatrixGeneration = true;
+            benchmarks(nRows, nCols);
+            break;
+        case 6:
             envelopeSizeStatistics(max(nRows,nCols),min(minRows,minCols),stepSize,true,samplesPerSize,filename);
             break;
             
