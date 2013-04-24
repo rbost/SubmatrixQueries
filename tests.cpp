@@ -398,57 +398,6 @@ bool SubmatrixQueriesTest::testSubmatrixQuery(bench_time_t *naiveTime, bench_tim
     return testSubmatrixQuery(r, c, naiveTime, explicitNodesTime,implicitNodesTime);
 }
 
-void SubmatrixQueriesTest::benchmarkAllSubmatrixQueries(Range rowRange, Range colRange, bench_time_t *naiveTime, bench_time_t *explicitNodesTime, bench_time_t *implicitNodesTime)
-{
-    bench_time_t clock1, clock2, clock3, clock4;
-    
-    
-    clock1 = now();
-    _queryDS->maxInRange(rowRange,colRange);
-    
-    clock2 = now();
-    _queryDS->maxInSubmatrix(rowRange,colRange);
-    
-    clock3 = now();
-    
-    if(SubmatrixQueriesTest::benchmarkNaiveQueries){
-        SubmatrixQueriesTest::naiveMaximumInSubmatrix(_testMatrix, rowRange, colRange);
-        clock4 = now();
-    }else{
-        clock4 = clock3;
-    }
-    
-    if (naiveTime) {
-        *naiveTime = add(*naiveTime,diff(clock4, clock3));
-    }
-    if (explicitNodesTime) {
-        *explicitNodesTime = add(*explicitNodesTime,diff(clock2, clock1));
-    }
-    if (implicitNodesTime) {
-        *implicitNodesTime = add(*implicitNodesTime,diff(clock3, clock2));
-    }
-    
-}
-
-
-void SubmatrixQueriesTest::benchmarkAllSubmatrixQueries(bench_time_t *naiveTime, bench_time_t *explicitNodesTime, bench_time_t *implicitNodesTime)
-{
-    size_t r1, r2;
-    r1 = rand() % (_testMatrix->rows());
-    r2 = rand() % (_testMatrix->rows());
-    
-    size_t c1,c2;
-    c1 = rand() % (_testMatrix->cols());
-    c2 = rand() % (_testMatrix->cols());
-    
-    
-    Range r = Range(min(r1,r2),max(r1,r2));
-    Range c = Range(min(c1,c2),max(c1,c2));
-    
-    benchmarkAllSubmatrixQueries(r, c,naiveTime,explicitNodesTime,implicitNodesTime);
-    
-}
-
 bool SubmatrixQueriesTest::multipleColumnQueryTest(size_t n)
 {
     bool result = true;
@@ -718,8 +667,58 @@ void SubmatrixQueriesTest::multipleBenchmarksSubmatrixQueries(size_t n)
 
 void SubmatrixQueriesTest::multipleBenchmarksSubmatrixQueries(size_t n,bench_time_t *naiveTime, bench_time_t *explicitNodesTime, bench_time_t *implicitNodesTime)
 {
+    bench_time_t clock1, clock2;
     for (size_t i = 0; i < n; i++) {
-        benchmarkAllSubmatrixQueries(naiveTime, explicitNodesTime, implicitNodesTime);
+        size_t r1, r2;
+        r1 = rand() % (_testMatrix->rows());
+        r2 = rand() % (_testMatrix->rows());
+        
+        size_t c1,c2;
+        c1 = rand() % (_testMatrix->cols());
+        c2 = rand() % (_testMatrix->cols());
+        
+        
+        clock1 = now();
+        _queryDS->maxInRange(Range(min(r1,r2),max(r1,r2)),Range(min(c1,c2),max(c1,c2)));
+        clock2 = now();
+        *explicitNodesTime = add(*explicitNodesTime,diff(clock2, clock1));
+    }
+
+    for (size_t i = 0; i < n; i++) {
+        size_t r1, r2;
+        r1 = rand() % (_testMatrix->rows());
+        r2 = rand() % (_testMatrix->rows());
+        
+        size_t c1,c2;
+        c1 = rand() % (_testMatrix->cols());
+        c2 = rand() % (_testMatrix->cols());
+        
+        
+        clock1 = now();
+        _queryDS->maxInSubmatrix(Range(min(r1,r2),max(r1,r2)),Range(min(c1,c2),max(c1,c2)));
+        clock2 = now();
+        *implicitNodesTime = add(*implicitNodesTime,diff(clock2, clock1));
+    }
+
+    if(SubmatrixQueriesTest::benchmarkNaiveQueries){
+        for (size_t i = 0; i < n; i++) {
+            size_t r1, r2;
+            r1 = rand() % (_testMatrix->rows());
+            r2 = rand() % (_testMatrix->rows());
+            
+            size_t c1,c2;
+            c1 = rand() % (_testMatrix->cols());
+            c2 = rand() % (_testMatrix->cols());
+            
+            Range r = Range(min(r1,r2),max(r1,r2));
+            Range c = Range(min(c1,c2),max(c1,c2));
+            
+            clock1 = now();
+            SubmatrixQueriesTest::naiveMaximumInSubmatrix(_testMatrix, r, c);
+            clock2 = now();
+            
+            *naiveTime = add(*naiveTime,diff(clock2, clock1));
+        }
     }
 }
 
