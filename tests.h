@@ -55,8 +55,8 @@ public:
     bool testRowQuery(bench_time_t *naiveTime, bench_time_t *queryTime);
     bool testCascadingRowQuery(Range colRange, size_t row, bench_time_t *queryTime, bench_time_t *cascadingTime, bench_time_t *simpleCascadingTime);
     bool testCascadingRowQuery(bench_time_t *queryTime, bench_time_t *cascadingTime, bench_time_t *simpleCascadingTime);
-    bool testSubmatrixQuery(Range rowRange, Range colRange, bench_time_t *naiveTime, bench_time_t *queryTime);
-    bool testSubmatrixQuery(bench_time_t *naiveTime, bench_time_t *queryTime);
+    bool testSubmatrixQuery(Range rowRange, Range colRange, bench_time_t *naiveTime, bench_time_t *explicitNodesTime, bench_time_t *implicitNodesTime);
+    bool testSubmatrixQuery(bench_time_t *naiveTime, bench_time_t *explicitNodesTime, bench_time_t *implicitNodesTime);
     
     void benchmarkAllRowQueries(Range colRange, size_t row, bench_time_t *naiveTime, bench_time_t *queryTime, bench_time_t *cascadingTime, bench_time_t *simpleCascadingTime);
     void benchmarkAllRowQueries(bench_time_t *naiveTime, bench_time_t *queryTime, bench_time_t *cascadingTime, bench_time_t *simpleCascadingTime);
