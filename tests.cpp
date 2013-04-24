@@ -398,105 +398,6 @@ bool SubmatrixQueriesTest::testSubmatrixQuery(bench_time_t *naiveTime, bench_tim
     return testSubmatrixQuery(r, c, naiveTime, explicitNodesTime,implicitNodesTime);
 }
 
-void SubmatrixQueriesTest::benchmarkAllRowQueries(Range colRange, size_t row, bench_time_t *naiveTime, bench_time_t *queryTime, bench_time_t *cascadingTime, bench_time_t *simpleCascadingTime)
-{
-    bench_time_t clock1, clock2, clock3, clock4, clock5;
-    
-    clock1 = now();
-    _queryDS->columnTree()->cascadingMaxInRange(row, colRange);
-    
-    clock2 = now();
-    _queryDS->columnTree()->simpleCascadingMaxInRange(row, colRange);
-
-    clock3 = now();
-     _queryDS->columnTree()->maxForRowInRange(row, colRange.min, colRange.max);
-    
-    clock4 = now();
-    if(SubmatrixQueriesTest::benchmarkNaiveQueries){
-        SubmatrixQueriesTest::naiveMaximumInRow(_testMatrix, colRange, row);
-        clock5 = now();
-    }else{
-        clock5 = clock4;
-    }
-    
-    if (queryTime) {
-        *queryTime = add(*queryTime,diff(clock4, clock3));
-    }
-    if (cascadingTime) {
-        *cascadingTime = add(*cascadingTime,diff(clock2, clock1));
-    }
-    if (simpleCascadingTime) {
-        *simpleCascadingTime = add(*simpleCascadingTime,diff(clock3, clock2));
-    }
-    if (naiveTime) {
-        *naiveTime = add(*naiveTime,diff(clock5, clock4));
-    }
-}
-
-void SubmatrixQueriesTest::benchmarkAllRowQueries(bench_time_t *naiveTime, bench_time_t *queryTime, bench_time_t *cascadingTime, bench_time_t *simpleCascadingTime)
-{
-    size_t row = rand() % (_testMatrix->rows());
-    
-    size_t c1,c2;
-    c1 = rand() % (_testMatrix->cols());
-    c2 = rand() % (_testMatrix->cols());
-    
-    Range c = Range(min(c1,c2),max(c1,c2));
-    
-    benchmarkAllRowQueries(c, row,naiveTime,queryTime,cascadingTime,simpleCascadingTime);
-}
-
-void SubmatrixQueriesTest::benchmarkAllColQueries(Range rowRange, size_t col, bench_time_t *naiveTime, bench_time_t *queryTime, bench_time_t *cascadingTime, bench_time_t *simpleCascadingTime)
-{
-    bench_time_t clock1, clock2, clock3, clock4, clock5;
-    
-    clock1 = now();
-    _queryDS->rowsTree()->cascadingMaxInRange(col, rowRange);
-    
-    clock2 = now();
-    _queryDS->rowsTree()->simpleCascadingMaxInRange(col, rowRange);
-    
-    clock3 = now();
-    _queryDS->rowsTree()->maxForColumnInRange(col, rowRange.min, rowRange.max);
-    
-    clock4 = now();
-    if(SubmatrixQueriesTest::benchmarkNaiveQueries){
-        SubmatrixQueriesTest::naiveMaximumInColumn(_testMatrix, rowRange, col);
-        clock5 = now();
-    }else{
-        clock5 = clock4;
-    }
-    
-    if (queryTime) {
-        *queryTime = add(*queryTime,diff(clock4, clock3));
-    }
-    if (cascadingTime) {
-        *cascadingTime = add(*cascadingTime,diff(clock2, clock1));
-    }
-    if (simpleCascadingTime) {
-        *simpleCascadingTime = add(*simpleCascadingTime,diff(clock3, clock2));
-    }
-    if (naiveTime) {
-        *naiveTime = add(*naiveTime,diff(clock5, clock4));
-    }
-
-}
-
-
-void SubmatrixQueriesTest::benchmarkAllColQueries(bench_time_t *naiveTime, bench_time_t *queryTime, bench_time_t *cascadingTime, bench_time_t *simpleCascadingTime)
-{
-    size_t col = rand() % (_testMatrix->cols());
-    
-    size_t r1,r2;
-    r1 = rand() % (_testMatrix->rows());
-    r2 = rand() % (_testMatrix->rows());
-    
-    Range r = Range(min(r1,r2),max(r1,r2));
-    
-    benchmarkAllColQueries(r, col,naiveTime,queryTime,cascadingTime,simpleCascadingTime);
-    
-}
-
 void SubmatrixQueriesTest::benchmarkAllSubmatrixQueries(Range rowRange, Range colRange, bench_time_t *naiveTime, bench_time_t *explicitNodesTime, bench_time_t *implicitNodesTime)
 {
     bench_time_t clock1, clock2, clock3, clock4;
@@ -652,9 +553,70 @@ void SubmatrixQueriesTest::multipleBenchmarksRowQueries(size_t n)
 
 void SubmatrixQueriesTest::multipleBenchmarksRowQueries(size_t n, bench_time_t *naiveTime, bench_time_t *queryTime, bench_time_t *cascadingTime, bench_time_t *simpleCascadingTime)
 {
+    bench_time_t clock1, clock2;
+    for (size_t i = 0; i < n; i++) {        
+        size_t row = rand() % (_testMatrix->rows());
+        
+        size_t c1,c2;
+        c1 = rand() % (_testMatrix->cols());
+        c2 = rand() % (_testMatrix->cols());
+        
+        Range c = Range(min(c1,c2),max(c1,c2));
+
+        clock1 = now();
+        _queryDS->columnTree()->cascadingMaxInRange(row, c);
+        clock2 = now();
+        
+        *cascadingTime = add(*cascadingTime,diff(clock2, clock1));
+    }
     for (size_t i = 0; i < n; i++) {
-        benchmarkAllRowQueries(naiveTime, queryTime, cascadingTime,  simpleCascadingTime);
-    }    
+
+        size_t row = rand() % (_testMatrix->rows());
+        
+        size_t c1,c2;
+        c1 = rand() % (_testMatrix->cols());
+        c2 = rand() % (_testMatrix->cols());
+        
+        Range c = Range(min(c1,c2),max(c1,c2));
+        
+        clock1 = now();
+        _queryDS->columnTree()->simpleCascadingMaxInRange(row, c);
+        clock2 = now();
+        
+        *simpleCascadingTime = add(*simpleCascadingTime,diff(clock2, clock1));
+    }
+    for (size_t i = 0; i < n; i++) {
+        size_t row = rand() % (_testMatrix->rows());
+        
+        size_t c1,c2;
+        c1 = rand() % (_testMatrix->cols());
+        c2 = rand() % (_testMatrix->cols());
+        
+        Range c = Range(min(c1,c2),max(c1,c2));
+        
+        clock1 = now();
+        _queryDS->columnTree()->maxForRowInRange(row, c.min, c.max);
+        clock2 = now();
+        
+        *queryTime = add(*queryTime,diff(clock2, clock1));
+    }
+    if(SubmatrixQueriesTest::benchmarkNaiveQueries){
+        for (size_t i = 0; i < n; i++) {
+            size_t row = rand() % (_testMatrix->rows());
+            
+            size_t c1,c2;
+            c1 = rand() % (_testMatrix->cols());
+            c2 = rand() % (_testMatrix->cols());
+            
+            Range c = Range(min(c1,c2),max(c1,c2));
+
+            clock1 = now();
+            SubmatrixQueriesTest::naiveMaximumInRow(_testMatrix, c, row);
+            clock2 = now();
+            
+            *naiveTime = add(*naiveTime,diff(clock2, clock1));
+        }
+    }
 }
 
 void SubmatrixQueriesTest::multipleBenchmarksColQueries(size_t n)
@@ -673,8 +635,70 @@ void SubmatrixQueriesTest::multipleBenchmarksColQueries(size_t n)
 
 void SubmatrixQueriesTest::multipleBenchmarksColQueries(size_t n, bench_time_t *naiveTime, bench_time_t *queryTime, bench_time_t *cascadingTime, bench_time_t *simpleCascadingTime)
 {
+    bench_time_t clock1, clock2;
     for (size_t i = 0; i < n; i++) {
-        benchmarkAllColQueries(naiveTime, queryTime, cascadingTime,  simpleCascadingTime);
+        size_t col = rand() % (_testMatrix->cols());
+        
+        size_t r1,r2;
+        r1 = rand() % (_testMatrix->rows());
+        r2 = rand() % (_testMatrix->rows());
+        
+        Range r = Range(min(r1,r2),max(r1,r2));
+        
+        clock1 = now();
+        _queryDS->columnTree()->cascadingMaxInRange(col, r);
+        clock2 = now();
+
+        *cascadingTime = add(*cascadingTime,diff(clock2, clock1));
+    }
+    for (size_t i = 0; i < n; i++) {
+        
+        size_t col = rand() % (_testMatrix->cols());
+        
+        size_t r1,r2;
+        r1 = rand() % (_testMatrix->rows());
+        r2 = rand() % (_testMatrix->rows());
+        
+        Range r = Range(min(r1,r2),max(r1,r2));
+        
+        clock1 = now();
+        _queryDS->columnTree()->simpleCascadingMaxInRange(col, r);
+        
+        clock2 = now();
+
+        *simpleCascadingTime = add(*simpleCascadingTime,diff(clock2, clock1));
+    }
+    for (size_t i = 0; i < n; i++) {
+        size_t col = rand() % (_testMatrix->cols());
+        
+        size_t r1,r2;
+        r1 = rand() % (_testMatrix->rows());
+        r2 = rand() % (_testMatrix->rows());
+        
+        Range r = Range(min(r1,r2),max(r1,r2));
+        
+        clock1 = now();
+        _queryDS->columnTree()->maxForRowInRange(col, r.min, r.max);
+        clock2 = now();
+
+        *queryTime = add(*queryTime,diff(clock2, clock1));
+    }
+    if(SubmatrixQueriesTest::benchmarkNaiveQueries){
+        for (size_t i = 0; i < n; i++) {
+            size_t col = rand() % (_testMatrix->cols());
+            
+            size_t r1,r2;
+            r1 = rand() % (_testMatrix->rows());
+            r2 = rand() % (_testMatrix->rows());
+            
+            Range r = Range(min(r1,r2),max(r1,r2));
+            
+            clock1 = now();
+            SubmatrixQueriesTest::naiveMaximumInRow(_testMatrix, r, col);
+            clock2 = now();
+
+            *naiveTime = add(*naiveTime,diff(clock2, clock1));
+        }
     }
 }
 

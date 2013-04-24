@@ -58,11 +58,6 @@ public:
     bool testSubmatrixQuery(Range rowRange, Range colRange, bench_time_t *naiveTime, bench_time_t *explicitNodesTime, bench_time_t *implicitNodesTime);
     bool testSubmatrixQuery(bench_time_t *naiveTime, bench_time_t *explicitNodesTime, bench_time_t *implicitNodesTime);
     
-    void benchmarkAllRowQueries(Range colRange, size_t row, bench_time_t *naiveTime, bench_time_t *queryTime, bench_time_t *cascadingTime, bench_time_t *simpleCascadingTime);
-    void benchmarkAllRowQueries(bench_time_t *naiveTime, bench_time_t *queryTime, bench_time_t *cascadingTime, bench_time_t *simpleCascadingTime);
-    void benchmarkAllColQueries(Range rowRange, size_t col, bench_time_t *naiveTime, bench_time_t *queryTime, bench_time_t *cascadingTime, bench_time_t *simpleCascadingTime);
-    void benchmarkAllColQueries(bench_time_t *naiveTime, bench_time_t *queryTime, bench_time_t *cascadingTime, bench_time_t *simpleCascadingTime);
-
     void benchmarkAllSubmatrixQueries(Range rowRange, Range colRange, bench_time_t *naiveTime, bench_time_t *explicitNodesTime, bench_time_t *implicitNodesTime);
     void benchmarkAllSubmatrixQueries(bench_time_t *naiveTime, bench_time_t *explicitNodesTime, bench_time_t *implicitNodesTime);
 
