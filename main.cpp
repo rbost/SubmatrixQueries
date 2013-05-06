@@ -49,17 +49,17 @@ void testEnvelope()
         cout << "Is Inverse Monge" << endl;
     }
     
-    RowEnvelope<int> *r3 = new RowEnvelope<int>(m,(size_t)3);
-    RowEnvelope<int> *r5 = new RowEnvelope<int>(m,(size_t)5);
+    RowEnvelope<int> *r3 = new RowEnvelope<int>(&m,(size_t)3);
+    RowEnvelope<int> *r5 = new RowEnvelope<int>(&m,(size_t)5);
     RowEnvelope<int> * r35 = mergeRowEnvelopes(r3, r5);
     cout << "r35";
     printBreakpointList(r35->breakpoints());
     cout << endl;
 
-    ColumnEnvelope<int> *e0 = new ColumnEnvelope<int>(m,(size_t)0);
-    ColumnEnvelope<int> *e1 = new ColumnEnvelope<int>(m,(size_t)1);
-    ColumnEnvelope<int> *e2 = new ColumnEnvelope<int>(m,(size_t)2);
-    ColumnEnvelope<int> *e3 = new ColumnEnvelope<int>(m,(size_t)3);
+    ColumnEnvelope<int> *e0 = new ColumnEnvelope<int>(&m,(size_t)0);
+    ColumnEnvelope<int> *e1 = new ColumnEnvelope<int>(&m,(size_t)1);
+    ColumnEnvelope<int> *e2 = new ColumnEnvelope<int>(&m,(size_t)2);
+    ColumnEnvelope<int> *e3 = new ColumnEnvelope<int>(&m,(size_t)3);
     
     cout << "e0";
     printBreakpointList(e0->breakpoints());
@@ -106,7 +106,7 @@ void testRowTree()
         cout << "Is Inverse Monge" << endl;
     }
     
-    ExtendedRowNode<int> root = ExtendedRowNode<int>(m);
+    ExtendedRowNode<int> root = ExtendedRowNode<int>(&m);
     
     int max = root.maxForColumnInRange(2,2,2);
     
@@ -136,7 +136,7 @@ void testColTree()
         cout << "Is Inverse Monge" << endl;
     }
     
-    ColNode<int> root = ColNode<int>(m);
+    ColNode<int> root = ColNode<int>(&m);
     
     int max = root.maxForRowInRange(1,0,4);
     
@@ -203,7 +203,7 @@ void  testSubmatrixQueries()
         cout << "Is Inverse Monge" << endl;
     }
     
-    SubmatrixQueriesDataStructure<int> structure = SubmatrixQueriesDataStructure<int>(m);
+    SubmatrixQueriesDataStructure<int> structure = SubmatrixQueriesDataStructure<int>(&m);
     
     int max = structure.maxInRange(0,4,1,3);
     

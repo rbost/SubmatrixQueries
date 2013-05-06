@@ -129,7 +129,7 @@ SubmatrixQueriesTest::SubmatrixQueriesTest(Matrix<double> *m)
     _testMatrix = new ComplexMatrix<double>(m);
     bench_time_t time = now();
  
-    _queryDS = new SubmatrixQueriesDataStructure<double>(*_testMatrix);
+    _queryDS = new SubmatrixQueriesDataStructure<double>(_testMatrix);
 
     if (SubmatrixQueriesTest::verboseBenchmarks) {
         time = diff(now(),time);
@@ -156,7 +156,7 @@ SubmatrixQueriesTest::SubmatrixQueriesTest(size_t rows, size_t cols)
     }
 //    DEBUG_ASSERT(_testMatrix->isInverseMonge());
     
-    _queryDS = new SubmatrixQueriesDataStructure<double>(*_testMatrix);
+    _queryDS = new SubmatrixQueriesDataStructure<double>(_testMatrix);
     if (SubmatrixQueriesTest::verboseBenchmarks) {
         time = diff(now(),time);
         cout << "Building Data Structure: " << benchTimeAsMiliSeconds(time) << " ms" << endl;
@@ -1381,8 +1381,8 @@ void SubmatrixQueriesTest::envelopeSizesForMongeMatrices(size_t nRows, size_t nC
 #else
         testMatrix = generateInverseMongeMatrixSlope(nRows, nCols);
 #endif
-        RowNode<double> *rowTree = new RowNode<double>(*testMatrix);
-        ColNode<double> *colTree = new ColNode<double>(*testMatrix);
+        RowNode<double> *rowTree = new RowNode<double>(testMatrix);
+        ColNode<double> *colTree = new ColNode<double>(testMatrix);
         
         if (SubmatrixQueriesTest::showProgressBar) cout<< "|" << flush;
         size_t s;

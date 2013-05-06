@@ -45,17 +45,17 @@ namespace envelope {
     template <typename T>
     class Envelope {
     protected:
-        Matrix<T> const& _values;
+        Matrix<T> const*_values;
         const vector< Breakpoint > *_breakpoints;
         
     private:
-        Envelope(Matrix<T> const& values) : _values(values)
+        Envelope(Matrix<T> const* values) : _values(values)
         {
             
         }
     public:
         // Initializes a new envelope with the specified breakpoints.
-        Envelope(Matrix<T> const& values, const vector< Breakpoint > *breakPoints): _values(values), _breakpoints(breakPoints)
+        Envelope(Matrix<T> const* values, const vector< Breakpoint > *breakPoints): _values(values), _breakpoints(breakPoints)
         {
         }
         
@@ -73,7 +73,7 @@ namespace envelope {
             return this->breakpoints()->size();
         }
         
-        inline Matrix<T> const& values() const
+        inline Matrix<T> const* values() const
         {
             return this->_values;
         }
@@ -186,12 +186,12 @@ namespace envelope {
     {
     public:
         // Initializes a new envelope corresponding to an envelope of one row (considered as a pseudo-line).
-        RowEnvelope(Matrix<T> const& values, size_t row) : Envelope<T>(values,new vector< Breakpoint >(1,Breakpoint(row,0)))
+        RowEnvelope(Matrix<T> const* values, size_t row) : Envelope<T>(values,new vector< Breakpoint >(1,Breakpoint(row,0)))
         {
         }
         
         // Initializes a new envelope withe the specified breakpoints.
-        RowEnvelope(Matrix<T> const& values, const vector< Breakpoint > *breakPoints): Envelope<T>(values,breakPoints)
+        RowEnvelope(Matrix<T> const* values, const vector< Breakpoint > *breakPoints): Envelope<T>(values,breakPoints)
         {
         }
 
@@ -213,7 +213,7 @@ namespace envelope {
         
         size_t numberOfColumns() const
         {
-            return this->_values.cols();
+            return this->_values->cols();
         }
         
         size_t mappedPosition(size_t index) const
@@ -243,17 +243,17 @@ namespace envelope {
         
         T valueForPositionAfterBreakpoint(size_t position, Breakpoint bp) const
         {
-            return (this->values())(bp.row,position);
+            return (*(this->values()))(bp.row,position);
         }
         
         T firstValue() const
         {
-            return (this->values())((this->breakpoints())->front().row,0);
+            return (*(this->values()))((this->breakpoints())->front().row,0);
         }
         T lastValue() const
         {
-            size_t lastCol = this->values().cols()-1;
-            return (this->values())((this->breakpoints())->back().row,lastCol);
+            size_t lastCol = this->values()->cols()-1;
+            return (*(this->values()))((this->breakpoints())->back().row,lastCol);
         }
     };
 
@@ -261,12 +261,12 @@ namespace envelope {
     class ColumnEnvelope : public Envelope<T>
     {
     public:
-        ColumnEnvelope(Matrix<T> const& values, size_t col) : Envelope<T>(values,new vector< Breakpoint >(1,Breakpoint(0,col)))
+        ColumnEnvelope(Matrix<T> const* values, size_t col) : Envelope<T>(values,new vector< Breakpoint >(1,Breakpoint(0,col)))
         {
         }
         
         // Initializes a new envelope withe the specified breakpoints.
-        ColumnEnvelope(Matrix<T> const& values, const vector< Breakpoint > *breakPoints): Envelope<T>(values,breakPoints)
+        ColumnEnvelope(Matrix<T> const* values, const vector< Breakpoint > *breakPoints): Envelope<T>(values,breakPoints)
         {
         }
         
@@ -287,7 +287,7 @@ namespace envelope {
         
         size_t numberOfRows() const
         {
-            return this->_values.rows();
+            return this->_values->rows();
         }
         
         size_t mappedPosition(size_t index) const
@@ -317,17 +317,17 @@ namespace envelope {
 
         T valueForPositionAfterBreakpoint(size_t position, Breakpoint bp) const
         {
-            return (this->values())(position,bp.col);
+            return (*(this->values()))(position,bp.col);
         }
 
         T firstValue() const
         {
-            return (this->values())(0,(this->breakpoints())->front().col);
+            return (*(this->values()))(0,(this->breakpoints())->front().col);
         }
         T lastValue() const
         {
-            size_t lastRow = this->values().rows()-1;
-            return (this->values())(lastRow,(this->breakpoints())->back().col);
+            size_t lastRow = this->values()->rows()-1;
+            return (*(this->values()))(lastRow,(this->breakpoints())->back().col);
         }
 
     };
