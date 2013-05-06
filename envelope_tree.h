@@ -303,11 +303,11 @@ public:
     
     // This constructor creates a new RowNode with the specified children.
     // If they are not NULL, it will also compute the merged envelope.
-    RowNode(Range r,RowNode<T> *lowIndices, RowNode<T> *highIndices ,Matrix<T> const& matrix): RowNode(r.min,r.max,lowIndices,highIndices,matrix)
+    RowNode(Range r,RowNode<T> *lowIndices, RowNode<T> *highIndices ,Matrix<T> const* matrix): RowNode(r.min,r.max,lowIndices,highIndices,matrix)
     {
     }
     
-    RowNode(size_t minRow, size_t maxRow,RowNode<T> *lowIndices, RowNode<T> *highIndices ,Matrix<T> const& matrix):EnvTreeNode<T>(minRow,maxRow)
+    RowNode(size_t minRow, size_t maxRow,RowNode<T> *lowIndices, RowNode<T> *highIndices ,Matrix<T> const* matrix):EnvTreeNode<T>(minRow,maxRow)
     {
         if (minRow == maxRow) { // it is a leaf
             this->setEnvelope(new RowEnvelope<T>(matrix, minRow));
@@ -324,7 +324,7 @@ public:
     // Creates a row envelope binary tree node for the specified interval.
     // This also will creates its children and merge their envelopes.
 
-    RowNode(size_t minRow, size_t maxRow, Matrix<T> const& matrix): EnvTreeNode<T>(minRow,maxRow)
+    RowNode(size_t minRow, size_t maxRow, Matrix<T> const* matrix): EnvTreeNode<T>(minRow,maxRow)
     {
         if (minRow == maxRow) { // it is a leaf
             this->setEnvelope(new RowEnvelope<T>(matrix, minRow));
@@ -346,7 +346,7 @@ public:
     // Use this constructor to build the root of the row envelope binary tree for the specified matrix
     // COMPLEXITY: O(number_of_rows*( log(number_of_cols) + log(number_of_rows) ))
     // SIZE: O(number_of_rows* log(number_of_rows))
-    RowNode(Matrix<T> const& matrix) : EnvTreeNode<T>(0,matrix.rows()-1)
+    RowNode(Matrix<T> const* matrix) : EnvTreeNode<T>(0,matrix->rows()-1)
     {        
         size_t minRow = this->minRow();
         size_t maxRow = this->maxRow();
@@ -392,7 +392,7 @@ class ColNode : public EnvTreeNode<T>{
 
 public:
     
-    ColNode(size_t minCol, size_t maxCol, Matrix<T> const& matrix): EnvTreeNode<T>(minCol,maxCol)
+    ColNode(size_t minCol, size_t maxCol, Matrix<T> const* matrix): EnvTreeNode<T>(minCol,maxCol)
     {
         if (minCol == maxCol) { // it is a leaf
             ColumnEnvelope<T>* envelope = new ColumnEnvelope<T>(matrix, minCol);
@@ -414,7 +414,7 @@ public:
     }
     
     
-    ColNode(Matrix<T> const& matrix) : EnvTreeNode<T>(0,matrix.cols()-1)
+    ColNode(Matrix<T> const* matrix) : EnvTreeNode<T>(0,matrix->cols()-1)
     {
         size_t minCol = this->minCol();
         size_t maxCol = this->maxCol();
@@ -461,7 +461,7 @@ class ExtendedRowNode : public RowNode<T> {
     BasicRQNode< T > *_rangeMaxima;
     
 public:
-    ExtendedRowNode(size_t minRow, size_t maxRow, Matrix<T> const& matrix): RowNode<T>(minRow,maxRow,NULL,NULL,matrix)
+    ExtendedRowNode(size_t minRow, size_t maxRow, Matrix<T> const* matrix): RowNode<T>(minRow,maxRow,NULL,NULL,matrix)
     {
         if (minRow < maxRow){
             size_t midRow = minRow + ((maxRow - minRow)/2);
@@ -471,7 +471,7 @@ public:
         }
     }
     
-    ExtendedRowNode(Matrix<T> const& matrix): RowNode<T>(0,matrix.rows()-1,NULL,NULL,matrix)
+    ExtendedRowNode(Matrix<T> const* matrix): RowNode<T>(0,matrix->rows()-1,NULL,NULL,matrix)
     {
         size_t minRow = this-> minRow();
         size_t maxRow = this->maxRow();
@@ -626,7 +626,7 @@ public:
         } //endif (this->isLeaf())
         
         Range range = this->range();
-        if(range.min == 0 && range.max == this->envelope()->values().rows()-1) // this is the root
+        if(range.min == 0 && range.max == this->envelope()->values()->rows()-1) // this is the root
         {
             this->deleteMaximaVector();
         }
@@ -671,10 +671,10 @@ public:
     // COMPLEXITY (expected): if m = number_of_rows and n = number_of_columns, O(m log(m) log(n) + n(log m + log n)) )
     // The current complexity if rather O(m^2 * log(n) + n(log m + log n))
     // SIZE: O(m log m)
-    SubmatrixQueriesDataStructure(Matrix<T> const& matrix)
+    SubmatrixQueriesDataStructure(Matrix<T> const* matrix)
     {
-        _rowsTree = new ExtendedRowNode<T>(matrix);
-        _columnTree = new ColNode<T>(matrix);
+        _rowsTree = new ExtendedRowNode<T>(*matrix);
+        _columnTree = new ColNode<T>(*matrix);
         
         _rowsTree->recursivelyComputeIntervalMaxima_fast(_columnTree);
     }
