@@ -316,7 +316,7 @@ void multiSizeSubmatrixQueriesBenchmarks(size_t maxNRows, size_t maxNCols, size_
 {
     if(minNRows == 0) minNRows += stepSize;
     if(minNCols == 0) minNCols += stepSize;
-
+    
     cout << "Benchmarks on samples from size " << minNRows << " x " << minNCols << " up to size " << maxNRows << " x " << maxNCols << ", "<< nSamplePerSize << " samples for each size\n\n";
     ofstream output (outputFilename,ios::out | ios::trunc);
     
@@ -326,6 +326,25 @@ void multiSizeSubmatrixQueriesBenchmarks(size_t maxNRows, size_t maxNCols, size_
         cout << "Fail to open the benchmarking output file.\n";
     }
     output.close();
+}
+
+
+void multiSizeAllQueriesBenchmarks(size_t maxNRows, size_t maxNCols, size_t minNRows, size_t minNCols, size_t stepSize, size_t nSamplePerSize, const char* outputFilename)
+{
+    if(minNRows == 0) minNRows += stepSize;
+    if(minNCols == 0) minNCols += stepSize;
+    
+    cout << "Benchmarks all queries on samples from size " << minNRows << " x " << minNCols << " up to size " << maxNRows << " x " << maxNCols << ", "<< nSamplePerSize << " samples for each size\n\n";
+    ofstream output (outputFilename,ios::out | ios::trunc);
+    
+    if (outputFilename == NULL) {
+        SubmatrixQueriesTest::multiSizeBenchmarksAllQueries(maxNRows, maxNCols, minNRows, minNCols, stepSize, nSamplePerSize,cout);
+    }else if (output.is_open()) {
+        SubmatrixQueriesTest::multiSizeBenchmarksAllQueries(maxNRows, maxNCols, minNRows, minNCols, stepSize, nSamplePerSize,output);
+        output.close();
+    }else{
+        cout << "Fail to open the benchmarking output file.\n";
+    }
 }
 
 void testInitalization(size_t nRows, size_t nCols)
@@ -453,6 +472,10 @@ int main(int argc, const char * argv[])
             benchmarks(nRows, nCols);
             break;
         case 6:
+            multiSizeAllQueriesBenchmarks(nRows, nCols, minRows, minCols,stepSize,samplesPerSize,filename);
+            break;
+            
+        case 7:
             envelopeSizeStatistics(max(nRows,nCols),min(minRows,minCols),stepSize,true,samplesPerSize,filename);
             break;
             

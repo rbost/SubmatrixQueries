@@ -66,6 +66,12 @@ public:
     static void multiSizeBenchmarksSubmatrixQueries(size_t maxNRows, size_t maxNCols, size_t stepSize, size_t nSamplePerSize, ostream &outputStream);
     static void multiSizeBenchmarksSubmatrixQueries(size_t maxNRows, size_t maxNCols, size_t minNRows, size_t minNCols, size_t stepSize, size_t nSamplePerSize, ostream &outputStream);
     
+    void multipleBenchmarksAllQueries(size_t nPosition,bench_time_t *positionNaiveTime, bench_time_t *positionExplicitNodesTime, bench_time_t *positionImplicitNodesTime, bench_time_t *positionSimpleCascadingTime,size_t nSubmatrix,bench_time_t *submatrixNaiveTime, bench_time_t *submatrixExplicitNodesTime, bench_time_t *submatrixImplicitNodesTime);
+    static void multiBenchmarksAllQueries(size_t nRows, size_t nCols, size_t nSamples,bench_time_t *positionNaiveTime, bench_time_t *positionExplicitNodesTime, bench_time_t *positionImplicitNodesTime, bench_time_t *positionSimpleCascadingTime,bench_time_t *submatrixNaiveTime, bench_time_t *submatrixExplicitNodesTime, bench_time_t *submatrixImplicitNodesTime);
+    static void multiSizeBenchmarksAllQueries(size_t maxNRows, size_t maxNCols, size_t stepSize, size_t nSamplePerSize, ostream &outputStream);
+    static void multiSizeBenchmarksAllQueries(size_t maxNRows, size_t maxNCols, size_t minNRows, size_t minNCols, size_t stepSize, size_t nSamplePerSize, ostream &outputStream);
+
+    
     void multipleBestPositionAndSubmatrixQueries(size_t nSMQueries, size_t nPosQueries,bench_time_t *positionQueryTime, bench_time_t *submatrixQueryTime);
     static void multipleBenchmarkBestPositionAndSubmatrixQueries(size_t nRows, size_t nCols, size_t nSamples, size_t nSMQueries, size_t nPosQueries,bench_time_t *positionQueryTime, bench_time_t *submatrixQueryTime);
     static void multiSizeBenchmarkBestPositionAndSubmatrixQueries(size_t maxNRows, size_t maxNCols, size_t minNRows, size_t minNCols, size_t stepSize, size_t nSamplePerSize, size_t nSMQueries, size_t nPosQueries, ostream &outputStream);

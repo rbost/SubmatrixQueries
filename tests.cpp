@@ -722,6 +722,13 @@ void SubmatrixQueriesTest::multipleBenchmarksSubmatrixQueries(size_t n,bench_tim
     }
 }
 
+void SubmatrixQueriesTest::multipleBenchmarksAllQueries(size_t nPosition,bench_time_t *positionNaiveTime, bench_time_t *positionExplicitNodesTime, bench_time_t *positionImplicitNodesTime, bench_time_t *positionSimpleCascadingTime,size_t nSubmatrix,bench_time_t *submatrixNaiveTime, bench_time_t *submatrixExplicitNodesTime, bench_time_t *submatrixImplicitNodesTime)
+{
+    this->multipleBenchmarksSubmatrixQueries(nSubmatrix, submatrixNaiveTime, submatrixExplicitNodesTime,  submatrixImplicitNodesTime);
+    this->multipleBenchmarksColQueries(nPosition, positionNaiveTime, positionExplicitNodesTime, positionImplicitNodesTime, positionSimpleCascadingTime);
+    this->multipleBenchmarksRowQueries(nPosition, positionNaiveTime, positionExplicitNodesTime, positionImplicitNodesTime, positionSimpleCascadingTime);
+}
+
 double SubmatrixQueriesTest::naiveMaximumInColumn(const Matrix<double> *m, Range rowRange, size_t col)
 {
     MaxValue<double> max = MaxValue<double>();
@@ -1152,7 +1159,6 @@ void SubmatrixQueriesTest::multiBenchmarksSubmatrixQueries(size_t nRows, size_t 
         if (SubmatrixQueriesTest::showProgressBar) cout<< "|" << flush;
 
         t->multipleBenchmarksSubmatrixQueries(100, naiveTime, explicitNodesTime, implicitNodesTime);
-        t->multipleBenchmarksSubmatrixQueries(100, naiveTime, explicitNodesTime, implicitNodesTime);
         
         delete t;
     }
@@ -1298,6 +1304,55 @@ void SubmatrixQueriesTest::multiSizeBenchmarkBestPositionAndSubmatrixQueries(siz
     }
     
 }
+
+
+
+void SubmatrixQueriesTest::multiBenchmarksAllQueries(size_t nRows, size_t nCols, size_t nSamples,bench_time_t *positionNaiveTime, bench_time_t *positionExplicitNodesTime, bench_time_t *positionImplicitNodesTime, bench_time_t *positionSimpleCascadingTime,bench_time_t *submatrixNaiveTime, bench_time_t *submatrixExplicitNodesTime, bench_time_t *submatrixImplicitNodesTime)
+{
+    if (SubmatrixQueriesTest::showProgressBar) cout << "\n";
+    
+    for (size_t i = 0; i < nSamples; i++) {
+        SubmatrixQueriesTest *t = new SubmatrixQueriesTest(nRows,nCols);
+        if (SubmatrixQueriesTest::showProgressBar) cout<< "|" << flush;
+        
+        t->multipleBenchmarksAllQueries(1000, positionNaiveTime, positionExplicitNodesTime, positionImplicitNodesTime, positionSimpleCascadingTime, 100, submatrixNaiveTime, submatrixExplicitNodesTime, submatrixImplicitNodesTime);
+        
+        delete t;
+    }
+}
+
+void SubmatrixQueriesTest::multiSizeBenchmarksAllQueries(size_t maxNRows, size_t maxNCols, size_t minNRows, size_t minNCols, size_t stepSize, size_t nSamplePerSize, ostream &outputStream)
+{
+    size_t nRows = minNRows, nCols = minNCols;
+    for (; nRows <= maxNRows && nCols <= maxNCols; nRows += stepSize, nCols += stepSize) {
+        bench_time_t *benchmarks = new bench_time_t [7];
+        
+        benchmarks[0] = ZeroTime;
+        benchmarks[1] = ZeroTime;
+        benchmarks[2] = ZeroTime;
+        benchmarks[3] = ZeroTime;
+        benchmarks[4] = ZeroTime;
+        benchmarks[5] = ZeroTime;
+        benchmarks[6] = ZeroTime;
+        
+        cout << "Benchmark for size: " << nRows << " x " << nCols << " ... ";
+        
+        SubmatrixQueriesTest::multiBenchmarksAllQueries(nRows,nCols, nSamplePerSize, benchmarks, benchmarks+1, benchmarks+2, benchmarks+3, benchmarks+4, benchmarks+5, benchmarks+6);
+        
+        cout << " done\n";
+        
+        outputStream << ((int)nRows) << " ; " << benchTimeAsMiliSeconds(benchmarks[0]) << " ; " << benchTimeAsMiliSeconds(benchmarks[1]) << " ; " << benchTimeAsMiliSeconds(benchmarks[2]) << " ; " << benchTimeAsMiliSeconds(benchmarks[3]) << " ; " << benchTimeAsMiliSeconds(benchmarks[4]) << " ; " << benchTimeAsMiliSeconds(benchmarks[5]) << " ; " << benchTimeAsMiliSeconds(benchmarks[6]) << "\n";
+        outputStream.flush();
+        
+        delete [] benchmarks;
+    }
+}
+
+void SubmatrixQueriesTest::multiSizeBenchmarksAllQueries(size_t maxNRows, size_t maxNCols, size_t nSampleSize, size_t nSamplePerSize, ostream &outputStream)
+{
+    multiSizeBenchmarksAllQueries(maxNRows, maxNCols, 0, 0, nSampleSize, nSamplePerSize, outputStream);
+}
+
 
 void SubmatrixQueriesTest::envelopeSizesForMongeMatrices(size_t nRows, size_t nCols, size_t nSamples, float *rowEnvelopes, float *colEnvelopes, size_t *maxRowSize,size_t *maxColSize)
 {
