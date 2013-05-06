@@ -1327,13 +1327,23 @@ void SubmatrixQueriesTest::multiSizeBenchmarksAllQueries(size_t maxNRows, size_t
     for (; nRows <= maxNRows && nCols <= maxNCols; nRows += stepSize, nCols += stepSize) {
         bench_time_t *benchmarks = new bench_time_t [7];
         
-        benchmarks[0] = ZeroTime;
-        benchmarks[1] = ZeroTime;
-        benchmarks[2] = ZeroTime;
-        benchmarks[3] = ZeroTime;
-        benchmarks[4] = ZeroTime;
-        benchmarks[5] = ZeroTime;
-        benchmarks[6] = ZeroTime;
+#ifdef __MACH__
+        benchmarks[0] = 0;
+        benchmarks[1] = 0;
+        benchmarks[2] = 0;
+        benchmarks[3] = 0;
+        benchmarks[4] = 0;
+        benchmarks[5] = 0;
+        benchmarks[6] = 0;
+#else
+        benchmarks[0].tv_sec = 0; benchmarks[0].tv_nsec = 0;
+        benchmarks[1].tv_sec = 0; benchmarks[1].tv_nsec = 0;
+        benchmarks[2].tv_sec = 0; benchmarks[2].tv_nsec = 0;
+        benchmarks[3].tv_sec = 0; benchmarks[3].tv_nsec = 0;
+        benchmarks[4].tv_sec = 0; benchmarks[4].tv_nsec = 0;
+        benchmarks[5].tv_sec = 0; benchmarks[5].tv_nsec = 0;
+        benchmarks[6].tv_sec = 0; benchmarks[6].tv_nsec = 0;
+#endif
         
         cout << "Benchmark for size: " << nRows << " x " << nCols << " ... ";
         
