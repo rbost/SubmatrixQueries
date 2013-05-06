@@ -414,6 +414,10 @@ int main(int argc, const char * argv[])
 
     int i = 3;
 
+    SubmatrixQueriesTest::benchmarkNaiveQueries = false;
+    SubmatrixQueriesTest::verboseBenchmarks = false;
+    SubmatrixQueriesTest::verboseMatrixGeneration = false;
+    
     while (i < argc) {
         if (strcmp("-o", argv[i]) == 0) {
             assert(i+1 < argc);
@@ -437,13 +441,17 @@ int main(int argc, const char * argv[])
             assert(i+1 < argc);
             sscanf(argv[i+1], "%d", &mode);
             i = i+2;
+        }else if (strcmp("--naive", argv[i]) == 0){
+            i = i+1;
+            SubmatrixQueriesTest::benchmarkNaiveQueries = true;
+        }else if (strcmp("-v", argv[i]) == 0 || strcmp("--verbose", argv[i]) == 0){
+            i = i+1;
+            SubmatrixQueriesTest::verboseBenchmarks = true;
+            SubmatrixQueriesTest::verboseMatrixGeneration = true;
         }
     }
 
     
-    SubmatrixQueriesTest::benchmarkNaiveQueries = false;
-    SubmatrixQueriesTest::verboseBenchmarks = false;
-    SubmatrixQueriesTest::verboseMatrixGeneration = false;
     
     switch (mode) {
         case 0:
