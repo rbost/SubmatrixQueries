@@ -45,4 +45,44 @@ public:
     inline bool hasBeenSet() const { return _hasBeenSet;}
     inline T  value() const { assert(_hasBeenSet); return _value; }
 };
+
+template <typename T>
+class MaxInMatrix : public MaxValue<T> {
+    size_t _row;
+    size_t _col;
+    
+public:
+    MaxInMatrix() : MaxValue<T>() {};
+    MaxInMatrix(T v, size_t r, size_t c) : MaxValue<T>(v), _row(r), _col(c){};
+    
+    T updateMax(T v, size_t r, size_t c)
+    {
+        if (!this->hasBeenSet()) {
+            _row = r;
+            _col = c;
+        }else if(v > MaxValue<T>::value()){
+            _row = r;
+            _col = c;
+        }
+
+        return  MaxValue<T>::updateMax(v);
+    }
+    
+    inline void getMaxPosition(size_t *r, size_t *c)
+    {
+        assert(this->hasBeenSet());
+        if (r != NULL) {
+            *r = _row;
+        }
+        if (c != NULL) {
+            *c = _col;
+        }
+    }
+    
+    inline T value(size_t *r, size_t *c)
+    {
+        getMaxPosition(r,c);
+        return MaxValue<T>::value();
+    }
+};
 #endif /* defined(__SubmatrixQueries__max_value__) */
