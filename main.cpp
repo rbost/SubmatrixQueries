@@ -108,7 +108,7 @@ void testRowTree()
     
     ExtendedRowNode<int> root = ExtendedRowNode<int>(&m);
     
-    int max = root.maxForColumnInRange(2,2,2);
+    int max = (root.maxForColumnInRange(2,2,2)).value(NULL,NULL);
     
     cout << "max: " << max << endl;
     
@@ -138,7 +138,7 @@ void testColTree()
     
     ColNode<int> root = ColNode<int>(&m);
     
-    int max = root.maxForRowInRange(1,0,4);
+    int max = (root.maxForRowInRange(1,0,4)).value(NULL,NULL);
     
     cout << "max: " << max << endl;
     
@@ -205,7 +205,7 @@ void  testSubmatrixQueries()
     
     SubmatrixQueriesDataStructure<int> structure = SubmatrixQueriesDataStructure<int>(&m);
     
-    int max = structure.maxInRange(0,4,1,3);
+    int max = (structure.maxInRange(0,4,1,3)).value(NULL,NULL);
     
     cout << "max: " << max << endl;
 

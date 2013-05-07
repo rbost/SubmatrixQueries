@@ -42,8 +42,31 @@ public:
         return _value;
     }
     
+    T updateMax(MaxValue<T> m) {
+      updateMax(m.value());
+    }
+    
     inline bool hasBeenSet() const { return _hasBeenSet;}
     inline T  value() const { assert(_hasBeenSet); return _value; }
+    
+    bool operator==(const MaxValue<T> &other) const {
+      return value() == other.value();
+    }
+    bool operator!=(const MaxValue<T> &other) const {
+      return !(*this == other);
+    }
+    bool operator<(const MaxValue<T> &other) const {
+      return value() < other.value();
+    }
+    bool operator<=(const MaxValue<T> &other) const {
+      return value() <= other.value();
+    }
+    bool operator>(const MaxValue<T> &other) const {
+      return value() > other.value();
+    }
+    bool operator>=(const MaxValue<T> &other) const {
+      return value() >= other.value();
+    }
 };
 
 template <typename T>
@@ -66,6 +89,21 @@ public:
         }
 
         return  MaxValue<T>::updateMax(v);
+    }
+    
+    T updateMax(MaxInMatrix<T> m) {
+      size_t r, c;
+      T v = m.value(&r, &c);
+      
+      if (!this->hasBeenSet()) {
+          _row = r;
+          _col = c;
+      } else if(v > MaxValue<T>::value()){
+          _row = r;
+          _col = c;
+      }
+      
+      return MaxValue<T>::updateMax(v);
     }
     
     inline void getMaxPosition(size_t *r, size_t *c)

@@ -11,6 +11,7 @@
 
 #include <vector>
 #include "matrix.h"
+#include "max_value.h"
 #include "debug_assert.h"
 
 using namespace std;
@@ -134,7 +135,7 @@ namespace envelope {
         virtual Breakpoint newBreakPointAtPosition(size_t index) const = 0;
         
         // Returns the value of the envelope for the given position
-        virtual T valueForPosition(size_t position) const
+        virtual MaxInMatrix<T> valueForPosition(size_t position) const
         {
             Breakpoint bp = this->breakpointBeforePosition(position);
             return this->valueForPositionAfterBreakpoint(position,bp);
@@ -151,7 +152,7 @@ namespace envelope {
 
         // ABSTRACT METHOD
         // Implementations must return the value at position given that bp is the last breakpoint before position 
-        virtual T valueForPositionAfterBreakpoint(size_t position, Breakpoint bp) const = 0;
+        virtual MaxInMatrix<T> valueForPositionAfterBreakpoint(size_t position, Breakpoint bp) const = 0;
         
         virtual inline size_t positionForBreakpointAtIndex(size_t i) const
         {
@@ -241,9 +242,12 @@ namespace envelope {
             return bp.row;
         }
         
-        T valueForPositionAfterBreakpoint(size_t position, Breakpoint bp) const
+        MaxInMatrix<T> valueForPositionAfterBreakpoint(size_t position, Breakpoint bp) const
         {
-            return (*(this->values()))(bp.row,position);
+            MaxInMatrix<T> max;
+            T mval = (*(this->values()))(bp.row,position);
+            max.updateMax(mval, bp.row, position);
+            return max;
         }
         
         T firstValue() const
@@ -315,9 +319,12 @@ namespace envelope {
             return bp.col;
         }
 
-        T valueForPositionAfterBreakpoint(size_t position, Breakpoint bp) const
+        MaxInMatrix<T> valueForPositionAfterBreakpoint(size_t position, Breakpoint bp) const
         {
-            return (*(this->values()))(position,bp.col);
+            MaxInMatrix<T> max;
+            T mval = (*(this->values()))(position,bp.col);
+            max.updateMax(mval, position, bp.col);
+            return max;
         }
 
         T firstValue() const
@@ -353,8 +360,8 @@ namespace envelope {
             bp1 = e1->breakpointBeforePosition(pos,minIndex1,maxIndex1,&index1);
             bp2 = e2->breakpointBeforePosition(pos,minIndex2,maxIndex2,&index2);
 
-            T val1 = e1->valueForPositionAfterBreakpoint(pos,bp1);
-            T val2 = e2->valueForPositionAfterBreakpoint(pos,bp2);
+            T val1 = (e1->valueForPositionAfterBreakpoint(pos,bp1)).value(NULL,NULL);
+            T val2 = (e2->valueForPositionAfterBreakpoint(pos,bp2)).value(NULL,NULL);
             
             if (val1 > val2) {
                 // the envelope e1 is this over e2 for this column, so search on the right part of the the envelopes

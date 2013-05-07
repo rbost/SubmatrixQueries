@@ -122,7 +122,9 @@ public:
     }
     
     // Returns the maximum value of the matrix in the specified column and in the specified row range
-    T maxInRange(size_t position, Range r) const{        
+    MaxInMatrix<T> maxInRange(size_t position, Range r) const{
+        MaxInMatrix<T> max;
+        
         // First of all, we get the canonical nodes
         std::vector<const EnvTreeNode<T> *> cNodes = this->canonicalNodes(r.min,r.max);
         
@@ -130,13 +132,13 @@ public:
         DEBUG_ASSERT(cNodes.size() > 0);
         
         // Compute the maximum over the canonical nodes
-        T max = cNodes[0]->envelope()->valueForPosition(position);
+        max.updateMax(cNodes[0]->envelope()->valueForPosition(position));
         
         for (size_t i = 1; i < cNodes.size(); i++) {
-            T value = cNodes[i]->envelope()->valueForPosition(position);
+            MaxInMatrix<T> value = cNodes[i]->envelope()->valueForPosition(position);
             
             if (value > max) {
-                max = value;
+                max.updateMax(value);
             }
         }
         
@@ -163,15 +165,15 @@ public:
                    this->envelope()->numberOfBreakpoints());
     }
     
-    T cascadingMaxInRange(size_t position, Range r) const{
-        MaxValue<T> max;
+    MaxInMatrix<T> cascadingMaxInRange(size_t position, Range r) const{
+        MaxInMatrix<T> max;
         
         this->updateRecursiveMaxInRange(position, r, &max, 0, this->envelope()->numberOfBreakpoints()-1);
         
-        return max.value();
+        return max;
     }
     
-    void updateRecursiveMaxInRange(size_t position, Range r, MaxValue<T>* max, size_t iMin, size_t iMax) const{
+    void updateRecursiveMaxInRange(size_t position, Range r, MaxInMatrix<T>* max, size_t iMin, size_t iMax) const{
         if (!r.intersects(this->range())) {
             return;
         }
@@ -189,7 +191,7 @@ public:
         if (r.isInRange(this->envelope()->mappedPositionForBreakpoint(bp))) {
             // If the breakpoint mapped position is in the range, we have the max for this node
             // Just update it an return
-            T value = this->envelope()->valueForPositionAfterBreakpoint(position,bp);
+            MaxInMatrix<T> value = this->envelope()->valueForPositionAfterBreakpoint(position,bp);
             
             max->updateMax(value);
             return;
@@ -253,15 +255,15 @@ public:
         }
     }
     
-    T simpleCascadingMaxInRange(size_t position, Range r) const{
-        MaxValue<T> max;
+    MaxInMatrix<T> simpleCascadingMaxInRange(size_t position, Range r) const{
+        MaxInMatrix<T> max;
         
         this->updateRecursiveMaxInRange(position, r, &max);
         
-        return max.value();
+        return max;
     }
     
-    void updateRecursiveMaxInRange(size_t position, Range r, MaxValue<T>* max) const{
+    void updateRecursiveMaxInRange(size_t position, Range r, MaxInMatrix<T>* max) const{
         if (!r.intersects(this->range())) {
             return;
         }
@@ -271,7 +273,7 @@ public:
         if (r.isInRange(this->envelope()->mappedPositionForBreakpoint(bp))) {
             // If the breakpoint mapped position is in the range, we have the max for this node
             // Just update it an return
-            T value = this->envelope()->valueForPositionAfterBreakpoint(position,bp);
+            MaxInMatrix<T> value = this->envelope()->valueForPositionAfterBreakpoint(position,bp);
             
             max->updateMax(value);
             return;
@@ -373,7 +375,7 @@ public:
     size_t maxRow() const { return (this->range()).max; }
     
     // Returns the maximum value of the matrix in the specified column and in the specified row range
-    T maxForColumnInRange(size_t col, size_t minRow, size_t maxRow) const{
+    MaxInMatrix<T> maxForColumnInRange(size_t col, size_t minRow, size_t maxRow) const{
         return this->maxInRange(col,Range(minRow,maxRow));
     }
 };
@@ -444,7 +446,7 @@ public:
     ColNode<T>* highIndicesNode() const { return (ColNode<T>* ) EnvTreeNode<T>::highIndicesNode(); }
 
     
-    T maxForRowInRange(size_t row, size_t minCol, size_t maxCol) const{
+    MaxInMatrix<T> maxForRowInRange(size_t row, size_t minCol, size_t maxCol) const{
         return this->maxInRange(row,Range(minCol,maxCol));
     }
 };
@@ -457,8 +459,8 @@ public:
  */
 template <typename T>
 class ExtendedRowNode : public RowNode<T> {
-    vector< T > *_maxima; // the _maxima vector stores the maxima of breakpoints intervals
-    BasicRQNode< T > *_rangeMaxima;
+    vector< MaxInMatrix<T> > *_maxima; // the _maxima vector stores the maxima of breakpoints intervals
+    BasicRQNode< MaxInMatrix<T> > *_rangeMaxima;
     
 public:
     ExtendedRowNode(size_t minRow, size_t maxRow, Matrix<T> const* matrix): RowNode<T>(minRow,maxRow,NULL,NULL,matrix)
@@ -491,12 +493,12 @@ public:
     virtual ExtendedRowNode<T>* lowIndicesNode() const { return (ExtendedRowNode<T>*) RowNode<T>::lowIndicesNode(); }
     virtual ExtendedRowNode<T>* highIndicesNode() const { return (ExtendedRowNode<T>*) RowNode<T>::highIndicesNode(); }
     
-    inline const vector< T > *maxima() const
+    inline const vector< MaxInMatrix<T> > *maxima() const
     {
         return _maxima;
     }
     
-    inline const BasicRQNode<T> *rangeMaxima() const
+    inline const BasicRQNode< MaxInMatrix<T> > *rangeMaxima() const
     {
         return _rangeMaxima;
     }
@@ -508,7 +510,7 @@ public:
         const vector< Breakpoint > *breakpoints = this->envelope()->breakpoints();
         size_t n = breakpoints->size();
         
-        _maxima = new vector< T >(n); // create a new vector of the same size than the breakpoints one
+        _maxima = new vector< MaxInMatrix<T> >(n); // create a new vector of the same size than the breakpoints one
     
         size_t minCol, maxCol;
         size_t row;
@@ -529,7 +531,7 @@ public:
         row = (*breakpoints)[i].row;
         (*_maxima)[i] = flippedTree->maxForRowInRange(row,minCol,maxCol);
         
-        _rangeMaxima = new BasicRQNode<T>(_maxima,0,_maxima->size()-1,&std::max<T>);
+        _rangeMaxima = new BasicRQNode< MaxInMatrix<T> >(_maxima,0,_maxima->size()-1,&std::max< MaxInMatrix<T> >);
 
     }
     
@@ -555,9 +557,9 @@ public:
             size_t row;
             
             row = (*this->envelope()->breakpoints())[0].row;
-            T max = flippedTree->simpleCascadingMaxInRange(row,Range(minCol, maxCol));
-            _rangeMaxima = new BasicRQNode<T>(max,&std::max<T>);
-            _maxima = new vector<T>(1,max);
+            MaxInMatrix<T> max = flippedTree->simpleCascadingMaxInRange(row,Range(minCol, maxCol));
+            _rangeMaxima = new BasicRQNode< MaxInMatrix<T> >(max,&std::max< MaxInMatrix<T> >);
+            _maxima = new vector< MaxInMatrix<T> >(1,max);
         }else{
             this->lowIndicesNode()->recursivelyComputeIntervalMaxima_fast(flippedTree);
             this->highIndicesNode()->recursivelyComputeIntervalMaxima_fast(flippedTree);
@@ -566,21 +568,21 @@ public:
                 
                 // only the envelope of the highIndicesNode has been kept when merging
                 // we duplicate the RMQ DS of this node
-                _maxima = new vector<T>(*this->highIndicesNode()->maxima());
-                _rangeMaxima = new BasicRQNode<T>(_maxima,0,_maxima->size()-1,&std::max<T>);
+                _maxima = new vector< MaxInMatrix<T> >(*this->highIndicesNode()->maxima());
+                _rangeMaxima = new BasicRQNode< MaxInMatrix<T> >(_maxima,0,_maxima->size()-1,&std::max< MaxInMatrix<T> >);
 
             }else if (this->crossingBreakpointIndex() == this->envelope()->numberOfBreakpoints()){
                 // only the envelope of the lowIndicesNode has been kept when merging
                 // we duplicate the RMQ DS of this node
-                _maxima = new vector<T>(*this->lowIndicesNode()->maxima());
-                _rangeMaxima = new BasicRQNode<T>(_maxima,0,_maxima->size()-1,&std::max<T>);
+                _maxima = new vector< MaxInMatrix<T> >(*this->lowIndicesNode()->maxima());
+                _rangeMaxima = new BasicRQNode< MaxInMatrix<T> >(_maxima,0,_maxima->size()-1,&std::max< MaxInMatrix<T> >);
 
             }else{
                 
                 const vector< Breakpoint > *breakpoints = this->envelope()->breakpoints();
                 size_t n = breakpoints->size();
                 
-                _maxima = new vector< T >(n); // create a new vector of the same size than the breakpoints one
+                _maxima = new vector< MaxInMatrix<T> >(n); // create a new vector of the same size than the breakpoints one
                 
                 // for the first breakpoints, just copy the maxima table from the lowIndicesNode
                 for (size_t i = 0; i < this->crossingBreakpointIndex() - 1; i++) {
@@ -619,7 +621,7 @@ public:
                 }
 
                 // and we end by creating the RMQ data structure
-                _rangeMaxima = new BasicRQNode<T>(_maxima,0,_maxima->size()-1,&std::max<T>);
+                _rangeMaxima = new BasicRQNode< MaxInMatrix<T> >(_maxima,0,_maxima->size()-1,&std::max< MaxInMatrix<T> >);
             }
             this->lowIndicesNode()->deleteMaximaVector();
             this->highIndicesNode()->deleteMaximaVector();
@@ -673,8 +675,8 @@ public:
     // SIZE: O(m log m)
     SubmatrixQueriesDataStructure(Matrix<T> const* matrix)
     {
-        _rowsTree = new ExtendedRowNode<T>(*matrix);
-        _columnTree = new ColNode<T>(*matrix);
+        _rowsTree = new ExtendedRowNode<T>(matrix);
+        _columnTree = new ColNode<T>(matrix);
         
         _rowsTree->recursivelyComputeIntervalMaxima_fast(_columnTree);
     }
@@ -696,7 +698,7 @@ public:
     }
     
     
-    void updateMaxForRowNodeOverColumnRange(ExtendedRowNode<T> const *rowNode, Range colRange, MaxValue<T> *max) const
+    void updateMaxForRowNodeOverColumnRange(ExtendedRowNode<T> const *rowNode, Range colRange, MaxInMatrix<T> *max) const
     {
         RowEnvelope<T> *envelope = rowNode->envelope();
         const vector< Breakpoint > *breakpoints = envelope->breakpoints();
@@ -733,7 +735,7 @@ public:
         
         if (endBPIndex - startBPIndex > 1) { // to have at least one interval, we need at least two breakpoints ...
             // the range of the set of intervals is then [(*breakpoints)[startBPIndex+1].col,(*breakpoints)[endBPIndex].col-1]
-            const BasicRQNode<T> *rangeMaxima = rowNode->rangeMaxima();
+            const BasicRQNode< MaxInMatrix<T> > *rangeMaxima = rowNode->rangeMaxima();
             max->updateMax(rangeMaxima->query(startBPIndex+1,endBPIndex-1));
         }
         
@@ -746,7 +748,7 @@ public:
         max->updateMax(_columnTree->simpleCascadingMaxInRange(row,Range(endBP.col,colRange.max)));
     }
     
-    T maxInRange(size_t minRow, size_t maxRow, size_t minCol, size_t maxCol) const
+    MaxInMatrix<T> maxInRange(size_t minRow, size_t maxRow, size_t minCol, size_t maxCol) const
     {
         return maxInRange(Range(minRow,maxRow), Range(minCol,maxCol));
     }
@@ -754,11 +756,11 @@ public:
     // This the query method: it returns the maximum of the submatrix of the Monge inverse matrix within the specified row and column ranges.
     // COMPLEXITY (expected): O(log(number_of_rows) * (log(number_of_rows) + log(number_of_cols)) )
     // In this slow implementation, we have instead O(log(number_of_rows) * (number_of_rows + log(number_of_cols)) ) (see the WARNING)
-    T maxInRangeSlow(Range rowRange, Range colRanges) const
+    MaxInMatrix<T> maxInRangeSlow(Range rowRange, Range colRanges) const
     {
         vector<const ExtendedRowNode<T> *> rowNodes = _rowsTree->canonicalNodes(rowRange.min,rowRange.max);
         
-        MaxValue<T> max;
+        MaxInMatrix<T> max;
         for (typename vector<const ExtendedRowNode<T> *>::iterator nodesIterator = rowNodes.begin(); nodesIterator != rowNodes.end(); ++nodesIterator) {
             
 
@@ -805,7 +807,7 @@ public:
                     Breakpoint bp = (*breakpoints)[i];
                     if (bp.col-1 <= colRanges.max) {
                         // alright, the interval is fully contained in the column range
-                        const vector< T > *maxima = (*nodesIterator)->maxima();
+                        const vector< MaxInMatrix<T> > *maxima = (*nodesIterator)->maxima();
                         // the maximum of interval [(*breakpoints)[i-1].col, (*breakpoints)[i].col-1] is in maxima[i-1]
                         max.updateMax((*maxima)[i-1]);
                     }else{
@@ -823,33 +825,33 @@ public:
                 max.updateMax(_columnTree->maxForRowInRange(row,(*breakpoints)[i-1].col,colRanges.max));
         }
         
-        return max.value();
+        return max;
     }
     
     // This the query method: it returns the maximum of the submatrix of the Monge inverse matrix within the specified row and column ranges.
     // COMPLEXITY: O(log(number_of_rows) * (log(number_of_rows) + log(number_of_cols)) )
-    T maxInRange(Range rowRange, Range colRanges) const
+    MaxInMatrix<T> maxInRange(Range rowRange, Range colRanges) const
     {
         vector<const ExtendedRowNode<T> *> rowNodes = _rowsTree->canonicalNodes(rowRange.min,rowRange.max);
         
-        MaxValue<T> max;
+        MaxInMatrix<T> max;
         for (typename vector<const ExtendedRowNode<T> *>::iterator nodesIterator = rowNodes.begin(); nodesIterator != rowNodes.end(); ++nodesIterator) {
             updateMaxForRowNodeOverColumnRange((*nodesIterator), colRanges, &max);
         }
         
-        return max.value();
+        return max;
     }
     
-    T maxInSubmatrix(Range rowRange, Range colRange) const
+    MaxInMatrix<T> maxInSubmatrix(Range rowRange, Range colRange) const
     {
-        MaxValue<T> max;
+        MaxInMatrix<T> max;
         
         updateRecursivelyMaxInRange(rowRange,colRange,rowsTree(),&max);
         
-        return max.value();
+        return max;
     }
     
-    void updateRecursivelyMaxInRange(Range rowRange, Range colRange, ExtendedRowNode<T> const *rowNode, MaxValue<T> *max) const
+    void updateRecursivelyMaxInRange(Range rowRange, Range colRange, ExtendedRowNode<T> const *rowNode, MaxInMatrix<T> *max) const
     {
         if (!rowRange.intersects(rowNode->range())) {
             return;

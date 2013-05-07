@@ -186,7 +186,7 @@ bool SubmatrixQueriesTest::testColumnQuery(Range rowRange, size_t col, bench_tim
     bench_time_t clock1, clock2, clock3;
 
     clock1 = now();
-    queryMax = _queryDS->rowsTree()->maxForColumnInRange(col, rowRange.min, rowRange.max);
+    queryMax = (_queryDS->rowsTree()->maxForColumnInRange(col, rowRange.min, rowRange.max)).value(NULL,NULL);
     clock2 = now();
     
     naiveMax = SubmatrixQueriesTest::naiveMaximumInColumn(_testMatrix, rowRange, col);
@@ -222,13 +222,13 @@ bool SubmatrixQueriesTest::testCascadingColQuery(Range rowRange, size_t col, ben
     bench_time_t clock1, clock2, clock3, clock4;
     
     clock1 = now();
-    cascadingMax = _queryDS->rowsTree()->cascadingMaxInRange(col, rowRange);
+    cascadingMax = (_queryDS->rowsTree()->cascadingMaxInRange(col, rowRange)).value(NULL,NULL);
     
     clock2 = now();
-    simpleCascadingMax = _queryDS->rowsTree()->simpleCascadingMaxInRange(col, rowRange);
+    simpleCascadingMax = (_queryDS->rowsTree()->simpleCascadingMaxInRange(col, rowRange)).value(NULL,NULL);
     
     clock3 = now();
-    queryMax = _queryDS->rowsTree()->maxForColumnInRange(col, rowRange.min, rowRange.max);
+    queryMax = (_queryDS->rowsTree()->maxForColumnInRange(col, rowRange.min, rowRange.max)).value(NULL,NULL);
     
     clock4 = now();
     
@@ -274,7 +274,7 @@ bool SubmatrixQueriesTest::testRowQuery(Range colRange, size_t row, bench_time_t
     bench_time_t clock1, clock2, clock3;
     
     clock1 = now();
-    queryMax = _queryDS->columnTree()->maxForRowInRange(row, colRange.min, colRange.max);
+    queryMax = (_queryDS->columnTree()->maxForRowInRange(row, colRange.min, colRange.max)).value(NULL,NULL);
     
     clock2 = now();
     naiveMax = SubmatrixQueriesTest::naiveMaximumInRow(_testMatrix, colRange, row);
@@ -310,13 +310,13 @@ bool SubmatrixQueriesTest::testCascadingRowQuery(Range colRange, size_t row, ben
     bench_time_t clock1, clock2, clock3, clock4;
     
     clock1 = now();
-    cascadingMax = _queryDS->columnTree()->cascadingMaxInRange(row, colRange);
+    cascadingMax = (_queryDS->columnTree()->cascadingMaxInRange(row, colRange)).value(NULL,NULL);
     
     clock2 = now();
-    simpleCascadingMax = _queryDS->columnTree()->simpleCascadingMaxInRange(row, colRange);
+    simpleCascadingMax = (_queryDS->columnTree()->simpleCascadingMaxInRange(row, colRange)).value(NULL,NULL);
 
     clock3 = now();
-    queryMax = _queryDS->columnTree()->maxForRowInRange(row, colRange.min, colRange.max);
+    queryMax = (_queryDS->columnTree()->maxForRowInRange(row, colRange.min, colRange.max)).value(NULL,NULL);
 
     clock4 = now();
 
@@ -353,11 +353,11 @@ bool SubmatrixQueriesTest::testSubmatrixQuery(Range rowRange, Range colRange, be
     bench_time_t clock1, clock2, clock3, clock4;
     
     clock1 = now();
-    explicitNodesMax = _queryDS->maxInRange(rowRange,colRange);
+    explicitNodesMax = (_queryDS->maxInRange(rowRange,colRange)).value(NULL,NULL);
     clock2 = now();
     naiveMax = SubmatrixQueriesTest::naiveMaximumInSubmatrix(_testMatrix, rowRange, colRange);
     clock3 = now();
-    implicitNodesMax = _queryDS->maxInSubmatrix(rowRange,colRange);
+    implicitNodesMax = (_queryDS->maxInSubmatrix(rowRange,colRange)).value(NULL,NULL);
     clock4 = now();
 
     if (naiveTime) {
