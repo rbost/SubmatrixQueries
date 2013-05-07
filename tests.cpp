@@ -1239,7 +1239,7 @@ void SubmatrixQueriesTest::multipleBestPositionAndSubmatrixQueries(size_t nPosQu
         r2 = rand() % (_testMatrix->rows());
         
         clock1 = now();
-        _queryDS->rowsTree()->simpleCascadingMaxInRange(col, Range(min(r1,r2),max(r1,r2)));
+        _queryDS->rowsTree()->fastestMaxInRange(col, Range(min(r1,r2),max(r1,r2)));
         clock2 = now();
         *positionQueryTime = add(*positionQueryTime,diff(clock2, clock1));
     }

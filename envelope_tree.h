@@ -285,6 +285,10 @@ public:
             this->highIndicesNode()->updateRecursiveMaxInRange(position,r,max);
         }
     }
+    
+    T fastestMaxInRange(size_t position, Range r) const{
+        return cascadingMaxInRange(position, r);
+    }
 };
 
 
@@ -555,7 +559,7 @@ public:
             size_t row;
             
             row = (*this->envelope()->breakpoints())[0].row;
-            T max = flippedTree->simpleCascadingMaxInRange(row,Range(minCol, maxCol));
+            T max = flippedTree->fastestMaxInRange(row,Range(minCol, maxCol));
             _rangeMaxima = new BasicRQNode<T>(max,&std::max<T>);
             _maxima = new vector<T>(1,max);
         }else{
@@ -596,7 +600,7 @@ public:
                 maxCol = (*breakpoints)[this->crossingBreakpointIndex()].col-1; // ... its last index ...
                 row = (*breakpoints)[this->crossingBreakpointIndex() - 1].row; // ... and the corresponding row ...
 
-                (*_maxima)[this->crossingBreakpointIndex() - 1] = flippedTree->simpleCascadingMaxInRange(row,Range(minCol,maxCol));
+                (*_maxima)[this->crossingBreakpointIndex() - 1] = flippedTree->fastestMaxInRange(row,Range(minCol,maxCol));
 
                 // and on the right side 
                 minCol = (*breakpoints)[this->crossingBreakpointIndex()].col; // ... get the interval first index ...
@@ -608,7 +612,7 @@ public:
                 }
                 row = (*breakpoints)[this->crossingBreakpointIndex()].row; // ... and the corresponding row ...
                 
-               (*_maxima)[this->crossingBreakpointIndex()] = flippedTree->simpleCascadingMaxInRange(row,Range(minCol,maxCol));
+               (*_maxima)[this->crossingBreakpointIndex()] = flippedTree->fastestMaxInRange(row,Range(minCol,maxCol));
                 
                 // for the last part of the breakpoints, we again have to copy the maxima table for the highIndicesNode
                 // to avoid computing the beginning index of the copy in the child max table, we do the copy backward
@@ -673,8 +677,8 @@ public:
     // SIZE: O(m log m)
     SubmatrixQueriesDataStructure(Matrix<T> const* matrix)
     {
-        _rowsTree = new ExtendedRowNode<T>(*matrix);
-        _columnTree = new ColNode<T>(*matrix);
+        _rowsTree = new ExtendedRowNode<T>(matrix);
+        _columnTree = new ColNode<T>(matrix);
         
         _rowsTree->recursivelyComputeIntervalMaxima_fast(_columnTree);
     }
@@ -713,7 +717,7 @@ public:
         // as a consequence, we have to check for that case to avoid undefined behavior
         if (endBPIndex == startBPIndex) {
             size_t row = startBP.row;
-            max->updateMax( _columnTree->simpleCascadingMaxInRange(row,colRange));
+            max->updateMax( _columnTree->fastestMaxInRange(row,colRange));
             return;
         }
         
@@ -722,7 +726,7 @@ public:
         if ((*breakpoints)[startBPIndex].col < colRange.min) {
             // it is not empty, go on ...
             size_t row = (*breakpoints)[startBPIndex].row;
-            max->updateMax(_columnTree->simpleCascadingMaxInRange(row,Range(colRange.min, (*breakpoints)[startBPIndex+1].col-1)));
+            max->updateMax(_columnTree->fastestMaxInRange(row,Range(colRange.min, (*breakpoints)[startBPIndex+1].col-1)));
         }else{
             // it is empty, we just move  the start index so it is consistent with the call on the RMQ data structure
             startBPIndex--;
@@ -743,7 +747,7 @@ public:
         // ( even if there are two ways to exit the loop, in the end we have to do the same processing for the remaining )
         
         size_t row = endBP.row;
-        max->updateMax(_columnTree->simpleCascadingMaxInRange(row,Range(endBP.col,colRange.max)));
+        max->updateMax(_columnTree->fastestMaxInRange(row,Range(endBP.col,colRange.max)));
     }
     
     T maxInRange(size_t minRow, size_t maxRow, size_t minCol, size_t maxCol) const
