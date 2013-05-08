@@ -35,12 +35,16 @@ namespace matrix {
         virtual T& operator()(size_t i, size_t j) = 0;
         virtual T operator()(size_t i, size_t j) const = 0;
         
+        virtual Matrix<T>& operator*=(const T s) = 0;
+        
         bool isMonotone() const;
         bool isMonge() const;
         bool isInverseMonge() const;
         
         void print() const;
     };
+    
+    
     
     // Monotone & Monge propery
     
@@ -170,6 +174,15 @@ namespace matrix {
         {
             return _data[i][j];
         }
+        
+        SimpleMatrix<T>& operator*=(const T s) {
+          for (size_t i = 0; i < rows(); i++) {
+            for (size_t j = 0; j < cols(); j++) {
+              _data[i][j] *= s;
+            }
+          }
+          return *this;
+        }
     };
     
     /* class ComplexMatrix
@@ -207,6 +220,8 @@ namespace matrix {
         T operator()(size_t i, size_t j) const;
         
         ComplexMatrix<T> transpose() const;
+        
+        ComplexMatrix<T>& operator*=(const T s);
         
     private:
         size_t _rows;
@@ -363,6 +378,16 @@ namespace matrix {
             m.col(i) = r;
         }
         return m;
+    }
+    
+    // multiply matrix by scalar
+    template <typename T> ComplexMatrix<T>& ComplexMatrix<T>::operator*=(const T s) {
+      for (size_t i = 0; i < rows(); i++) {
+        for (size_t j = 0; j < cols(); j++) {
+          _data[i * _cols + j] *= s;
+        }
+      }
+      return *this;
     }
 }
 #endif /* defined(__SubmatrixQueries__matrix__) */
