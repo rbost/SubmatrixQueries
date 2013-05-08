@@ -76,7 +76,7 @@ public:
         }
     }
     
-    BasicRQNode(T val,const T& (*compareFunc)(T const&, T const&)) : _minIndex(0), _maxIndex(0), _isLeaf(true), _value(val),_compare(compareFunc)
+    BasicRQNode(T val,const T& (*compareFunc)(T const&, T const&)) : _value(val), _minIndex(0), _maxIndex(0), _isLeaf(true),_compare(compareFunc)
     {}
 
 // Remove that constructor because it creates some seg faults when deallocating
