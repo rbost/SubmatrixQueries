@@ -200,6 +200,9 @@ namespace matrix {
         ComplexMatrix(Matrix<T> *m);
         ComplexMatrix(ComplexMatrix<T> *m);
         
+        // copy over submatrix
+        ComplexMatrix(Matrix<T> *m, size_t rmin, size_t rmax, size_t cmin, size_t cmax);
+        
         size_t rows() const;
         size_t cols() const;
         
@@ -254,6 +257,15 @@ namespace matrix {
         for (size_t i = 0; i < this->rows(); i++) {
             for (size_t j = 0; j < this->cols(); j++) {
                 (*this)(i,j) = (*m)(i,j);
+            }
+        }
+    }
+    
+    template <typename T> ComplexMatrix<T>::ComplexMatrix(Matrix<T> *m, size_t rmin, size_t rmax, size_t cmin, size_t cmax) : _rows(rmax-rmin+1), _cols(cmax-cmin+1), _data()
+    {
+        for (size_t i = rmin; i <= rmax; i++) {
+            for (size_t j = cmin; j <= cmax; j++) {
+                (*this)(i-rmin,j-cmin) = (*m)(i,j);
             }
         }
     }
@@ -407,6 +419,8 @@ namespace matrix {
     private:
         size_t _rmin, _rmax, _cmin, _cmax;
         Matrix<T> *_data;
+        T _multiplier;
+        bool _multiplierSet;
         
         virtual T& operator()(size_t i, size_t j);
         virtual T operator()(size_t i, size_t j) const;
@@ -416,14 +430,10 @@ namespace matrix {
     };
     
     template <typename T>
-    MatrixView<T>::MatrixView(Matrix<T> *m, size_t rmin, size_t rmax, size_t cmin, size_t cmax) {
+    MatrixView<T>::MatrixView(Matrix<T> *m, size_t rmin, size_t rmax, size_t cmin, size_t cmax)
+         : _data(m), _rmin(rmin), _rmax(rmax), _cmin(cmin), _cmax(cmax), _multiplier() {
         DEBUG_ASSERT(0 <= rmin && rmax < m->rows() && 0 <= cmin && cmax < m->cols());
         DEBUG_ASSERT(rmin <= rmax && cmin <= cmax);
-        _data = m;
-        _rmin = rmin;
-        _rmax = rmax;
-        _cmin = cmin;
-        _cmax = cmax;
     }
     
     template <typename T> size_t MatrixView<T>::rows() const{
@@ -437,22 +447,17 @@ namespace matrix {
     template <typename T> T& MatrixView<T>::operator()(size_t i, size_t j) {
         DEBUG_ASSERT(i >= 0 && j >= 0);
         DEBUG_ASSERT(i < rows() && j < cols())
-        return (*_data)(i+_rmin, j+_rmax);
+        return (*_data)(i+_rmin, j+_cmin);
     }
     
     template <typename T> T MatrixView<T>::operator()(size_t i, size_t j) const {
         DEBUG_ASSERT(i >= 0 && j >= 0);
         DEBUG_ASSERT(i < rows() && j < cols())
-        return (*_data)(i+_rmin, j+_rmax);
+        return (*_data)(i+_rmin, j+_cmin);
     }
     
     template <typename T> MatrixView<T>& MatrixView<T>::operator*=(const T s) {
-        for (size_t i = 0; i < rows(); i++) {
-          for (size_t j = 0; j < cols(); j++) {
-            (*_data)(i,j) *= s;
-          }
-        }
-        return *this;
+        std::cout << "Cannot call on view" << std::endl;
     }
     
 }
