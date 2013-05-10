@@ -286,7 +286,7 @@ public:
         }
     }
     
-    T fastestMaxInRange(size_t position, Range r) const{
+    inline T fastestMaxInRange(size_t position, Range r) const{
         return cascadingMaxInRange(position, r);
     }
 };
@@ -868,6 +868,10 @@ public:
         
         updateMaxForRowNodeOverColumnRange(rowNode, colRange, max);
     }
-
+    
+    inline T fastestMaxInSubmatrix(Range rowRange, Range colRange) const
+    {
+        return maxInSubmatrix(rowRange, colRange);
+    }
 };
 #endif /* defined(__SubmatrixQueries__enveloppe_tree__) */
