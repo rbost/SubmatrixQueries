@@ -14,6 +14,8 @@
 #include "range.h"
 #include "envelope_tree.h"
 
+namespace matrixqueries {
+
 using namespace matrix;
 
 #ifdef __MACH__
@@ -101,5 +103,7 @@ public:
     static Matrix<double>* generateInverseMongeMatrixSlope(size_t rows, size_t cols);
     static Matrix<double>* generateInverseMongeMatrixSlopeMultithread(size_t rows, size_t cols,size_t threadCount);
 };
+
+}
 
 #endif /* defined(__SubmatrixQueries__tests__) */

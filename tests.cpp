@@ -25,6 +25,8 @@ extern "C"
 #include <pthread.h>
 }
 
+namespace matrixqueries {
+
 double fRand(double fMin, double fMax)
 {
     double f = (double)rand() / RAND_MAX;
@@ -1426,3 +1428,4 @@ void SubmatrixQueriesTest::envelopeSizesStats(size_t maxN, size_t minN, size_t s
     }
 }
 
+}

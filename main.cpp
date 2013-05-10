@@ -20,6 +20,7 @@
 using namespace std;
 using namespace matrix;
 using namespace envelope;
+using namespace matrixqueries;
 
 void printBreakpointList(const vector< Breakpoint > *bp)
 {

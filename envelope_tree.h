@@ -19,6 +19,8 @@
 #include "range_query.h"
 #include "debug_assert.h"
 
+namespace matrixqueries {
+
 using namespace envelope;
 using namespace matrix;
 
@@ -868,4 +870,6 @@ public:
     }
 
 };
+
+}
 #endif /* defined(__SubmatrixQueries__enveloppe_tree__) */
