@@ -417,10 +417,8 @@ namespace matrix {
         size_t rows() const;
         size_t cols() const;
     private:
-        size_t _rmin, _rmax, _cmin, _cmax;
         Matrix<T> *_data;
-        T _multiplier;
-        bool _multiplierSet;
+        size_t _rmin, _rmax, _cmin, _cmax;
         
         virtual T& operator()(size_t i, size_t j);
         virtual T operator()(size_t i, size_t j) const;
@@ -431,7 +429,7 @@ namespace matrix {
     
     template <typename T>
     MatrixView<T>::MatrixView(Matrix<T> *m, size_t rmin, size_t rmax, size_t cmin, size_t cmax)
-         : _data(m), _rmin(rmin), _rmax(rmax), _cmin(cmin), _cmax(cmax), _multiplier() {
+         : _data(m), _rmin(rmin), _rmax(rmax), _cmin(cmin), _cmax(cmax) {
         DEBUG_ASSERT(0 <= rmin && rmax < m->rows() && 0 <= cmin && cmax < m->cols());
         DEBUG_ASSERT(rmin <= rmax && cmin <= cmax);
     }
@@ -458,6 +456,7 @@ namespace matrix {
     
     template <typename T> MatrixView<T>& MatrixView<T>::operator*=(const T s) {
         std::cout << "Cannot call on view" << std::endl;
+        return *this;
     }
     
 }
